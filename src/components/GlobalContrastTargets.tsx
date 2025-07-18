@@ -1,9 +1,7 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { PaletteControls } from '../types'
 import { Button } from './ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Input } from './ui/input'
-import { Label } from './ui/label'
 
 interface GlobalContrastTargetsProps {
   onApplyToAll: (contrastTargets: PaletteControls['contrastTargets']) => void
