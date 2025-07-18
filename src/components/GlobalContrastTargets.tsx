@@ -36,50 +36,7 @@ export function GlobalContrastTargets({
     setTargets(prev => ({ ...prev, [step]: value }))
   }
 
-  const loadPreset = (presetType: 'balanced' | 'accessible' | 'subtle') => {
-    const presets = {
-      balanced: {
-        50: 1.1,
-        100: 1.3,
-        200: 1.7,
-        300: 2.3,
-        400: 3.2,
-        500: 4.5,
-        600: 6.7,
-        700: 9.3,
-        800: 13.1,
-        900: 15.2,
-        950: 17.2
-      },
-      accessible: {
-        50: 1.5,
-        100: 2.0,
-        200: 2.5,
-        300: 3.0,
-        400: 4.0,
-        500: 4.5,
-        600: 7.0,
-        700: 9.0,
-        800: 12.0,
-        900: 15.0,
-        950: 18.0
-      },
-      subtle: {
-        50: 1.05,
-        100: 1.1,
-        200: 1.3,
-        300: 1.8,
-        400: 2.5,
-        500: 3.5,
-        600: 5.0,
-        700: 7.5,
-        800: 10.0,
-        900: 13.0,
-        950: 16.0
-      }
-    }
-    setTargets(presets[presetType])
-  }
+
 
   return (
     <div className="space-y-4">

@@ -8,7 +8,7 @@ import { Input } from './components/ui/input'
 import { Label } from './components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
 import { Contrast } from 'lucide-react'
-import { generatePalette, copyToClipboard, createNewPalette, getColorFormats, analyzeContrast, getContrastBadge, savePalettesToStorage, loadPalettesFromStorage, validateColor, isValidHexColor, exportPalettes, importPalettes, downloadPalettes, convertExternalPalettes, getTextColorForBackground } from './lib/colorGeneration'
+import { generatePalette, copyToClipboard, createNewPalette, getColorFormats, analyzeContrast, getContrastBadge, savePalettesToStorage, loadPalettesFromStorage, validateColor, isValidHexColor, importPalettes, downloadPalettes, convertExternalPalettes, getTextColorForBackground } from './lib/colorGeneration'
 import { defaultControls, presets } from './lib/presets'
 import { PaletteControls, Palette, ColorFormat, GamutSettings, LightnessSettings } from './types'
 
