@@ -1,42 +1,42 @@
 import { PaletteControls } from '../types';
 
-// Default contrast targets that roughly follow a typical scale
+// Professional contrast targets for accessibility
 const defaultContrastTargets = {
-  50: 1.05,
-  100: 1.15,
-  200: 1.5,
-  300: 2.0,
-  400: 3.0,
+  50: 1.1,
+  100: 1.3,
+  200: 1.7,
+  300: 2.3,
+  400: 3.2,
   500: 4.5,  // AA compliance
-  600: 6.0,
-  700: 7.0,  // AAA compliance
-  800: 10.0,
-  900: 15.0,
-  950: 20.0
+  600: 6.7,
+  700: 9.3,  // AAA compliance
+  800: 13.1,
+  900: 15.2,
+  950: 17.2
 };
 
-// Default lightness values (will be used as starting point)
+// Professional lightness values for better contrast
 const defaultLightnessValues = {
-  50: 0.95,
-  100: 0.90,
-  200: 0.80,
-  300: 0.70,
-  400: 0.60,
-  500: 0.50,
-  600: 0.40,
-  700: 0.30,
-  800: 0.25,
-  900: 0.20,
-  950: 0.15
+  50: 0.97,
+  100: 0.91,
+  200: 0.83,
+  300: 0.73,
+  400: 0.65,
+  500: 0.56,
+  600: 0.49,
+  700: 0.41,
+  800: 0.32,
+  900: 0.26,
+  950: 0.22
 };
 
 export const defaultControls: PaletteControls = {
-  baseHue: 220,
+  baseHue: 247,
   lightnessMin: 0.95,
   lightnessMax: 0.15,
   chromaMode: 'smooth',
   chromaValues: {
-    50: 0.02,
+    50: 0.01,
     100: 0.05,
     200: 0.08,
     300: 0.11,
@@ -48,26 +48,23 @@ export const defaultControls: PaletteControls = {
     900: 0.10,
     950: 0.08
   },
-  maxChroma: 0.15,
-  chromaPeak: 0.5,
-  lightHueDrift: 0,
-  darkHueDrift: 15,
-  contrastMode: false,
+  maxChroma: 0.24,
+  chromaPeak: 0.55,
+  lightHueDrift: -5,
+  darkHueDrift: 5,
   backgroundColor: '#ffffff',
   contrastTargets: defaultContrastTargets,
-  lightnessValues: defaultLightnessValues,
-  gamutMode: 'sRGB',
-  enforceGamut: false
+  lightnessValues: defaultLightnessValues
 };
 
 export const presets: { [key: string]: PaletteControls } = {
   blue: {
-    baseHue: 220,
+    baseHue: 247,
     lightnessMin: 0.95,
     lightnessMax: 0.15,
     chromaMode: 'smooth',
     chromaValues: {
-      50: 0.02,
+      50: 0.01,
       100: 0.05,
       200: 0.08,
       300: 0.11,
@@ -79,80 +76,68 @@ export const presets: { [key: string]: PaletteControls } = {
       900: 0.10,
       950: 0.08
     },
-    maxChroma: 0.15,
-    chromaPeak: 0.5,
-    lightHueDrift: 0,
-    darkHueDrift: 15,
-    contrastMode: false,
+    maxChroma: 0.24,
+    chromaPeak: 0.55,
+    lightHueDrift: -5,
+    darkHueDrift: 5,
     backgroundColor: '#ffffff',
     contrastTargets: defaultContrastTargets,
-    lightnessValues: defaultLightnessValues,
-    gamutMode: 'sRGB',
-    enforceGamut: false
-  },
-  
-  red: {
-    baseHue: 0,
-    lightnessMin: 0.95,
-    lightnessMax: 0.15,
-    chromaMode: 'smooth',
-    chromaValues: {
-      50: 0.02,
-      100: 0.05,
-      200: 0.08,
-      300: 0.11,
-      400: 0.13,
-      500: 0.15,
-      600: 0.16,
-      700: 0.14,
-      800: 0.12,
-      900: 0.10,
-      950: 0.08
-    },
-    maxChroma: 0.15,
-    chromaPeak: 0.5,
-    lightHueDrift: 0,
-    darkHueDrift: 10,
-    contrastMode: false,
-    backgroundColor: '#ffffff',
-    contrastTargets: defaultContrastTargets,
-    lightnessValues: defaultLightnessValues,
-    gamutMode: 'sRGB',
-    enforceGamut: false
-  },
-  
-  green: {
-    baseHue: 140,
-    lightnessMin: 0.95,
-    lightnessMax: 0.15,
-    chromaMode: 'smooth',
-    chromaValues: {
-      50: 0.02,
-      100: 0.05,
-      200: 0.08,
-      300: 0.11,
-      400: 0.13,
-      500: 0.15,
-      600: 0.16,
-      700: 0.14,
-      800: 0.12,
-      900: 0.10,
-      950: 0.08
-    },
-    maxChroma: 0.15,
-    chromaPeak: 0.5,
-    lightHueDrift: 0,
-    darkHueDrift: 20,
-    contrastMode: false,
-    backgroundColor: '#ffffff',
-    contrastTargets: defaultContrastTargets,
-    lightnessValues: defaultLightnessValues,
-    gamutMode: 'sRGB',
-    enforceGamut: false
+    lightnessValues: {
+      50: 0.97,
+      100: 0.91,
+      200: 0.83,
+      300: 0.73,
+      400: 0.65,
+      500: 0.56,
+      600: 0.49,
+      700: 0.41,
+      800: 0.32,
+      900: 0.26,
+      950: 0.22
+    }
   },
   
   purple: {
-    baseHue: 280,
+    baseHue: 302,
+    lightnessMin: 0.97,
+    lightnessMax: 0.15,
+    chromaMode: 'smooth',
+    chromaValues: {
+      50: 0.01,
+      100: 0.04,
+      200: 0.08,
+      300: 0.11,
+      400: 0.13,
+      500: 0.15,
+      600: 0.16,
+      700: 0.14,
+      800: 0.12,
+      900: 0.09,
+      950: 0.07
+    },
+    maxChroma: 0.24,
+    chromaPeak: 0.48,
+    lightHueDrift: 0,
+    darkHueDrift: 15,
+    backgroundColor: '#ffffff',
+    contrastTargets: defaultContrastTargets,
+    lightnessValues: {
+      50: 0.97,
+      100: 0.91,
+      200: 0.83,
+      300: 0.76,
+      400: 0.67,
+      500: 0.59,
+      600: 0.5,
+      700: 0.42,
+      800: 0.32,
+      900: 0.27,
+      950: 0.23
+    }
+  },
+  
+  error: {
+    baseHue: 30,
     lightnessMin: 0.95,
     lightnessMax: 0.15,
     chromaMode: 'smooth',
@@ -169,75 +154,102 @@ export const presets: { [key: string]: PaletteControls } = {
       900: 0.10,
       950: 0.08
     },
-    maxChroma: 0.15,
-    chromaPeak: 0.5,
-    lightHueDrift: 0,
-    darkHueDrift: 25,
-    contrastMode: false,
+    maxChroma: 0.23,
+    chromaPeak: 0.44,
+    lightHueDrift: -5,
+    darkHueDrift: 5,
     backgroundColor: '#ffffff',
     contrastTargets: defaultContrastTargets,
-    lightnessValues: defaultLightnessValues,
-    gamutMode: 'sRGB',
-    enforceGamut: false
+    lightnessValues: {
+      50: 0.97,
+      100: 0.92,
+      200: 0.84,
+      300: 0.75,
+      400: 0.67,
+      500: 0.59,
+      600: 0.5,
+      700: 0.41,
+      800: 0.32,
+      900: 0.27,
+      950: 0.23
+    }
   },
   
-  orange: {
-    baseHue: 35,
+  success: {
+    baseHue: 151,
     lightnessMin: 0.95,
     lightnessMax: 0.15,
-    chromaMode: 'vibrant',
+    chromaMode: 'manual',
     chromaValues: {
-      50: 0.03,
-      100: 0.06,
-      200: 0.09,
-      300: 0.12,
-      400: 0.15,
-      500: 0.17,
-      600: 0.18,
-      700: 0.16,
-      800: 0.14,
-      900: 0.12,
-      950: 0.10
+      50: 0.052,
+      100: 0.098,
+      200: 0.137,
+      300: 0.169,
+      400: 0.191,
+      500: 0.189,
+      600: 0.189,
+      700: 0.112,
+      800: 0.09,
+      900: 0.079,
+      950: 0.055
     },
-    maxChroma: 0.18,
-    chromaPeak: 0.6,
-    lightHueDrift: 0,
+    maxChroma: 0.37,
+    chromaPeak: 0.51,
+    lightHueDrift: -5,
     darkHueDrift: 5,
-    contrastMode: false,
     backgroundColor: '#ffffff',
     contrastTargets: defaultContrastTargets,
-    lightnessValues: defaultLightnessValues,
-    gamutMode: 'sRGB',
-    enforceGamut: false
+    lightnessValues: {
+      50: 0.95,
+      100: 0.9,
+      200: 0.82,
+      300: 0.72,
+      400: 0.63,
+      500: 0.55,
+      600: 0.46,
+      700: 0.39,
+      800: 0.3,
+      900: 0.26,
+      950: 0.22
+    }
   },
-
-  yellow: {
+  
+  warning: {
     baseHue: 60,
     lightnessMin: 0.95,
     lightnessMax: 0.15,
     chromaMode: 'smooth',
     chromaValues: {
-      50: 0.03,
-      100: 0.06,
-      200: 0.09,
-      300: 0.12,
-      400: 0.15,
-      500: 0.17,
-      600: 0.18,
-      700: 0.16,
-      800: 0.14,
-      900: 0.12,
-      950: 0.10
+      50: 0.02,
+      100: 0.05,
+      200: 0.08,
+      300: 0.11,
+      400: 0.13,
+      500: 0.15,
+      600: 0.16,
+      700: 0.14,
+      800: 0.12,
+      900: 0.10,
+      950: 0.08
     },
-    maxChroma: 0.18,
+    maxChroma: 0.28,
     chromaPeak: 0.5,
-    lightHueDrift: 0,     // Keep light colors yellow
-    darkHueDrift: 30,     // Make dark colors more orange
-    contrastMode: false,
+    lightHueDrift: 20,
+    darkHueDrift: -20,
     backgroundColor: '#ffffff',
     contrastTargets: defaultContrastTargets,
-    lightnessValues: defaultLightnessValues,
-    gamutMode: 'sRGB',
-    enforceGamut: false
+    lightnessValues: {
+      50: 0.9671120588933685,
+      100: 0.9116559261129418,
+      200: 0.8279919808823784,
+      300: 0.75,
+      400: 0.66,
+      500: 0.58,
+      600: 0.48,
+      700: 0.41,
+      800: 0.32,
+      900: 0.27,
+      950: 0.23
+    }
   }
 }; 

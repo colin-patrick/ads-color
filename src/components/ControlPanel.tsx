@@ -6,7 +6,8 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { cn } from '../lib/utils'
-import { calculateLightnessForContrast } from '../lib/colorGeneration'
+import { calculateLightnessForContrast, isValidHexColor } from '../lib/colorGeneration'
+import { useState, useEffect } from 'react'
 
 interface ControlPanelProps {
   controls: PaletteControls
@@ -14,19 +15,22 @@ interface ControlPanelProps {
   paletteName?: string
   paletteColor?: string
   colors?: Array<{ step: number; contrast: number; lightness: number; css: string }>
+  lightnessMode: 'contrast' | 'range'
 }
 
-export function ControlPanel({ controls, onControlsChange, paletteName, paletteColor, colors }: ControlPanelProps) {
+export function ControlPanel({ controls, onControlsChange, paletteName, paletteColor, colors, lightnessMode }: ControlPanelProps) {
   const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+  
+  // Track the text input value separately for validation
+  const [backgroundColorInput, setBackgroundColorInput] = useState(controls.backgroundColor)
+
+  // Keep text input in sync with background color
+  useEffect(() => {
+    setBackgroundColorInput(controls.backgroundColor)
+  }, [controls.backgroundColor])
 
   const updateControl = (key: keyof PaletteControls, value: any) => {
     onControlsChange({ ...controls, [key]: value })
-  }
-
-  const updateContrastTarget = (step: number, value: number) => {
-    const newTargets = { ...controls.contrastTargets };
-    newTargets[step as keyof typeof newTargets] = value;
-    updateControl('contrastTargets', newTargets);
   }
 
   const updateChromaValue = (step: number, value: number) => {
@@ -83,11 +87,11 @@ export function ControlPanel({ controls, onControlsChange, paletteName, paletteC
                   size="sm"
                   className={cn(
                     "text-sm",
-                    name === 'red' && "bg-red-50 border-red-200 text-red-700 hover:bg-red-100",
                     name === 'blue' && "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100",
-                    name === 'green' && "bg-green-50 border-green-200 text-green-700 hover:bg-green-100",
                     name === 'purple' && "bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100",
-                    name === 'orange' && "bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
+                    name === 'error' && "bg-red-50 border-red-200 text-red-700 hover:bg-red-100",
+                    name === 'success' && "bg-green-50 border-green-200 text-green-700 hover:bg-green-100",
+                    name === 'warning' && "bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100"
                   )}
                 >
                   {name.charAt(0).toUpperCase() + name.slice(1)}
@@ -148,182 +152,132 @@ export function ControlPanel({ controls, onControlsChange, paletteName, paletteC
           </div>
 
           {/* Chroma Controls */}
-          <div className="space-y-4">
+          <div className="border-t border-gray-200 pt-4 space-y-3">
+            <h3 className="text-sm font-medium text-gray-900">Chroma Controls</h3>
+            
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-gray-900">Chroma Controls</h3>
-              
+              <label className="text-sm font-medium text-gray-700">Chroma Mode</label>
+              <Select value={controls.chromaMode} onValueChange={(value) => updateControl('chromaMode', value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">Manual</SelectItem>
+                  <SelectItem value="smooth">Smooth (Bell Curve)</SelectItem>
+                  <SelectItem value="vibrant">Vibrant (Flat)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {controls.chromaMode === 'manual' && (
               <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-700">Chroma Mode</label>
-                <Select value={controls.chromaMode} onValueChange={(value) => updateControl('chromaMode', value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="manual">Manual</SelectItem>
-                    <SelectItem value="smooth">Smooth (Bell Curve)</SelectItem>
-                    <SelectItem value="vibrant">Vibrant (Flat)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {controls.chromaMode === 'manual' && (
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-gray-700">Individual Chroma Values</label>
-                  <div className="space-y-2">
-                    {steps.map(step => (
-                      <div key={step} className="flex items-center space-x-3">
-                        <span className="text-xs font-mono text-gray-500 w-8">{step}</span>
-                        <Slider
-                          value={[controls.chromaValues[step] || 0.1]}
-                          onValueChange={(value) => updateChromaValue(step, value[0])}
-                          min={0}
-                          max={0.5}
-                          step={0.001}
-                          className="flex-1"
-                        />
-                        <span className="text-xs text-gray-500 w-12 text-right">
-                          {((controls.chromaValues[step] || 0.1)).toFixed(3)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                <label className="text-sm font-medium text-gray-700">Individual Chroma Values</label>
+                <div className="space-y-2">
+                  {steps.map(step => (
+                    <div key={step} className="flex items-center space-x-3">
+                      <span className="text-xs font-mono text-gray-500 w-8">{step}</span>
+                      <Slider
+                        value={[controls.chromaValues[step] || 0.1]}
+                        onValueChange={(value) => updateChromaValue(step, value[0])}
+                        min={0}
+                        max={0.5}
+                        step={0.001}
+                        className="flex-1"
+                      />
+                      <span className="text-xs text-gray-500 w-12 text-right">
+                        {((controls.chromaValues[step] || 0.1)).toFixed(3)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              {(controls.chromaMode === 'smooth' || controls.chromaMode === 'vibrant') && (
+            {(controls.chromaMode === 'smooth' || controls.chromaMode === 'vibrant') && (
+              <div className="space-y-3">
                 <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Max Chroma</label>
+                    <span className="text-sm text-gray-500">{(controls.maxChroma * 100).toFixed(0)}%</span>
+                  </div>
+                  <Slider
+                    value={[controls.maxChroma]}
+                    onValueChange={(value) => updateControl('maxChroma', value[0])}
+                    min={0}
+                    max={0.37}
+                    step={0.01}
+                    className="w-full"
+                  />
+                </div>
+
+                {controls.chromaMode === 'smooth' && (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-gray-700">Max Chroma</label>
-                      <span className="text-sm text-gray-500">{(controls.maxChroma * 100).toFixed(0)}%</span>
+                      <label className="text-sm font-medium text-gray-700">Chroma Peak Position</label>
+                      <span className="text-sm text-gray-500">{(controls.chromaPeak * 100).toFixed(0)}%</span>
                     </div>
                     <Slider
-                      value={[controls.maxChroma]}
-                      onValueChange={(value) => updateControl('maxChroma', value[0])}
+                      value={[controls.chromaPeak]}
+                      onValueChange={(value) => updateControl('chromaPeak', value[0])}
                       min={0}
-                      max={0.37}
+                      max={1}
                       step={0.01}
                       className="w-full"
                     />
                   </div>
-
-                  {controls.chromaMode === 'smooth' && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-gray-700">Chroma Peak Position</label>
-                        <span className="text-sm text-gray-500">{(controls.chromaPeak * 100).toFixed(0)}%</span>
-                      </div>
-                      <Slider
-                        value={[controls.chromaPeak]}
-                        onValueChange={(value) => updateControl('chromaPeak', value[0])}
-                        min={0}
-                        max={1}
-                        step={0.01}
-                        className="w-full"
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Color Gamut Controls */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-900">Color Gamut</h3>
-            
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Target Gamut</label>
-                <Select value={controls.gamutMode} onValueChange={(value) => updateControl('gamutMode', value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sRGB">sRGB (Standard - Web Safe)</SelectItem>
-                    <SelectItem value="P3">P3 (Wide Gamut - Modern Displays)</SelectItem>
-                    <SelectItem value="Rec2020">Rec2020 (Ultra Wide - HDR)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500">
-                  {controls.gamutMode === 'sRGB' && 'Compatible with all devices and browsers'}
-                  {controls.gamutMode === 'P3' && 'Modern displays and Apple devices'}
-                  {controls.gamutMode === 'Rec2020' && 'HDR displays and future displays'}
-                </p>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-gray-700">Enforce Gamut</label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={controls.enforceGamut}
-                    onChange={(e) => updateControl('enforceGamut', e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Clamp colors</span>
-                </label>
-              </div>
-              <p className="text-xs text-gray-500">
-                {controls.enforceGamut 
-                  ? 'Colors will be automatically clamped to fit within the target gamut' 
-                  : 'Colors may extend beyond the target gamut (warnings will be shown)'}
-              </p>
-            </div>
-          </div>
 
-          {/* Contrast Mode */}
-          <div className="space-y-4">
+
+          {/* Lightness Controls */}
+          <div className="border-t border-gray-200 pt-4 space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-900">Contrast Mode</h3>
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  checked={controls.contrastMode}
-                  onChange={(e) => updateControl('contrastMode', e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Enable</span>
-              </label>
+              <h3 className="text-sm font-medium text-gray-900">Lightness Controls</h3>
+              <span className="text-xs text-gray-500">
+                Mode: {lightnessMode === 'contrast' ? 'Contrast-based' : 'Range-based'}
+              </span>
             </div>
             
-            {controls.contrastMode && (
+            {lightnessMode === 'contrast' && (
               <div className="space-y-4">
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-gray-700">Background Color</label>
-                  <input
-                    type="color"
-                    value={controls.backgroundColor}
-                    onChange={(e) => updateControl('backgroundColor', e.target.value)}
-                    className="w-full h-10 border border-gray-300 rounded-md cursor-pointer"
-                  />
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={controls.backgroundColor}
+                      onChange={(e) => {
+                        const newColor = e.target.value;
+                        updateControl('backgroundColor', newColor);
+                        setBackgroundColorInput(newColor);
+                      }}
+                      className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <Input
+                      type="text"
+                      value={backgroundColorInput}
+                      onChange={(e) => {
+                        const newValue = e.target.value;
+                        setBackgroundColorInput(newValue);
+                        
+                        // Only update the actual background color if it's a valid hex
+                        if (isValidHexColor(newValue)) {
+                          updateControl('backgroundColor', newValue);
+                        }
+                      }}
+                      className={`flex-1 text-sm font-mono ${
+                        isValidHexColor(backgroundColorInput) 
+                          ? '' 
+                          : 'border-red-300 bg-red-50'
+                      }`}
+                      placeholder="#ffffff"
+                    />
+                  </div>
                 </div>
                 
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-gray-700">Contrast Targets</label>
-                  <div className="space-y-2">
-                    {steps.map(step => (
-                      <div key={step} className="flex items-center space-x-3">
-                        <span className="text-xs font-mono text-gray-500 w-8">{step}</span>
-                        <Input
-                          type="number"
-                          value={controls.contrastTargets[step as keyof typeof controls.contrastTargets]}
-                          onChange={(e) => updateContrastTarget(step, parseFloat(e.target.value))}
-                          min="1"
-                          max="21"
-                          step="0.1"
-                          className="flex-1 text-sm"
-                        />
-                        {step === 500 && <span className="text-xs text-gray-400">AA</span>}
-                        {step === 700 && <span className="text-xs text-gray-400">AAA</span>}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    Each step has its own contrast target. AA = 4.5:1, AAA = 7:1
-                  </p>
-                </div>
-
                 {/* Individual Lightness Controls in Contrast Mode */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-gray-700">Manual Lightness Adjustments</label>
@@ -376,45 +330,41 @@ export function ControlPanel({ controls, onControlsChange, paletteName, paletteC
               </div>
             )}
 
-            {/* Manual Controls - When Contrast Mode is OFF */}
-            {!controls.contrastMode && (
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700">Lightness Range</label>
-                    <span className="text-sm text-gray-500">
-                      {Math.round(controls.lightnessMin * 100)}% - {Math.round(controls.lightnessMax * 100)}%
-                    </span>
+            {/* Manual Controls - When in Range Mode */}
+            {lightnessMode === 'range' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">Lightness Range</label>
+                  <span className="text-sm text-gray-500">
+                    {Math.round(controls.lightnessMin * 100)}% - {Math.round(controls.lightnessMax * 100)}%
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-xs text-gray-600">Max Lightness (Step 50)</label>
+                    <Slider
+                      value={[controls.lightnessMin]}
+                      onValueChange={(value) => updateControl('lightnessMin', value[0])}
+                      min={0.5}
+                      max={1}
+                      step={0.01}
+                      className="w-full"
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <div>
-                      <label className="text-xs text-gray-600">Max Lightness (Step 50)</label>
-                      <Slider
-                        value={[controls.lightnessMin]}
-                        onValueChange={(value) => updateControl('lightnessMin', value[0])}
-                        min={0.5}
-                        max={1}
-                        step={0.01}
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-600">Min Lightness (Step 950)</label>
-                      <Slider
-                        value={[controls.lightnessMax]}
-                        onValueChange={(value) => updateControl('lightnessMax', value[0])}
-                        min={0}
-                        max={0.5}
-                        step={0.01}
-                        className="w-full"
-                      />
-                    </div>
+                  <div>
+                    <label className="text-xs text-gray-600">Min Lightness (Step 950)</label>
+                    <Slider
+                      value={[controls.lightnessMax]}
+                      onValueChange={(value) => updateControl('lightnessMax', value[0])}
+                      min={0}
+                      max={0.5}
+                      step={0.01}
+                      className="w-full"
+                    />
                   </div>
                 </div>
               </div>
             )}
-
-
           </div>
 
           {/* Reset Button */}

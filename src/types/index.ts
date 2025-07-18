@@ -8,7 +8,6 @@ export interface PaletteControls {
   chromaPeak: number;
   lightHueDrift: number;  // Hue drift for light colors (50-400)
   darkHueDrift: number;   // Hue drift for dark colors (600-950)
-  contrastMode: boolean;
   backgroundColor: string;
   // Individual contrast targets for each step
   contrastTargets: {
@@ -26,9 +25,6 @@ export interface PaletteControls {
   };
   // Individual lightness values for manual adjustment
   lightnessValues: Record<number, number>;
-  // Gamut constraint settings
-  gamutMode: 'sRGB' | 'P3' | 'Rec2020';
-  enforceGamut: boolean;
 }
 
 export interface PaletteColor {
@@ -76,6 +72,15 @@ export interface GamutValidation {
   clamped: boolean;
 }
 
+export interface GamutSettings {
+  gamutMode: 'sRGB' | 'P3' | 'Rec2020';
+  enforceGamut: boolean;
+}
+
+export interface LightnessSettings {
+  mode: 'contrast' | 'range';
+}
+
 export interface AppState {
   palettes: Palette[];
   activePaletteId: string | null;
@@ -85,4 +90,6 @@ export interface AppState {
     backgroundColor: string;
     textSize: 'normal' | 'large';
   };
+  gamutSettings: GamutSettings;
+  lightnessSettings: LightnessSettings;
 } 

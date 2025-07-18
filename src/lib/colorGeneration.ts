@@ -54,7 +54,7 @@ export function calculateLightnessForContrast(
 /**
  * Generate a complete 11-step OKLCH color palette
  */
-export function generatePalette(controls: PaletteControls): PaletteColor[] {
+export function generatePalette(controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020'; enforceGamut: boolean }, lightnessSettings?: { mode: 'contrast' | 'range' }): PaletteColor[] {
   const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
   
   return steps.map(step => {
@@ -63,7 +63,10 @@ export function generatePalette(controls: PaletteControls): PaletteColor[] {
     
     let lightness: number;
     
-    if (controls.contrastMode) {
+    // Use provided lightness settings or defaults for backward compatibility
+    const effectiveLightnessSettings = lightnessSettings || { mode: 'contrast' };
+    
+    if (effectiveLightnessSettings.mode === 'contrast') {
       // Check if there's a manual lightness override for this step
       if (controls.lightnessValues[step] !== undefined) {
         lightness = controls.lightnessValues[step];
@@ -114,10 +117,13 @@ export function generatePalette(controls: PaletteControls): PaletteColor[] {
     let finalChroma = chroma;
     let finalHue = hue;
     
-    if (controls.enforceGamut) {
+    // Use provided gamut settings or defaults for backward compatibility
+    const effectiveGamutSettings = gamutSettings || { gamutMode: 'sRGB', enforceGamut: true };
+    
+    if (effectiveGamutSettings.enforceGamut) {
       const clampedResult = clampColorToGamut(
         { l: lightness, c: chroma, h: hue },
-        controls.gamutMode
+        effectiveGamutSettings.gamutMode
       );
       
       if (clampedResult.clamped) {
@@ -139,7 +145,7 @@ export function generatePalette(controls: PaletteControls): PaletteColor[] {
     const cssColor = formatHex(oklchColor) || '#000000';
     
     // Calculate contrast against background
-    const contrastBackground = controls.contrastMode ? (controls.backgroundColor || '#ffffff') : '#ffffff';
+    const contrastBackground = effectiveLightnessSettings.mode === 'contrast' ? (controls.backgroundColor || '#ffffff') : '#ffffff';
     const contrast = wcagContrast(oklchColor, contrastBackground) || 1;
     
     return {
@@ -328,7 +334,7 @@ export function validateColorGamut(color: PaletteColor, targetGamut: ColorGamut)
 /**
  * Validate color and provide warnings
  */
-export function validateColor(color: PaletteColor, controls: PaletteControls): {
+export function validateColor(color: PaletteColor, controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020'; enforceGamut: boolean }, lightnessSettings?: { mode: 'contrast' | 'range' }): {
   inGamut: boolean;
   gamut: ColorGamut | null;
   gamutValidation: GamutValidation;
@@ -338,18 +344,21 @@ export function validateColor(color: PaletteColor, controls: PaletteControls): {
 } {
   const warnings: string[] = [];
   
+  // Use provided gamut settings or defaults for backward compatibility
+  const effectiveGamutSettings = gamutSettings || { gamutMode: 'sRGB', enforceGamut: true };
+  
   // Validate against target gamut
-  const gamutValidation = validateColorGamut(color, controls.gamutMode);
+  const gamutValidation = validateColorGamut(color, effectiveGamutSettings.gamutMode);
   const gamut = gamutValidation.detectedGamut;
   const inGamut = gamutValidation.withinGamut;
   
-  if (!inGamut && controls.enforceGamut) {
+  if (!inGamut && effectiveGamutSettings.enforceGamut) {
     if (gamutValidation.requiresGamut) {
-      warnings.push(`Color requires ${gamutValidation.requiresGamut} gamut support (current target: ${controls.gamutMode})`);
+      warnings.push(`Color requires ${gamutValidation.requiresGamut} gamut support (current target: ${effectiveGamutSettings.gamutMode})`);
     }
-  } else if (!inGamut && !controls.enforceGamut) {
+  } else if (!inGamut && !effectiveGamutSettings.enforceGamut) {
     if (gamutValidation.requiresGamut) {
-      warnings.push(`Color extends beyond ${controls.gamutMode} into ${gamutValidation.requiresGamut} gamut`);
+      warnings.push(`Color extends beyond ${effectiveGamutSettings.gamutMode} into ${gamutValidation.requiresGamut} gamut`);
     }
   }
   
@@ -357,7 +366,10 @@ export function validateColor(color: PaletteColor, controls: PaletteControls): {
   let contrastAccuracy: 'GOOD' | 'OK' | 'POOR' | undefined;
   let contrastDelta: number | undefined;
   
-  if (controls.contrastMode && controls.contrastTargets) {
+  // Use provided lightness settings or defaults for backward compatibility
+  const effectiveLightnessSettings = lightnessSettings || { mode: 'contrast' };
+  
+  if (effectiveLightnessSettings.mode === 'contrast' && controls.contrastTargets) {
     const targetContrast = controls.contrastTargets[color.step as keyof typeof controls.contrastTargets];
     if (targetContrast) {
       contrastDelta = Math.abs(color.contrast - targetContrast);
@@ -436,28 +448,58 @@ export function analyzeContrast(color: PaletteColor, backgroundColor: string, te
 /**
  * Get contrast badge information for UI display
  */
-export function getContrastBadge(contrastResult: ContrastResult) {
-  const { wcagAA, wcagAAA } = contrastResult;
+export function getContrastBadge(contrastResult: ContrastResult, color: PaletteColor, showCompliance: boolean = true) {
+  const { wcagAA, wcagAAA, ratio } = contrastResult;
+  const textColor = getTextColorForBackground(color);
+  const isLightBackground = textColor === '#000000';
+  
+  // Use accessible colors based on the background
+  const badgeStyle = isLightBackground 
+    ? { backgroundColor: '#000000', color: '#ffffff' }
+    : { backgroundColor: '#ffffff', color: '#000000' };
+  
+  // Determine compliance level
+  let complianceLevel = '';
+  let description = '';
   
   if (wcagAAA) {
-    return {
-      label: 'AAA',
-      color: 'bg-green-100 text-green-800',
-      description: 'Excellent contrast - exceeds all accessibility standards'
-    };
+    complianceLevel = 'AAA';
+    description = 'Excellent contrast - exceeds all accessibility standards';
   } else if (wcagAA) {
-    return {
-      label: 'AA',
-      color: 'bg-blue-100 text-blue-800',
-      description: 'Good contrast - meets WCAG AA standards'
-    };
+    complianceLevel = 'AA';
+    description = 'Good contrast - meets WCAG AA standards';
   } else {
-    return {
-      label: 'FAIL',
-      color: 'bg-red-100 text-red-800',
-      description: 'Poor contrast - fails accessibility standards'
-    };
+    complianceLevel = 'FAIL';
+    description = 'Poor contrast - fails accessibility standards';
   }
+  
+  // Create label based on showCompliance setting
+  const label = showCompliance ? `${complianceLevel} ${ratio}` : `${ratio}`;
+  
+  return {
+    label,
+    style: badgeStyle,
+    description
+  };
+}
+
+/**
+ * Calculate the appropriate text color (white or black) for readability on a given color
+ */
+export function getTextColorForBackground(color: PaletteColor): string {
+  const oklchColor = oklch({
+    mode: 'oklch',
+    l: color.lightness,
+    c: color.chroma,
+    h: color.hue
+  });
+  
+  // Calculate contrast ratios with both white and black text
+  const contrastWithWhite = wcagContrast(oklchColor, '#ffffff') || 1;
+  const contrastWithBlack = wcagContrast(oklchColor, '#000000') || 1;
+  
+  // Return the color that provides better contrast
+  return contrastWithWhite > contrastWithBlack ? '#ffffff' : '#000000';
 }
 
 /**
@@ -581,5 +623,142 @@ export function clearPalettesFromStorage() {
     localStorage.removeItem('ads-color-generator-palettes');
   } catch (error) {
     console.error('Failed to clear palettes from localStorage:', error);
+  }
+}
+
+/**
+ * Export palettes to JSON format
+ */
+export function exportPalettes(palettes: Palette[], activePaletteId: string): string {
+  const exportData = {
+    version: '1.0',
+    exportedAt: new Date().toISOString(),
+    palettes,
+    activePaletteId,
+    metadata: {
+      totalPalettes: palettes.length,
+      tool: 'ADS Color Generator'
+    }
+  };
+  
+  return JSON.stringify(exportData, null, 2);
+}
+
+/**
+ * Import palettes from JSON format
+ */
+export function importPalettes(jsonData: string): { palettes: Palette[], activePaletteId: string } | null {
+  try {
+    const importData = JSON.parse(jsonData);
+    
+    // Validate import data structure
+    if (!importData.palettes || !Array.isArray(importData.palettes)) {
+      throw new Error('Invalid import data: missing or invalid palettes array');
+    }
+    
+    // Convert date strings back to Date objects and ensure all properties exist
+    const palettes = importData.palettes.map((palette: any) => {
+      // Ensure the palette has all required properties
+      if (!palette.id || !palette.name || !palette.controls) {
+        throw new Error('Invalid palette data: missing required properties');
+      }
+      
+      return {
+        ...palette,
+        id: palette.id || generateId(),
+        name: palette.name || 'Imported Palette',
+        createdAt: palette.createdAt ? new Date(palette.createdAt) : new Date(),
+        updatedAt: palette.updatedAt ? new Date(palette.updatedAt) : new Date(),
+        controls: {
+          // Ensure all required properties exist with defaults
+          ...defaultControls,
+          // Override with actual imported values
+          ...palette.controls
+        }
+      };
+    });
+    
+    return {
+      palettes,
+      activePaletteId: importData.activePaletteId || (palettes.length > 0 ? palettes[0].id : '')
+    };
+  } catch (error) {
+    console.error('Failed to import palettes:', error);
+    return null;
+  }
+}
+
+/**
+ * Download palettes as JSON file
+ */
+export function downloadPalettes(palettes: Palette[], activePaletteId: string, filename: string = 'color-palettes.json') {
+  const jsonData = exportPalettes(palettes, activePaletteId);
+  const blob = new Blob([jsonData], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Convert external palette data to internal format
+ * This helper function can be customized based on the structure of your localhost:5185 palettes
+ */
+export function convertExternalPalettes(externalData: any): Palette[] {
+  try {
+    // This is a flexible converter that can handle different formats
+    let palettesData = externalData;
+    
+    // Handle different possible structures
+    if (externalData.palettes) {
+      palettesData = externalData.palettes;
+    } else if (Array.isArray(externalData)) {
+      palettesData = externalData;
+    }
+    
+    if (!Array.isArray(palettesData)) {
+      throw new Error('Expected an array of palettes');
+    }
+    
+    return palettesData.map((paletteData: any, index: number) => {
+      const id = paletteData.id || generateId();
+      const name = paletteData.name || `Imported Palette ${index + 1}`;
+      
+      // Build controls from various possible sources
+      const controls: PaletteControls = {
+        ...defaultControls,
+        // Try to extract meaningful values from the external data
+        baseHue: paletteData.baseHue || paletteData.hue || paletteData.controls?.baseHue || defaultControls.baseHue,
+        lightnessMin: paletteData.lightnessMin || paletteData.controls?.lightnessMin || defaultControls.lightnessMin,
+        lightnessMax: paletteData.lightnessMax || paletteData.controls?.lightnessMax || defaultControls.lightnessMax,
+        chromaMode: paletteData.chromaMode || paletteData.controls?.chromaMode || defaultControls.chromaMode,
+        maxChroma: paletteData.maxChroma || paletteData.controls?.maxChroma || defaultControls.maxChroma,
+        chromaPeak: paletteData.chromaPeak || paletteData.controls?.chromaPeak || defaultControls.chromaPeak,
+        lightHueDrift: paletteData.lightHueDrift || paletteData.controls?.lightHueDrift || defaultControls.lightHueDrift,
+        darkHueDrift: paletteData.darkHueDrift || paletteData.controls?.darkHueDrift || defaultControls.darkHueDrift,
+        // Use provided controls or defaults
+        ...(paletteData.controls || {})
+      };
+      
+      const colors = generatePalette(controls);
+      const now = new Date();
+      
+      return {
+        id,
+        name,
+        controls,
+        colors,
+        createdAt: paletteData.createdAt ? new Date(paletteData.createdAt) : now,
+        updatedAt: paletteData.updatedAt ? new Date(paletteData.updatedAt) : now
+      };
+    });
+  } catch (error) {
+    console.error('Failed to convert external palettes:', error);
+    throw new Error('Failed to convert external palette data');
   }
 }

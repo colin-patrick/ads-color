@@ -85,35 +85,9 @@ export function GlobalContrastTargets({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">Global Contrast Targets</h3>
-        <div className="flex items-center space-x-2">
-          <Button
-            onClick={() => loadPreset('subtle')}
-            variant="outline"
-            size="sm"
-            className="text-xs bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-          >
-            Subtle
-          </Button>
-          <Button
-            onClick={() => loadPreset('balanced')}
-            variant="outline"
-            size="sm"
-            className="text-xs bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-          >
-            Balanced
-          </Button>
-          <Button
-            onClick={() => loadPreset('accessible')}
-            variant="outline"
-            size="sm"
-            className="text-xs bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
-          >
-            Accessible
-          </Button>
-        </div>
       </div>
 
-      <div className="space-y-2 max-h-64 overflow-y-auto">
+      <div className="space-y-2">
         {steps.map(step => (
           <div key={step} className="flex items-center space-x-3">
             <span className="text-sm font-mono text-gray-500 w-8">{step}</span>
@@ -126,30 +100,21 @@ export function GlobalContrastTargets({
               step="0.1"
               className="flex-1 text-sm"
             />
-            <div className="flex items-center space-x-1 text-xs text-gray-400">
-              {step === 500 && <span>AA</span>}
-              {step === 700 && <span>AAA</span>}
-            </div>
           </div>
         ))}
       </div>
 
-      <div className="text-xs text-gray-500 mb-4">
-        <p>AA = 4.5:1 (normal text), AAA = 7:1 (enhanced contrast)</p>
-        <p>These targets will be applied to all palettes when you click Apply.</p>
-      </div>
-
-      <div className="flex space-x-2 pt-2 border-t border-gray-200">
+      <div className="flex flex-col space-y-2 pt-2 border-t border-gray-200">
         <Button
           onClick={() => onApplyToActive(targets)}
-          className="flex-1 text-sm"
+          className="w-full text-sm"
         >
           Apply to Active Palette
         </Button>
         <Button
           onClick={() => onApplyToAll(targets)}
           variant="secondary"
-          className="flex-1 text-sm"
+          className="w-full text-sm"
         >
           Apply to All Palettes
         </Button>

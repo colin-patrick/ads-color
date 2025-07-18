@@ -3,15 +3,17 @@ import { ControlPanel } from './components/ControlPanel'
 import { GlobalContrastTargets } from './components/GlobalContrastTargets'
 import { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover'
 import { Button } from './components/ui/button'
+import { Toggle } from './components/ui/toggle'
 import { Input } from './components/ui/input'
 import { Label } from './components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
-import { generatePalette, copyToClipboard, createNewPalette, getColorFormats, analyzeContrast, getContrastBadge, savePalettesToStorage, loadPalettesFromStorage, validateColor, isValidHexColor } from './lib/colorGeneration'
-import { defaultControls } from './lib/presets'
-import { PaletteControls, Palette, ColorFormat } from './types'
+import { Contrast } from 'lucide-react'
+import { generatePalette, copyToClipboard, createNewPalette, getColorFormats, analyzeContrast, getContrastBadge, savePalettesToStorage, loadPalettesFromStorage, validateColor, isValidHexColor, exportPalettes, importPalettes, downloadPalettes, convertExternalPalettes, getTextColorForBackground } from './lib/colorGeneration'
+import { defaultControls, presets } from './lib/presets'
+import { PaletteControls, Palette, ColorFormat, GamutSettings, LightnessSettings } from './types'
 
-// Create initial palette
-const initialPalette = createNewPalette('Default Palette', defaultControls)
+// Create initial palette using the Blue preset
+const initialPalette = createNewPalette('Blue', presets.blue)
 
 function App() {
   const [palettes, setPalettes] = useState<Palette[]>([initialPalette])
@@ -19,6 +21,17 @@ function App() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [colorFormat, setColorFormat] = useState<ColorFormat>('hex')
   const [copiedStep, setCopiedStep] = useState<string | null>(null)
+  
+  // Global gamut settings
+  const [gamutSettings, setGamutSettings] = useState<GamutSettings>({
+    gamutMode: 'sRGB',
+    enforceGamut: true
+  })
+  
+  // Global lightness settings
+  const [lightnessSettings, setLightnessSettings] = useState<LightnessSettings>({
+    mode: 'contrast'
+  })
   
   // Rename palette state
   const [editingPaletteId, setEditingPaletteId] = useState<string | null>(null)
@@ -28,7 +41,8 @@ function App() {
   const [contrastAnalysis, setContrastAnalysis] = useState({
     enabled: false,
     backgroundColor: '#ffffff',
-    textSize: 'normal' as 'normal' | 'large'
+    textSize: 'normal' as 'normal' | 'large',
+    showCompliance: true
   })
   
   // Track the text input value separately for validation
@@ -46,6 +60,28 @@ function App() {
       setPalettes(savedData.palettes)
       setActivePaletteId(savedData.activePaletteId)
     }
+    
+    // Load global settings from localStorage
+    const savedGamutSettings = localStorage.getItem('ads-color-generator-gamut-settings')
+    if (savedGamutSettings) {
+      try {
+        const parsedGamutSettings = JSON.parse(savedGamutSettings)
+        setGamutSettings(parsedGamutSettings)
+      } catch (error) {
+        console.error('Failed to parse gamut settings:', error)
+      }
+    }
+    
+    const savedLightnessSettings = localStorage.getItem('ads-color-generator-lightness-settings')
+    if (savedLightnessSettings) {
+      try {
+        const parsedLightnessSettings = JSON.parse(savedLightnessSettings)
+        setLightnessSettings(parsedLightnessSettings)
+      } catch (error) {
+        console.error('Failed to parse lightness settings:', error)
+      }
+    }
+    
     setIsLoaded(true)
   }, [])
 
@@ -53,8 +89,11 @@ function App() {
   useEffect(() => {
     if (isLoaded) {
       savePalettesToStorage(palettes, activePaletteId)
+      // Save global settings to localStorage
+      localStorage.setItem('ads-color-generator-gamut-settings', JSON.stringify(gamutSettings))
+      localStorage.setItem('ads-color-generator-lightness-settings', JSON.stringify(lightnessSettings))
     }
-  }, [palettes, activePaletteId, isLoaded])
+  }, [palettes, activePaletteId, isLoaded, gamutSettings, lightnessSettings])
 
   // Get active palette
   const activePalette = useMemo(() => 
@@ -64,8 +103,8 @@ function App() {
 
   // Generate colors for active palette
   const activePaletteColors = useMemo(() => 
-    activePalette ? generatePalette(activePalette.controls) : [],
-    [activePalette]
+    activePalette ? generatePalette(activePalette.controls, gamutSettings, lightnessSettings) : [],
+    [activePalette, gamutSettings, lightnessSettings]
   )
 
   // Update active palette controls
@@ -151,11 +190,12 @@ function App() {
       ...palette,
       controls: {
         ...palette.controls,
-        contrastTargets,
-        contrastMode: true // Enable contrast mode when applying targets
+        contrastTargets
       },
       updatedAt: new Date()
     })))
+    // Switch to contrast mode when applying targets
+    setLightnessSettings({ mode: 'contrast' })
   }
 
   // Apply global contrast targets to active palette only
@@ -166,16 +206,81 @@ function App() {
             ...palette,
             controls: {
               ...palette.controls,
-              contrastTargets,
-              contrastMode: true // Enable contrast mode when applying targets
+              contrastTargets
             },
             updatedAt: new Date()
           }
         : palette
     ))
+    // Switch to contrast mode when applying targets
+    setLightnessSettings({ mode: 'contrast' })
   }
 
+  // Export palettes to JSON file
+  const handleExportPalettes = () => {
+    downloadPalettes(palettes, activePaletteId, 'color-palettes.json')
+  }
 
+  // Import palettes from JSON file
+  const handleImportPalettes = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const jsonData = e.target?.result as string
+        const importedData = importPalettes(jsonData)
+        
+        if (importedData) {
+          // Replace current palettes with imported ones
+          setPalettes(importedData.palettes)
+          setActivePaletteId(importedData.activePaletteId)
+          
+          // Clear the input
+          event.target.value = ''
+          
+          alert(`Successfully imported ${importedData.palettes.length} palette(s)!`)
+        } else {
+          alert('Failed to import palettes. Please check the file format.')
+        }
+      } catch (error) {
+        console.error('Import error:', error)
+        alert('Failed to import palettes. Please check the file format.')
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  // Import external palettes (from localhost:5185 or other tools)
+  const handleImportExternalPalettes = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const jsonData = e.target?.result as string
+        const externalData = JSON.parse(jsonData)
+        const convertedPalettes = convertExternalPalettes(externalData)
+        
+        // Add converted palettes to existing ones
+        setPalettes(prev => [...prev, ...convertedPalettes])
+        if (convertedPalettes.length > 0) {
+          setActivePaletteId(convertedPalettes[0].id)
+        }
+        
+        // Clear the input
+        event.target.value = ''
+        
+        alert(`Successfully imported ${convertedPalettes.length} palette(s) from external tool!`)
+      } catch (error) {
+        console.error('External import error:', error)
+        alert('Failed to import external palettes. Please check the file format.')
+      }
+    }
+    reader.readAsText(file)
+  }
 
   // Format options for color display
   const formatOptions: Array<{ value: ColorFormat, label: string }> = [
@@ -218,7 +323,7 @@ function App() {
                       <div className="flex items-center space-x-3 flex-1">
                         <div 
                           className="w-4 h-4 rounded-full border border-gray-300" 
-                          style={{ backgroundColor: generatePalette(palette.controls)[5]?.css || '#3b82f6' }}
+                          style={{ backgroundColor: generatePalette(palette.controls, gamutSettings, lightnessSettings)[5]?.css || '#3b82f6' }}
                         ></div>
                         {editingPaletteId === palette.id ? (
                           <input
@@ -285,6 +390,57 @@ function App() {
               >
                 + Add Palette
               </Button>
+              
+              {/* Import/Export Section */}
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Import/Export</h3>
+                <div className="space-y-2">
+                  <Button 
+                    onClick={handleExportPalettes}
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-sm"
+                  >
+                    Export Palettes
+                  </Button>
+                  
+                  <div className="relative">
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-sm"
+                      onClick={() => document.getElementById('import-file')?.click()}
+                    >
+                      Import Palettes
+                    </Button>
+                    <input
+                      id="import-file"
+                      type="file"
+                      accept=".json"
+                      onChange={handleImportPalettes}
+                      className="hidden"
+                    />
+                  </div>
+                  
+                  <div className="relative">
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-sm bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                      onClick={() => document.getElementById('import-external-file')?.click()}
+                    >
+                      Import from External Tool
+                    </Button>
+                    <input
+                      id="import-external-file"
+                      type="file"
+                      accept=".json"
+                      onChange={handleImportExternalPalettes}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -295,10 +451,28 @@ function App() {
           <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-4">
+                {/* Contrast Analysis Toggle - First Position */}
                 <div className="flex items-center space-x-2">
-                  <Label htmlFor="format-select" className="text-sm text-gray-600">Format:</Label>
+                  <Toggle
+                    pressed={contrastAnalysis.enabled}
+                    onPressedChange={(pressed) => setContrastAnalysis(prev => ({ ...prev, enabled: pressed }))}
+                    aria-label="Toggle contrast analysis"
+                    title="Toggle contrast analysis"
+                  >
+                    <Contrast className="h-4 w-4" />
+                  </Toggle>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="format-select" className="sr-only">
+                    Color format
+                  </Label>
                   <Select value={colorFormat} onValueChange={(value) => setColorFormat(value as ColorFormat)}>
-                    <SelectTrigger id="format-select" className="w-20">
+                    <SelectTrigger 
+                      id="format-select" 
+                      className="w-24"
+                      title="Choose the color format for displaying and copying color values (HEX, RGB, HSL, or OKLCH)"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -311,89 +485,174 @@ function App() {
                   </Select>
                 </div>
                 
-                {/* Global Contrast Targets */}
+                {/* Global Gamut Settings */}
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button className="flex items-center space-x-2">
-                      <span>⚖️</span>
-                      <span>Global Contrast Targets</span>
+                    <Button variant="outline" className="flex items-center space-x-2">
+                      <span>Gamut Settings</span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80">
-                    <GlobalContrastTargets
-                      onApplyToAll={handleApplyContrastToAll}
-                      onApplyToActive={handleApplyContrastToActive}
-                      defaultTargets={activePalette?.controls.contrastTargets}
-                    />
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Color Gamut</Label>
+                        <Select value={gamutSettings.gamutMode} onValueChange={(value) => setGamutSettings(prev => ({ ...prev, gamutMode: value as 'sRGB' | 'P3' | 'Rec2020' }))}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sRGB">sRGB (Standard - Web Safe)</SelectItem>
+                            <SelectItem value="P3">P3 (Wide Gamut - Modern Displays)</SelectItem>
+                            <SelectItem value="Rec2020">Rec2020 (Ultra Wide - HDR)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-gray-500">
+                          {gamutSettings.gamutMode === 'sRGB' && 'Compatible with all devices and browsers'}
+                          {gamutSettings.gamutMode === 'P3' && 'Modern displays and Apple devices'}
+                          {gamutSettings.gamutMode === 'Rec2020' && 'HDR displays and future displays'}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">Enforce Gamut</Label>
+                        <label className="inline-flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={gamutSettings.enforceGamut}
+                            onChange={(e) => setGamutSettings(prev => ({ ...prev, enforceGamut: e.target.checked }))}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Clamp colors</span>
+                        </label>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {gamutSettings.enforceGamut 
+                          ? 'Colors will be automatically clamped to fit within the target gamut' 
+                          : 'Colors may extend beyond the target gamut (warnings will be shown)'}
+                      </p>
+                    </div>
                   </PopoverContent>
                 </Popover>
-              </div>
-
-            </div>
-            
-            {/* Contrast Analysis Controls */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={contrastAnalysis.enabled}
-                    onChange={(e) => setContrastAnalysis(prev => ({ ...prev, enabled: e.target.checked }))}
-                    className="rounded"
-                  />
-                  <span className="text-sm text-gray-700">Contrast Analysis</span>
-                </label>
                 
-                {contrastAnalysis.enabled && (
-                  <>
-                    <div className="flex items-center space-x-2">
-                      <Label className="text-sm text-gray-600">Background:</Label>
-                      <input
-                        type="color"
-                        value={contrastAnalysis.backgroundColor}
-                        onChange={(e) => {
-                          const newColor = e.target.value;
-                          setContrastAnalysis(prev => ({ ...prev, backgroundColor: newColor }));
-                          setBackgroundColorInput(newColor);
-                        }}
-                        className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-                      />
-                      <Input
-                        type="text"
-                        value={backgroundColorInput}
-                        onChange={(e) => {
-                          const newValue = e.target.value;
-                          setBackgroundColorInput(newValue);
-                          
-                          // Only update the actual background color if it's a valid hex
-                          if (isValidHexColor(newValue)) {
-                            setContrastAnalysis(prev => ({ ...prev, backgroundColor: newValue }));
-                          }
-                        }}
-                        className={`w-20 text-xs font-mono ${
-                          isValidHexColor(backgroundColorInput) 
-                            ? '' 
-                            : 'border-red-300 bg-red-50'
-                        }`}
-                      />
+                {/* Global Lightness Mode Settings */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="flex items-center space-x-2">
+                      <span>Lightness Mode</span>
+                      <span className="text-xs text-gray-500">
+                        ({lightnessSettings.mode === 'contrast' ? 'Contrast' : 'Range'})
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Lightness Calculation Mode</Label>
+                        <Select value={lightnessSettings.mode} onValueChange={(value) => setLightnessSettings({ mode: value as 'contrast' | 'range' })}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="contrast">Contrast-based</SelectItem>
+                            <SelectItem value="range">Range-based</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-gray-500">
+                          {lightnessSettings.mode === 'contrast' 
+                            ? 'Calculate lightness based on contrast targets against background colors'
+                            : 'Use manual lightness ranges (min/max) for all palettes'}
+                        </p>
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Label className="text-sm text-gray-600">Text Size:</Label>
-                      <Select value={contrastAnalysis.textSize} onValueChange={(value) => setContrastAnalysis(prev => ({ ...prev, textSize: value as 'normal' | 'large' }))}>
-                        <SelectTrigger className="w-24">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="normal">Normal</SelectItem>
-                          <SelectItem value="large">Large</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </>
+                  </PopoverContent>
+                </Popover>
+                
+                {/* Contrast Targets - Only show in contrast mode */}
+                {lightnessSettings.mode === 'contrast' && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button className="flex items-center space-x-2">
+                        <span>Contrast Targets</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80">
+                      <GlobalContrastTargets
+                        onApplyToAll={handleApplyContrastToAll}
+                        onApplyToActive={handleApplyContrastToActive}
+                        defaultTargets={activePalette?.controls.contrastTargets}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 )}
               </div>
             </div>
+            
+            {/* Contrast Analysis Controls - Below toggle button */}
+            {contrastAnalysis.enabled && (
+              <div className="border-t border-gray-200 pt-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium text-gray-700">Contrast Analysis Settings</Label>
+                </div>
+                <div className="flex items-center space-x-4 mt-3">
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-sm text-gray-600">Background:</Label>
+                    <input
+                      type="color"
+                      value={contrastAnalysis.backgroundColor}
+                      onChange={(e) => {
+                        const newColor = e.target.value;
+                        setContrastAnalysis(prev => ({ ...prev, backgroundColor: newColor }));
+                        setBackgroundColorInput(newColor);
+                      }}
+                      className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <Input
+                      type="text"
+                      value={backgroundColorInput}
+                      onChange={(e) => {
+                        const newValue = e.target.value;
+                        setBackgroundColorInput(newValue);
+                        
+                        // Only update the actual background color if it's a valid hex
+                        if (isValidHexColor(newValue)) {
+                          setContrastAnalysis(prev => ({ ...prev, backgroundColor: newValue }));
+                        }
+                      }}
+                      className={`w-20 text-xs font-mono ${
+                        isValidHexColor(backgroundColorInput) 
+                          ? '' 
+                          : 'border-red-300 bg-red-50'
+                      }`}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-sm text-gray-600">Text Size:</Label>
+                    <Select value={contrastAnalysis.textSize} onValueChange={(value) => setContrastAnalysis(prev => ({ ...prev, textSize: value as 'normal' | 'large' }))}>
+                      <SelectTrigger className="w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="large">Large</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-sm text-gray-600">Show Level:</Label>
+                    <Toggle
+                      pressed={contrastAnalysis.showCompliance}
+                      onPressedChange={(pressed) => setContrastAnalysis(prev => ({ ...prev, showCompliance: pressed }))}
+                      aria-label="Show compliance level in badges"
+                      title="Show/hide FAIL, AA, AAA labels in contrast badges"
+                    >
+                      <span className="text-xs">AA</span>
+                    </Toggle>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Scrollable Palettes Display */}
@@ -401,7 +660,7 @@ function App() {
             <div className="p-6">
               <div className="flex space-x-8 min-w-max">
                 {palettes.map(palette => {
-                  const paletteColors = generatePalette(palette.controls)
+                  const paletteColors = generatePalette(palette.controls, gamutSettings, lightnessSettings)
                   
                   return (
                     <div key={palette.id} className="flex-shrink-0 space-y-4">
@@ -416,10 +675,10 @@ function App() {
                             ? analyzeContrast(color, contrastAnalysis.backgroundColor, contrastAnalysis.textSize)
                             : null
                           
-                          const contrastBadge = contrastResult ? getContrastBadge(contrastResult) : null
+                          const contrastBadge = contrastResult ? getContrastBadge(contrastResult, color, contrastAnalysis.showCompliance) : null
                           
                           // Validate color and get warnings
-                          const validation = validateColor(color, palette.controls)
+                          const validation = validateColor(color, palette.controls, gamutSettings, lightnessSettings)
                           
                           return (
                             <div key={color.step} className="flex-shrink-0">
@@ -438,14 +697,14 @@ function App() {
                                 {/* Top-right badges container */}
                                 <div className="absolute top-1 right-1 flex items-center space-x-1">
                                   {/* Gamut compliance badge */}
-                                  {validation.gamutValidation && !palette.controls.enforceGamut && (
+                                  {validation.gamutValidation && !gamutSettings.enforceGamut && (
                                     <div>
                                       {validation.gamutValidation.withinGamut ? (
                                         <div 
                                           className="px-1 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
-                                          title={`Compatible with ${palette.controls.gamutMode} displays`}
+                                          title={`Compatible with ${gamutSettings.gamutMode} displays`}
                                         >
-                                          ✓ {palette.controls.gamutMode}
+                                          ✓ {gamutSettings.gamutMode}
                                         </div>
                                       ) : (
                                         <div 
@@ -461,8 +720,9 @@ function App() {
                                   {/* Contrast analysis badge */}
                                   {contrastResult && contrastBadge && (
                                     <div 
-                                      className={`px-1 py-0.5 rounded text-xs font-medium ${contrastBadge.color}`}
-                                      title={`${contrastBadge.description} (${contrastResult?.ratio}:1)`}
+                                      className="px-1 py-0.5 rounded text-xs font-medium"
+                                      style={contrastBadge.style}
+                                      title={contrastBadge.description}
                                     >
                                       {contrastBadge.label}
                                     </div>
@@ -474,7 +734,7 @@ function App() {
                                   <div 
                                     className="text-sm font-bold"
                                     style={{ 
-                                      color: color.contrast > 3 ? '#ffffff' : '#000000'
+                                      color: getTextColorForBackground(color)
                                     }}
                                   >
                                     {color.step}
@@ -486,24 +746,14 @@ function App() {
                                   <div 
                                     className="text-xs font-mono leading-tight"
                                     style={{ 
-                                      color: color.contrast > 3 ? '#ffffff' : '#000000'
+                                      color: getTextColorForBackground(color)
                                     }}
                                     title={displayValue}
                                   >
                                     {displayValue}
                                   </div>
                                   
-                                  {/* Contrast ratio display */}
-                                  {contrastResult && (
-                                    <div 
-                                      className="text-xs"
-                                      style={{ 
-                                        color: color.contrast > 3 ? '#cccccc' : '#666666'
-                                      }}
-                                    >
-                                      {contrastResult.ratio}:1
-                                    </div>
-                                  )}
+
                                 </div>
                               </div>
                             </div>
@@ -524,8 +774,9 @@ function App() {
             controls={activePalette?.controls || defaultControls}
             onControlsChange={handleControlsChange}
             paletteName={activePalette?.name}
-            paletteColor={activePalette ? generatePalette(activePalette.controls)[5]?.css : undefined}
+            paletteColor={activePalette ? generatePalette(activePalette.controls, gamutSettings, lightnessSettings)[5]?.css : undefined}
             colors={activePaletteColors}
+            lightnessMode={lightnessSettings.mode}
           />
         </div>
       </div>
