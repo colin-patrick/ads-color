@@ -87,8 +87,8 @@ export interface AppState {
   colorFormat: ColorFormat;
   contrastAnalysis: {
     enabled: boolean;
-    backgroundColor: string;
-    textSize: 'normal' | 'large';
+    selectedColor: string;
+    showCompliance: boolean;
   };
   gamutSettings: GamutSettings;
   lightnessSettings: LightnessSettings;

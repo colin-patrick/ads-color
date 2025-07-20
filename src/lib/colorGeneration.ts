@@ -1,9 +1,22 @@
 import { oklch, rgb, hsl, wcagContrast, formatHex, formatRgb, formatHsl, p3, rec2020 } from 'culori';
-import { PaletteControls, PaletteColor, Palette, ColorFormatValue, ContrastResult, ColorGamut, GamutValidation } from '../types';
+import { PaletteControls, PaletteColor, Palette, ColorFormatValue, ContrastResult, ColorGamut, GamutValidation, GamutSettings, LightnessSettings } from '../types';
 import { defaultControls } from './presets';
 
 // Color steps for the 11-step palette
 export const COLOR_STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+
+/**
+ * Get the maximum chroma value for a given gamut
+ */
+export function getMaxChromaForGamut(gamut: 'sRGB' | 'P3' | 'Rec2020'): number {
+  const maxChromaByGamut = {
+    'sRGB': 0.37,    // Current sRGB limit
+    'P3': 0.50,      // P3 can achieve higher chroma
+    'Rec2020': 0.55  // Rec2020 has the widest gamut
+  };
+  
+  return maxChromaByGamut[gamut];
+}
 
 /**
  * Validate if a string is a valid hex color
@@ -761,4 +774,97 @@ export function convertExternalPalettes(externalData: any): Palette[] {
     console.error('Failed to convert external palettes:', error);
     throw new Error('Failed to convert external palette data');
   }
+}
+
+/**
+ * Convert a color to luminance-only by removing chroma
+ */
+export function convertToLuminance(color: PaletteColor): PaletteColor {
+  // Create OKLCH color with chroma = 0 to get pure luminance
+  const luminanceColor = oklch({
+    mode: 'oklch',
+    l: color.lightness,
+    c: 0, // Remove all chroma
+    h: color.hue // Keep original hue (though it won't be visible)
+  });
+  
+  // Convert to CSS color
+  const luminanceCss = formatHex(luminanceColor) || '#000000';
+  
+  return {
+    ...color,
+    chroma: 0,
+    css: luminanceCss,
+    oklch: `oklch(${(color.lightness * 100).toFixed(1)}% 0 ${color.hue.toFixed(1)})`
+  };
+}
+
+/**
+ * Convert an array of colors to luminance-only
+ */
+export function convertPaletteToLuminance(colors: PaletteColor[]): PaletteColor[] {
+  return colors.map(convertToLuminance);
+}
+
+/**
+ * Generate color options for contrast analysis combobox
+ */
+export function generateColorOptions(palettes: Palette[], gamutSettings: GamutSettings, lightnessSettings: LightnessSettings): Array<{
+  value: string
+  label: string
+  color: string
+  group?: string
+  isRelative?: boolean
+}> {
+  const options: Array<{
+    value: string
+    label: string
+    color: string
+    group?: string
+    isRelative?: boolean
+  }> = []
+
+  // Add pure colors first
+  options.push(
+    {
+      value: '#ffffff',
+      label: 'White',
+      color: '#ffffff',
+      group: 'Pure Colors'
+    },
+    {
+      value: '#000000',
+      label: 'Black',
+      color: '#000000',
+      group: 'Pure Colors'
+    }
+  )
+
+  // Add relative palette options
+  const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]
+  steps.forEach(step => {
+    options.push({
+      value: `palette-${step}`,
+      label: `Palette ${step}`,
+      color: '', // No specific color - it's relative
+      group: 'Palette',
+      isRelative: true
+    })
+  })
+
+  // Add colors from all palettes
+  palettes.forEach(palette => {
+    const colors = generatePalette(palette.controls, gamutSettings, lightnessSettings)
+    
+    colors.forEach(color => {
+      options.push({
+        value: color.css,
+        label: `${palette.name} ${color.step}`,
+        color: color.css,
+        group: palette.name
+      })
+    })
+  })
+
+  return options
 }
