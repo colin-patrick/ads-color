@@ -1,18 +1,16 @@
-import { RotateCcw, RefreshCw, ChevronDown } from 'lucide-react'
+import { RotateCcw, RefreshCw } from 'lucide-react'
 import { PaletteControls, Palette, GamutSettings } from '../types'
-import { presets, defaultControls } from '../lib/presets'
+import { defaultControls } from '../lib/presets'
 import { Slider } from './ui/slider'
 import { Button } from './ui/button'
-import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import { Card, CardContent, CardHeader } from './ui/card'
+import { CardContent, CardHeader } from './ui/card'
 import { Label } from './ui/label'
 import { ColorCombobox, ColorOption } from './ui/color-combobox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
-import { cn } from '../lib/utils'
-import { calculateLightnessForContrast, isValidHexColor, generatePalette, getMaxChromaForGamut } from '../lib/colorGeneration'
+import { calculateLightnessForContrast, generatePalette, getMaxChromaForGamut } from '../lib/colorGeneration'
 import { HueVisualizer } from './HueVisualizer'
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 
 interface ControlPanelProps {
   controls: PaletteControls
@@ -82,10 +80,6 @@ export function ControlPanel({
     const targetContrast = controls.contrastTargets[step as keyof typeof controls.contrastTargets];
     const calculatedLightness = calculateLightnessForContrast(targetContrast, controls.backgroundColor);
     updateLightnessValue(step, calculatedLightness);
-  }
-
-  const applyPreset = (presetName: string) => {
-    onControlsChange(presets[presetName])
   }
 
   const resetToDefaults = () => {

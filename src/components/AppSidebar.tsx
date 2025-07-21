@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useMemo, useEffect, useRef } from 'react'
 import { Plus, Copy, X, FileUp, FileDown, MoreHorizontal, Trash2, Edit, Check } from 'lucide-react'
 import {
   Sidebar,
@@ -12,8 +12,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuAction,
-  SidebarSeparator,
-  useSidebar,
 } from '@/components/ui/sidebar'
 import {
   DropdownMenu,
@@ -22,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
-import { generatePalette, savePalettesToStorage, importPalettes, downloadPalettes } from '../lib/colorGeneration'
+import { generatePalette } from '../lib/colorGeneration'
 import { Palette, GamutSettings, LightnessSettings } from '../types'
 
 interface AppSidebarProps {

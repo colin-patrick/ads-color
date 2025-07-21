@@ -1,4 +1,3 @@
-import React from 'react'
 import { PaletteControls, PaletteColor } from '../types'
 
 interface HueVisualizerProps {
@@ -7,7 +6,7 @@ interface HueVisualizerProps {
   className?: string
 }
 
-export function HueVisualizer({ controls, colors, className = '' }: HueVisualizerProps) {
+export function HueVisualizer({ colors, className = '' }: HueVisualizerProps) {
   // Create gradient stops with white and black on the ends
   const sortedColors = colors.sort((a, b) => a.step - b.step) // Ensure colors are in step order
   

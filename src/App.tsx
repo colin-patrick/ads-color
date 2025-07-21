@@ -4,14 +4,13 @@ import { ControlPanel } from './components/ControlPanel'
 import { GlobalContrastTargets } from './components/GlobalContrastTargets'
 import { AppSidebar } from './components/AppSidebar'
 import { SidebarProvider, SidebarTrigger } from './components/ui/sidebar'
-import { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover'
 import { Button } from './components/ui/button'
 import { Toggle } from './components/ui/toggle'
 import { Label } from './components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from './components/ui/sheet'
 import { Separator } from './components/ui/separator'
-import { Contrast, Settings, Eye, EyeOff } from 'lucide-react'
+import { Settings, Eye, EyeOff } from 'lucide-react'
 import { generatePalette, copyToClipboard, createNewPalette, getColorFormats, analyzeContrast, getContrastBadge, savePalettesToStorage, loadPalettesFromStorage, validateColor, importPalettes, downloadPalettes, getTextColorForBackground, convertPaletteToLuminance, generateColorOptions } from './lib/colorGeneration'
 import { ColorCombobox } from './components/ui/color-combobox'
 import { defaultControls, presets } from './lib/presets'
@@ -182,7 +181,6 @@ function App() {
     // Store the deleted palette's position for restoration
     const paletteIndex = palettes.findIndex(p => p.id === paletteId)
     let wasActivePalette = false
-    let newActivePaletteId = activePaletteId
 
     // Remove palette from state
     setPalettes(prev => {
@@ -191,7 +189,6 @@ function App() {
       // Handle active palette change if needed
       if (paletteId === activePaletteId && updated.length > 0) {
         wasActivePalette = true
-        newActivePaletteId = updated[0].id
         setActivePaletteId(updated[0].id)
       }
       
