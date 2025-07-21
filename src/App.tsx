@@ -11,17 +11,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from './components/ui/sheet'
 import { Separator } from './components/ui/separator'
 import { Settings, Eye, EyeOff } from 'lucide-react'
-import { generatePalette, copyToClipboard, createNewPalette, getColorFormats, analyzeContrast, getContrastBadge, savePalettesToStorage, loadPalettesFromStorage, validateColor, importPalettes, downloadPalettes, getTextColorForBackground, convertPaletteToLuminance, generateColorOptions } from './lib/colorGeneration'
+import { generatePalette, copyToClipboard, createNewPalette, getColorFormats, analyzeContrast, getContrastBadge, savePalettesToStorage, loadPalettesFromStorage, loadDefaultPalettes, validateColor, importPalettes, downloadPalettes, getTextColorForBackground, convertPaletteToLuminance, generateColorOptions } from './lib/colorGeneration'
 import { ColorCombobox } from './components/ui/color-combobox'
-import { defaultControls, presets } from './lib/presets'
+import { defaultControls } from './lib/presets'
 import { PaletteControls, Palette, ColorFormat, GamutSettings, LightnessSettings } from './types'
 
-// Create initial palette using the Blue preset
-const initialPalette = createNewPalette('Blue', presets.blue)
-
 function App() {
-  const [palettes, setPalettes] = useState<Palette[]>([initialPalette])
-  const [activePaletteId, setActivePaletteId] = useState<string>(initialPalette.id)
+  // Initialize with empty arrays, will be set in useEffect
+  const [palettes, setPalettes] = useState<Palette[]>([])
+  const [activePaletteId, setActivePaletteId] = useState<string>('')
   const [isLoaded, setIsLoaded] = useState(false)
   const [colorFormat, setColorFormat] = useState<ColorFormat>('hex')
   
@@ -65,6 +63,11 @@ function App() {
     if (savedData) {
       setPalettes(savedData.palettes)
       setActivePaletteId(savedData.activePaletteId)
+    } else {
+      // If no saved data, load the default palettes
+      const defaultData = loadDefaultPalettes()
+      setPalettes(defaultData.palettes)
+      setActivePaletteId(defaultData.activePaletteId)
     }
     
     // Load global settings from localStorage

@@ -1,6 +1,7 @@
 import { oklch, rgb, hsl, wcagContrast, formatHex, formatRgb, formatHsl, p3, rec2020 } from 'culori';
 import { PaletteControls, PaletteColor, Palette, ColorFormatValue, ContrastResult, ColorGamut, GamutValidation, GamutSettings, LightnessSettings } from '../types';
-import { defaultControls } from './presets';
+import { defaultControls, presets } from './presets';
+import defaultPalettesData from '../data/default-palettes.json';
 
 // Color steps for the 11-step palette
 export const COLOR_STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
@@ -867,4 +868,48 @@ export function generateColorOptions(palettes: Palette[], gamutSettings: GamutSe
   })
 
   return options
+}
+
+/**
+ * Load default palettes from JSON file
+ */
+export function loadDefaultPalettes(): { palettes: Palette[], activePaletteId: string } {
+  try {
+    // Use the imported default palettes data
+    const importData = defaultPalettesData;
+    
+    // Convert the data to proper Palette objects and regenerate colors
+    const palettes = importData.palettes.map((palette: any) => {
+      // Ensure all required properties exist
+      const controls: PaletteControls = {
+        ...defaultControls,
+        ...palette.controls
+      };
+      
+      // Regenerate colors from controls to ensure they're accurate
+      const colors = generatePalette(controls);
+      
+      return {
+        id: palette.id,
+        name: palette.name,
+        controls,
+        colors,
+        createdAt: palette.createdAt ? new Date(palette.createdAt) : new Date(),
+        updatedAt: palette.updatedAt ? new Date(palette.updatedAt) : new Date(),
+      };
+    });
+    
+    return {
+      palettes,
+      activePaletteId: importData.activePaletteId || (palettes.length > 0 ? palettes[0].id : '')
+    };
+  } catch (error) {
+    console.error('Failed to load default palettes, falling back to single blue palette:', error);
+    // Fallback to single blue palette if loading fails
+    const fallbackPalette = createNewPalette('Blue', presets.blue);
+    return {
+      palettes: [fallbackPalette],
+      activePaletteId: fallbackPalette.id
+    };
+  }
 }
