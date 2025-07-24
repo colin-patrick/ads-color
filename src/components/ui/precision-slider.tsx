@@ -30,7 +30,6 @@ export function PrecisionSlider({
   className,
   showNumberInput = true
 }: PrecisionSliderProps) {
-  const displayValue = formatDisplay ? formatDisplay(value) : value.toFixed(3)
   
   // Extract numeric value for the input field
   const getInputValue = () => {
@@ -79,17 +78,20 @@ export function PrecisionSlider({
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium">{label}</label>
         {showNumberInput && (
-          <Input
-            type="number"
-            value={inputValue}
-            onChange={handleInputChange}
-            onBlur={handleInputBlur}
-            onKeyDown={handleKeyDown}
-            min={min}
-            max={max}
-            step={step}
-            className="w-24 h-8 text-sm font-mono pr-1 pl-3"
-          />
+          <div className="flex items-center gap-1">
+            <Input
+              type="number"
+              value={inputValue}
+              onChange={handleInputChange}
+              onBlur={handleInputBlur}
+              onKeyDown={handleKeyDown}
+              min={min}
+              max={max}
+              step={step}
+              className="w-20 h-8 text-sm font-mono pr-1 pl-3"
+            />
+            {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
+          </div>
         )}
       </div>
       

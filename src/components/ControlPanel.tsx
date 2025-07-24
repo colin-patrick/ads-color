@@ -1,7 +1,6 @@
 import { RotateCcw, RefreshCw } from 'lucide-react'
 import { PaletteControls, Palette, GamutSettings, DEFAULT_PRECISION } from '../types'
 import { defaultControls } from '../lib/presets'
-import { Slider } from './ui/slider'
 import { PrecisionSlider } from './ui/precision-slider'
 import { Button } from './ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
