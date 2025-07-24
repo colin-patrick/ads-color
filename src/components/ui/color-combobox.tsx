@@ -72,7 +72,7 @@ export function ColorCombobox({
           <div className="flex items-center space-x-2 overflow-hidden">
             {selectedOption && (
               selectedOption.isRelative ? (
-                <svg className="w-4 h-4 flex-shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="w-4 h-4 flex-shrink-0 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="3" width="18" height="18" rx="2"/>
                   <path d="M9 3v18"/>
                   <path d="M15 3v18"/>
@@ -81,7 +81,7 @@ export function ColorCombobox({
                 </svg>
               ) : (
                 <div 
-                  className="w-4 h-4 rounded border border-gray-300 flex-shrink-0"
+                  className="w-4 h-4 rounded border border-input flex-shrink-0"
                   style={{ backgroundColor: selectedOption.color }}
                 />
               )
@@ -111,7 +111,7 @@ export function ColorCombobox({
                   >
                     <div className="flex items-center space-x-2 flex-1">
                       {option.isRelative ? (
-                        <svg className="w-4 h-4 flex-shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg className="w-4 h-4 flex-shrink-0 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="3" y="3" width="18" height="18" rx="2"/>
                           <path d="M9 3v18"/>
                           <path d="M15 3v18"/>
@@ -120,7 +120,7 @@ export function ColorCombobox({
                         </svg>
                       ) : (
                         <div 
-                          className="w-4 h-4 rounded border border-gray-300 flex-shrink-0"
+                          className="w-4 h-4 rounded border border-input flex-shrink-0"
                           style={{ backgroundColor: option.color }}
                         />
                       )}

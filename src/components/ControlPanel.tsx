@@ -1,15 +1,17 @@
 import { RotateCcw, RefreshCw } from 'lucide-react'
-import { PaletteControls, Palette, GamutSettings } from '../types'
+import { PaletteControls, Palette, GamutSettings, DEFAULT_PRECISION } from '../types'
 import { defaultControls } from '../lib/presets'
 import { Slider } from './ui/slider'
+import { PrecisionSlider } from './ui/precision-slider'
 import { Button } from './ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { CardContent, CardHeader } from './ui/card'
 import { Label } from './ui/label'
 import { ColorCombobox, ColorOption } from './ui/color-combobox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
-import { calculateLightnessForContrast, generatePalette, getMaxChromaForGamut } from '../lib/colorGeneration'
+import { generatePalette, getMaxChromaForGamut } from '../lib/colorGeneration'
 import { HueVisualizer } from './HueVisualizer'
+import { CurvePreview } from './CurvePreview'
 import { useMemo } from 'react'
 
 interface ControlPanelProps {
@@ -54,7 +56,7 @@ export function ControlPanel({
   const paletteColors = useMemo(() => {
     const colors: Record<string, string> = {};
     for (const palette of palettes) {
-      const generatedPalette = generatePalette(palette.controls, { gamutMode: 'sRGB', enforceGamut: true }, { mode: 'contrast' });
+      const generatedPalette = generatePalette(palette.controls, { gamutMode: 'sRGB' }, { mode: 'contrast' });
       colors[palette.id] = generatedPalette[5]?.css || '#3b82f6'; // Use step 500 as representative color
     }
     return colors;
@@ -64,6 +66,8 @@ export function ControlPanel({
     onControlsChange({ ...controls, [key]: value })
   }
 
+  // Removed - no longer need manual mode switching
+
   const updateChromaValue = (step: number, value: number) => {
     const newValues = { ...controls.chromaValues };
     newValues[step] = value;
@@ -72,14 +76,26 @@ export function ControlPanel({
 
   const updateLightnessValue = (step: number, value: number) => {
     const newValues = { ...controls.lightnessValues };
+    const newOverrides = { ...controls.lightnessOverrides };
+    
     newValues[step] = value;
-    updateControl('lightnessValues', newValues);
+    newOverrides[step] = true; // Always set override flag when manually adjusting
+    
+    onControlsChange({ 
+      ...controls, 
+      lightnessValues: newValues,
+      lightnessOverrides: newOverrides
+    });
   }
 
   const resetLightnessToCalculated = (step: number) => {
-    const targetContrast = controls.contrastTargets[step as keyof typeof controls.contrastTargets];
-    const calculatedLightness = calculateLightnessForContrast(targetContrast, controls.backgroundColor);
-    updateLightnessValue(step, calculatedLightness);
+    const newOverrides = { ...controls.lightnessOverrides };
+    newOverrides[step] = false; // Clear override flag to use calculated value
+    
+    onControlsChange({ 
+      ...controls, 
+      lightnessOverrides: newOverrides
+    });
   }
 
   const resetToDefaults = () => {
@@ -89,7 +105,7 @@ export function ControlPanel({
   return (
     <>
       {/* Fixed Header with Palette Selector */}
-      <CardHeader className="p-4 border-b border-gray-200 flex-shrink-0">
+              <CardHeader className="p-4 border-b border-border flex-shrink-0">
         <div className="space-y-2">
           <div className="space-y-1">
             <Select value={activePaletteId} onValueChange={onActivePaletteChange}>
@@ -97,7 +113,7 @@ export function ControlPanel({
                 <SelectValue>
                   <div className="flex items-center space-x-2">
                     <div 
-                      className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0" 
+                      className="w-4 h-4 rounded-full border border-input flex-shrink-0" 
                       style={{ backgroundColor: paletteColors[activePaletteId] || paletteColor || '#6b7280' }}
                     ></div>
                     <span className="text-sm truncate">
@@ -111,7 +127,7 @@ export function ControlPanel({
                   <SelectItem key={palette.id} value={palette.id}>
                     <div className="flex items-center space-x-2">
                       <div 
-                        className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0" 
+                        className="w-4 h-4 rounded-full border border-input flex-shrink-0" 
                         style={{ backgroundColor: paletteColors[palette.id] }}
                       ></div>
                       <span className="truncate">{palette.name}</span>
@@ -144,53 +160,50 @@ export function ControlPanel({
             <TabsContent value="hue" className="space-y-4 mt-6">
               {/* Base Hue */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Base Hue (Middle)</Label>
-                  <span className="text-sm text-muted-foreground">{Math.round(controls.baseHue)}°</span>
-                </div>
-                <Slider
-                  value={[controls.baseHue]}
-                  onValueChange={(value) => updateControl('baseHue', value[0])}
+                <PrecisionSlider
+                  value={controls.baseHue}
+                  onChange={(value) => updateControl('baseHue', value)}
                   min={0}
                   max={360}
-                  step={1}
+                  step={DEFAULT_PRECISION.hue.step}
+                  label="Base Hue (Middle)"
+                  unit="°"
+                  formatDisplay={(value) => `${value.toFixed(DEFAULT_PRECISION.hue.displayDecimals)}°`}
                   className="w-full"
                 />
-                <p className="text-xs text-gray-500">Anchor hue at step 500 (middle of palette)</p>
+                <p className="text-xs text-muted-foreground">Anchor hue at step 500 (middle of palette)</p>
               </div>
 
               {/* Light Hue Drift */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Light Hue Drift</Label>
-                  <span className="text-sm text-muted-foreground">{Math.round(controls.lightHueDrift)}°</span>
-                </div>
-                <Slider
-                  value={[controls.lightHueDrift]}
-                  onValueChange={(value) => updateControl('lightHueDrift', value[0])}
+                <PrecisionSlider
+                  value={controls.lightHueDrift}
+                  onChange={(value) => updateControl('lightHueDrift', value)}
                   min={-60}
                   max={60}
-                  step={1}
+                  step={DEFAULT_PRECISION.hue.step}
+                  label="Light Hue Drift"
+                  unit="°"
+                  formatDisplay={(value) => `${value.toFixed(DEFAULT_PRECISION.hue.displayDecimals)}°`}
                   className="w-full"
                 />
-                <p className="text-xs text-gray-500">Hue shift for light colors (steps 50-400)</p>
+                <p className="text-xs text-muted-foreground">Hue shift for light colors (steps 50-400)</p>
               </div>
 
               {/* Dark Hue Drift */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Dark Hue Drift</Label>
-                  <span className="text-sm text-muted-foreground">{Math.round(controls.darkHueDrift)}°</span>
-                </div>
-                <Slider
-                  value={[controls.darkHueDrift]}
-                  onValueChange={(value) => updateControl('darkHueDrift', value[0])}
+                <PrecisionSlider
+                  value={controls.darkHueDrift}
+                  onChange={(value) => updateControl('darkHueDrift', value)}
                   min={-60}
                   max={60}
-                  step={1}
+                  step={DEFAULT_PRECISION.hue.step}
+                  label="Dark Hue Drift"
+                  unit="°"
+                  formatDisplay={(value) => `${value.toFixed(DEFAULT_PRECISION.hue.displayDecimals)}°`}
                   className="w-full"
                 />
-                <p className="text-xs text-gray-500">Hue shift for dark colors (steps 600-950)</p>
+                <p className="text-xs text-muted-foreground">Hue shift for dark colors (steps 600-950)</p>
               </div>
             </TabsContent>
 
@@ -202,70 +215,109 @@ export function ControlPanel({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="manual">Manual</SelectItem>
-                    <SelectItem value="smooth">Smooth (Bell Curve)</SelectItem>
-                    <SelectItem value="vibrant">Vibrant (Flat)</SelectItem>
+                    <SelectItem value="manual">Manual Control</SelectItem>
+                    <SelectItem value="curve">Curve Distribution</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {controls.chromaMode === 'manual' && (
-                <div className="space-y-3">
+                <div className="space-y-6">
                   <Label className="text-sm font-medium">Individual Chroma Values</Label>
-                  <div className="space-y-2">
+                  <div className="space-y-6">
                     {steps.map(step => (
-                      <div key={step} className="flex items-center space-x-3">
-                        <span className="text-xs font-mono text-gray-500 w-8">{step}</span>
-                        <Slider
-                          value={[controls.chromaValues[step] || 0.1]}
-                          onValueChange={(value) => updateChromaValue(step, value[0])}
+                      <div key={step} className="flex items-center space-x-2">
+                        <PrecisionSlider
+                          value={controls.chromaValues[step] ?? 0.1}
+                          onChange={(value) => updateChromaValue(step, value)}
                           min={0}
                           max={maxChroma}
-                          step={0.001}
+                          step={DEFAULT_PRECISION.chroma.step}
+                          label={step.toString()}
+                          formatDisplay={(value) => value.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)}
                           className="flex-1"
                         />
-                        <span className="text-xs text-gray-500 w-12 text-right">
-                          {((controls.chromaValues[step] || 0.1)).toFixed(3)}
-                        </span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {(controls.chromaMode === 'smooth' || controls.chromaMode === 'vibrant') && (
-                <div className="space-y-3">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium">Max Chroma</Label>
-                      <span className="text-sm text-muted-foreground">{(controls.maxChroma * 100).toFixed(0)}%</span>
-                    </div>
-                    <Slider
-                      value={[controls.maxChroma]}
-                      onValueChange={(value) => updateControl('maxChroma', value[0])}
+              {controls.chromaMode === 'curve' && (
+                <div className="space-y-6">
+                  <CurvePreview controls={controls} />
+                  
+                  <PrecisionSlider
+                    value={controls.minChroma}
+                    onChange={(value) => updateControl('minChroma', value)}
+                    min={0}
+                    max={controls.maxChroma * 0.8}
+                    step={DEFAULT_PRECISION.chroma.step}
+                    label="Min Chroma"
+                    formatDisplay={(value) => value.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)}
+                    className="w-full"
+                  />
+                  
+                  <PrecisionSlider
+                    value={controls.maxChroma}
+                    onChange={(value) => updateControl('maxChroma', value)}
+                    min={controls.minChroma || 0}
+                    max={maxChroma}
+                    step={DEFAULT_PRECISION.chroma.step}
+                    label="Max Chroma"
+                    formatDisplay={(value) => value.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)}
+                    className="w-full"
+                  />
+
+                  {controls.chromaCurveType !== 'flat' && (
+                    <PrecisionSlider
+                      value={controls.chromaPeak}
+                      onChange={(value) => updateControl('chromaPeak', value)}
                       min={0}
-                      max={maxChroma}
+                      max={1}
                       step={0.01}
+                      label="Chroma Peak Position"
                       className="w-full"
                     />
-                  </div>
-
-                  {controls.chromaMode === 'smooth' && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-medium">Chroma Peak Position</Label>
-                        <span className="text-sm text-muted-foreground">{(controls.chromaPeak * 100).toFixed(0)}%</span>
-                      </div>
-                      <Slider
-                        value={[controls.chromaPeak]}
-                        onValueChange={(value) => updateControl('chromaPeak', value[0])}
-                        min={0}
-                        max={1}
-                        step={0.01}
-                        className="w-full"
-                      />
-                    </div>
                   )}
+
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Curve Type</Label>
+                    <Select 
+                      value={controls.chromaCurveType || 'gaussian'} 
+                      onValueChange={(value) => updateControl('chromaCurveType', value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="flat">Flat (Equal Chroma)</SelectItem>
+                        <SelectItem value="gaussian">Gaussian (Smooth Bell)</SelectItem>
+                        <SelectItem value="linear">Linear (Triangular)</SelectItem>
+                        <SelectItem value="sine">Sine Wave (Gentle)</SelectItem>
+                        <SelectItem value="cubic">Cubic (Dramatic)</SelectItem>
+                        <SelectItem value="quartic">Quartic (Very Dramatic)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Curve Easing</Label>
+                    <Select 
+                      value={controls.chromaEasing || 'none'} 
+                      onValueChange={(value) => updateControl('chromaEasing', value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="ease-in">Ease In (Slow Start)</SelectItem>
+                        <SelectItem value="ease-out">Ease Out (Slow End)</SelectItem>
+                        <SelectItem value="ease-in-out">Ease In-Out (Both)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               )}
             </TabsContent>
@@ -277,6 +329,8 @@ export function ControlPanel({
               
               {lightnessMode === 'contrast' && (
                 <div className="space-y-4">
+                  {/* Removed lightness mode selector - always use auto with overrides */}
+                  
                   <div className="space-y-3">
                     <Label className="text-sm font-medium">Contrast Target Color</Label>
                     <ColorCombobox
@@ -288,49 +342,64 @@ export function ControlPanel({
                     />
                   </div>
                   
-                  {/* Individual Lightness Controls in Contrast Mode */}
+                  {/* Lightness Controls - Auto with individual overrides */}
                   <div className="space-y-3">
-                    <Label className="text-sm font-medium">Manual Lightness Adjustments</Label>
+                    <Label className="text-sm font-medium">
+                      Lightness Values (Chroma-Aware)
+                    </Label>
                     <p className="text-xs text-muted-foreground">
-                      Adjust lightness manually to fine-tune contrast ratios. Click refresh to reset to calculated value.
+                      Values calculated automatically to achieve target contrast ratios. Adjust any slider to override that step's value.
                     </p>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {steps.map(step => {
                         const color = colors?.find(c => c.step === step);
                         const targetContrast = controls.contrastTargets[step as keyof typeof controls.contrastTargets];
                         const actualContrast = color?.contrast || 0;
                         
-                        return (
-                          <div key={step} className="bg-gray-50 rounded-lg p-3 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-mono text-gray-500">{step}</span>
-                              <div className="flex items-center space-x-2">
-                                <span className="text-xs text-gray-500">
-                                  Target: {targetContrast} | Actual: {actualContrast.toFixed(1)}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Slider
-                                value={[controls.lightnessValues[step] || 0.5]}
-                                onValueChange={(value) => updateLightnessValue(step, value[0])}
+                        // Simple value calculation - always auto mode with optional overrides
+                        const hasManualOverride = controls.lightnessOverrides?.[step] || false;
+                        
+                        let currentLightness: number;
+                        if (hasManualOverride) {
+                          // Use manually overridden value
+                          currentLightness = controls.lightnessValues[step] ?? (color?.lightness || 0.5);
+                        } else {
+                          // Use calculated value
+                          currentLightness = color?.lightness || 0.5;
+                        }
+                        
+                                                                        return (
+                          <div key={step} className="space-y-3">
+                            <div className="flex items-top space-x-2">
+                              <PrecisionSlider
+                                value={currentLightness * 100}
+                                onChange={(value) => updateLightnessValue(step, value / 100)}
                                 min={0}
-                                max={1}
-                                step={0.01}
+                                max={100}
+                                step={DEFAULT_PRECISION.lightness.step * 100}
+                                label={step.toString()}
+                                unit="%"
+                                formatDisplay={(value) => `${value.toFixed(2)}%`}
                                 className="flex-1"
                               />
-                              <span className="text-xs text-gray-500 w-12">
-                                {((controls.lightnessValues[step] || 0.5) * 100).toFixed(0)}%
+                              <div className="w-6 h-8 flex items-center justify-center">
+                                {hasManualOverride && (
+                                  <Button
+                                    onClick={() => resetLightnessToCalculated(step)}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                                    title="Reset to calculated value"
+                                  >
+                                    <RefreshCw className="w-3 h-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex justify-start">
+                              <span className="text-xs text-muted-foreground">
+                                Target: {targetContrast} | Actual: {actualContrast.toFixed(1)}
                               </span>
-                              <Button
-                                onClick={() => resetLightnessToCalculated(step)}
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
-                                title="Reset to calculated value"
-                              >
-                                <RefreshCw className="w-3 h-3" />
-                              </Button>
                             </div>
                           </div>
                         );
@@ -342,36 +411,36 @@ export function ControlPanel({
 
               {/* Manual Controls - When in Range Mode */}
               {lightnessMode === 'range' && (
-                <div className="space-y-3">
+                <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700">Lightness Range</label>
-                    <span className="text-sm text-gray-500">
+                                <label className="text-sm font-medium text-foreground">Lightness Range</label>
+            <span className="text-sm text-muted-foreground">
                       {Math.round(controls.lightnessMin * 100)}% - {Math.round(controls.lightnessMax * 100)}%
                     </span>
                   </div>
-                  <div className="space-y-2">
-                    <div>
-                      <label className="text-xs text-gray-600">Max Lightness (Step 50)</label>
-                      <Slider
-                        value={[controls.lightnessMin]}
-                        onValueChange={(value) => updateControl('lightnessMin', value[0])}
-                        min={0.5}
-                        max={1}
-                        step={0.01}
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-600">Min Lightness (Step 950)</label>
-                      <Slider
-                        value={[controls.lightnessMax]}
-                        onValueChange={(value) => updateControl('lightnessMax', value[0])}
-                        min={0}
-                        max={0.5}
-                        step={0.01}
-                        className="w-full"
-                      />
-                    </div>
+                  <div className="space-y-6">
+                    <PrecisionSlider
+                      value={controls.lightnessMin * 100}
+                      onChange={(value) => updateControl('lightnessMin', value / 100)}
+                      min={50}
+                      max={100}
+                      step={DEFAULT_PRECISION.lightness.step * 100}
+                      label="Max Lightness (Step 50)"
+                      unit="%"
+                      formatDisplay={(value) => `${value.toFixed(2)}%`}
+                      className="w-full"
+                    />
+                    <PrecisionSlider
+                      value={controls.lightnessMax * 100}
+                      onChange={(value) => updateControl('lightnessMax', value / 100)}
+                      min={0}
+                      max={50}
+                      step={DEFAULT_PRECISION.lightness.step * 100}
+                      label="Min Lightness (Step 950)"
+                      unit="%"
+                      formatDisplay={(value) => `${value.toFixed(2)}%`}
+                      className="w-full"
+                    />
                   </div>
                 </div>
               )}

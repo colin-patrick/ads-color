@@ -38,6 +38,7 @@ interface AppSidebarProps {
   onEditingPaletteNameChange: (name: string) => void
   onExportPalettes: () => void
   onImportPalettes: (event: React.ChangeEvent<HTMLInputElement>) => void
+  onImportExternal: (event: React.ChangeEvent<HTMLInputElement>) => void
   gamutSettings: GamutSettings
   lightnessSettings: LightnessSettings
 }
@@ -57,6 +58,7 @@ export function AppSidebar({
   onEditingPaletteNameChange,
   onExportPalettes,
   onImportPalettes,
+  onImportExternal,
   gamutSettings,
   lightnessSettings,
 }: AppSidebarProps) {
@@ -162,7 +164,7 @@ export function AppSidebar({
   }, [editingPaletteId, handleEnhancedSave])
 
   return (
-    <Sidebar collapsible="offcanvas" className="bg-white border-r border-gray-200">
+          <Sidebar collapsible="offcanvas" className="bg-background border-r border-border">
       {/* Live region for screen reader announcements */}
       <div 
         aria-live="polite" 
@@ -247,7 +249,7 @@ export function AppSidebar({
                           </button>
                           <button
                             onClick={handleEnhancedCancel}
-                            className="h-4 w-4 flex items-center justify-center text-gray-500 hover:text-gray-700 opacity-70 hover:opacity-100"
+                            className="h-4 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground opacity-70 hover:opacity-100"
                             title="Cancel (Escape)"
                             aria-label="Cancel rename"
                           >
@@ -323,6 +325,12 @@ export function AppSidebar({
                 <span>Import Palettes</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => document.getElementById('import-external-file')?.click()}>
+                <FileUp className="h-4 w-4" />
+                <span>Import External</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
           
           <input
@@ -330,6 +338,13 @@ export function AppSidebar({
             type="file"
             accept=".json"
             onChange={onImportPalettes}
+            className="hidden"
+          />
+          <input
+            id="import-external-file"
+            type="file"
+            accept=".json"
+            onChange={onImportExternal}
             className="hidden"
           />
         </SidebarFooter>

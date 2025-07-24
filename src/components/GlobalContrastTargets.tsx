@@ -41,13 +41,13 @@ export function GlobalContrastTargets({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Global Contrast Targets</h3>
+        <h3 className="text-lg font-semibold text-foreground">Global Contrast Targets</h3>
       </div>
 
       <div className="space-y-2">
         {steps.map(step => (
           <div key={step} className="flex items-center space-x-3">
-            <span className="text-sm font-mono text-gray-500 w-8">{step}</span>
+            <span className="text-sm font-mono text-muted-foreground w-8">{step}</span>
             <Input
               type="number"
               value={targets[step]}
@@ -61,7 +61,7 @@ export function GlobalContrastTargets({
         ))}
       </div>
 
-      <div className="flex flex-col space-y-2 pt-2 border-t border-gray-200">
+              <div className="flex flex-col space-y-2 pt-2 border-t border-border">
         <Button
           onClick={() => onApplyToActive(targets)}
           className="w-full text-sm"

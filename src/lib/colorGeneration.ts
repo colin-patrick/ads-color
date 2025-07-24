@@ -1,5 +1,5 @@
 import { oklch, rgb, hsl, wcagContrast, formatHex, formatRgb, formatHsl, p3, rec2020 } from 'culori';
-import { PaletteControls, PaletteColor, Palette, ColorFormatValue, ContrastResult, ColorGamut, GamutValidation, GamutSettings, LightnessSettings } from '../types';
+import { PaletteControls, PaletteColor, Palette, ColorFormatValue, ContrastResult, ColorGamut, GamutValidation, GamutSettings, LightnessSettings, DEFAULT_PRECISION } from '../types';
 import { defaultControls, presets } from './presets';
 import defaultPalettesData from '../data/default-palettes.json';
 
@@ -62,13 +62,159 @@ export function calculateLightnessForContrast(
   // Convert luminance to OKLCH lightness (simplified approximation)
   const oklchLightness = Math.cbrt(targetLuminance);
   
-  return oklchLightness;
+  // Round to precision for consistency
+  return Math.round(oklchLightness / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
 }
+
+/**
+ * Calculate lightness value needed to achieve target contrast ratio (chroma-aware)
+ * Uses iterative solving to account for chroma's impact on final contrast
+ */
+export function calculateChromaAwareLightness(
+  targetContrast: number,
+  backgroundColor: string,
+  chroma: number,
+  hue: number,
+  maxIterations: number = 20,
+  tolerance: number = 0.05
+): number {
+  // Start with the simple calculation as initial guess
+  let lightness = calculateLightnessForContrast(targetContrast, backgroundColor);
+  
+  // If chroma is very low, simple calculation should be accurate enough
+  if (chroma < 0.001) {
+    return lightness;
+  }
+  
+  // Use binary search to find the correct lightness
+  let lowerBound = 0;
+  let upperBound = 1;
+  let iterations = 0;
+  
+  while (iterations < maxIterations) {
+    // Create test color with current lightness
+    const testColor = oklch({
+      mode: 'oklch',
+      l: lightness,
+      c: chroma,
+      h: hue
+    });
+    
+    // Calculate actual contrast
+    const actualContrast = wcagContrast(testColor, backgroundColor) || 1;
+    const contrastDelta = Math.abs(actualContrast - targetContrast);
+    
+    // If we're close enough, return current lightness
+    if (contrastDelta <= tolerance) {
+      const clampedLightness = Math.max(0, Math.min(1, lightness));
+      return Math.round(clampedLightness / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
+    }
+    
+    // Adjust search bounds and lightness based on whether we're above or below target
+    if (actualContrast > targetContrast) {
+      // Too much contrast, need to move lightness toward background
+      const backgroundLuminance = getLuminance(backgroundColor);
+      if (backgroundLuminance > 0.18) {
+        // Light background, make foreground lighter
+        lowerBound = lightness;
+        lightness = (lightness + upperBound) / 2;
+      } else {
+        // Dark background, make foreground darker
+        upperBound = lightness;
+        lightness = (lowerBound + lightness) / 2;
+      }
+    } else {
+      // Too little contrast, need to move lightness away from background
+      const backgroundLuminance = getLuminance(backgroundColor);
+      if (backgroundLuminance > 0.18) {
+        // Light background, make foreground darker
+        upperBound = lightness;
+        lightness = (lowerBound + lightness) / 2;
+      } else {
+        // Dark background, make foreground lighter
+        lowerBound = lightness;
+        lightness = (lightness + upperBound) / 2;
+      }
+    }
+    
+    iterations++;
+  }
+  
+  // If we couldn't converge, return the best attempt
+  // Round to precision to avoid long decimal values from binary search
+  const clampedLightness = Math.max(0, Math.min(1, lightness));
+  return Math.round(clampedLightness / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
+}
+
+/**
+ * Apply easing function to a normalized factor (0-1)
+ */
+function applyEasing(factor: number, easing: string = 'none'): number {
+  switch (easing) {
+    case 'ease-in':
+      return factor * factor;
+    case 'ease-out':
+      return 1 - Math.pow(1 - factor, 2);
+    case 'ease-in-out':
+      return factor < 0.5 
+        ? 2 * factor * factor 
+        : 1 - Math.pow(-2 * factor + 2, 2) / 2;
+    default:
+      return factor;
+  }
+}
+
+/**
+ * Calculate chroma factor based on curve type and distance from peak
+ */
+function calculateChromaFactor(
+  distance: number, 
+  curveType: string, 
+  easing: string = 'none'
+): number {
+  let baseFactor: number;
+  
+  switch (curveType) {
+    case 'flat':
+      // Flat distribution (replaces old 'vibrant' mode)
+      baseFactor = 1;
+      break;
+    case 'gaussian':
+      // Normalized Gaussian bell curve that reaches 0 at distance 0.5
+      const rawGaussian = Math.exp(-Math.pow(distance, 2) / 0.15);
+      const minGaussian = Math.exp(-Math.pow(0.5, 2) / 0.15); // Value at distance 0.5
+      baseFactor = distance >= 0.5 ? 0 : (rawGaussian - minGaussian) / (1 - minGaussian);
+      break;
+    case 'linear':
+      // Triangular distribution - fix to work with full distance range
+      baseFactor = Math.max(0, 1 - distance * 2);
+      break;
+    case 'sine':
+      // Sine wave curve - fix to work with full distance range
+      baseFactor = distance <= 0.5 ? Math.cos(distance * Math.PI) : 0;
+      break;
+    case 'cubic':
+      // Cubic curve - fix to work with full distance range
+      baseFactor = distance <= 0.5 ? Math.pow(1 - distance * 2, 3) : 0;
+      break;
+    case 'quartic':
+      // Quartic curve - fix to work with full distance range
+      baseFactor = distance <= 0.5 ? Math.pow(1 - distance * 2, 4) : 0;
+      break;
+    default:
+      // Fallback to Gaussian
+      baseFactor = Math.exp(-Math.pow(distance, 2) / 0.15);
+  }
+  
+  // Apply easing transformation
+  return applyEasing(baseFactor, easing);
+}
+
 
 /**
  * Generate a complete 11-step OKLCH color palette
  */
-export function generatePalette(controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020'; enforceGamut: boolean }, lightnessSettings?: { mode: 'contrast' | 'range' }): PaletteColor[] {
+export function generatePalette(controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020' }, lightnessSettings?: { mode: 'contrast' | 'range' }): PaletteColor[] {
   const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
   
   return steps.map(step => {
@@ -81,13 +227,57 @@ export function generatePalette(controls: PaletteControls, gamutSettings?: { gam
     const effectiveLightnessSettings = lightnessSettings || { mode: 'contrast' };
     
     if (effectiveLightnessSettings.mode === 'contrast') {
-      // Check if there's a manual lightness override for this step
-      if (controls.lightnessValues[step] !== undefined) {
+      // Always auto mode with individual overrides
+      if (controls.lightnessOverrides?.[step] && controls.lightnessValues[step] !== undefined) {
+        // Step has been manually overridden
         lightness = controls.lightnessValues[step];
       } else {
-        // Fall back to calculated lightness from contrast target
+        // Calculate lightness automatically
         const targetContrast = controls.contrastTargets[step as keyof typeof controls.contrastTargets];
-        lightness = calculateLightnessForContrast(targetContrast, controls.backgroundColor);
+        
+        // Determine the final chroma after gamut clamping for chroma-aware calculation
+        // First, calculate what the chroma will be after clamping
+        let tempChroma: number;
+        if (controls.chromaMode === 'manual') {
+          tempChroma = controls.chromaValues[step] ?? 0.1;
+        } else { // curve mode
+          const peak = controls.chromaPeak;
+          const chromaPosition = Math.abs(normalizedStep - peak);
+          const chromaFactor = calculateChromaFactor(
+            chromaPosition, 
+            controls.chromaCurveType || 'gaussian',
+            controls.chromaEasing
+          );
+          tempChroma = controls.minChroma + (controls.maxChroma - controls.minChroma) * chromaFactor;
+        }
+        
+        // Calculate hue
+        let tempHue: number;
+        if (step <= 500) {
+          const lightProgress = (500 - step) / (500 - 50);
+          tempHue = controls.baseHue + (lightProgress * controls.lightHueDrift);
+        } else {
+          const darkProgress = (step - 500) / (950 - 500);
+          tempHue = controls.baseHue + (darkProgress * controls.darkHueDrift);
+        }
+        tempHue = tempHue % 360;
+        if (tempHue < 0) tempHue += 360;
+        
+        // Test what happens to chroma after gamut clamping with initial lightness estimate
+        const initialLightness = calculateLightnessForContrast(targetContrast, controls.backgroundColor);
+        const effectiveGamutSettings = gamutSettings || { gamutMode: 'sRGB' };
+        const clampedResult = clampColorToGamut(
+          { l: initialLightness, c: tempChroma, h: tempHue },
+          effectiveGamutSettings.gamutMode
+        );
+        
+        // Now calculate lightness using the FINAL chroma values after clamping
+        lightness = calculateChromaAwareLightness(
+          targetContrast, 
+          controls.backgroundColor, 
+          clampedResult.c,  // Use clamped chroma
+          clampedResult.h   // Use clamped hue
+        );
       }
     } else {
       // Use manual lightness calculation
@@ -97,15 +287,18 @@ export function generatePalette(controls: PaletteControls, gamutSettings?: { gam
     // Calculate chroma based on mode
     let chroma: number;
     if (controls.chromaMode === 'manual') {
-      chroma = controls.chromaValues[step] || 0.1;
-    } else if (controls.chromaMode === 'smooth') {
-      // Bell curve distribution
+      chroma = controls.chromaValues[step] ?? 0.1;
+    } else { // curve mode
+      // Curve-based distribution
       const peak = controls.chromaPeak; // Use configurable peak position
       const chromaPosition = Math.abs(normalizedStep - peak);
-      const chromaFactor = Math.exp(-Math.pow(chromaPosition, 2) / 0.15);
-      chroma = controls.maxChroma * chromaFactor;
-    } else { // vibrant
-      chroma = controls.maxChroma;
+      const chromaFactor = calculateChromaFactor(
+        chromaPosition, 
+        controls.chromaCurveType || 'gaussian',
+        controls.chromaEasing
+      );
+      // Use min/max chroma range like lightness system
+      chroma = controls.minChroma + (controls.maxChroma - controls.minChroma) * chromaFactor;
     }
     
     // Calculate hue with three-hue system
@@ -126,33 +319,37 @@ export function generatePalette(controls: PaletteControls, gamutSettings?: { gam
     hue = hue % 360;
     if (hue < 0) hue += 360;
     
-    // Apply gamut constraints if enabled
+    // Apply gamut constraints - always enforce gamut clamping
     let finalLightness = lightness;
     let finalChroma = chroma;
     let finalHue = hue;
     
     // Use provided gamut settings or defaults for backward compatibility
-    const effectiveGamutSettings = gamutSettings || { gamutMode: 'sRGB', enforceGamut: true };
+    const effectiveGamutSettings = gamutSettings || { gamutMode: 'sRGB' };
     
-    if (effectiveGamutSettings.enforceGamut) {
-      const clampedResult = clampColorToGamut(
-        { l: lightness, c: chroma, h: hue },
-        effectiveGamutSettings.gamutMode
-      );
-      
-      if (clampedResult.clamped) {
-        finalLightness = clampedResult.l;
-        finalChroma = clampedResult.c;
-        finalHue = clampedResult.h;
-      }
+    // Always clamp colors to the selected gamut
+    const clampedResult = clampColorToGamut(
+      { l: lightness, c: chroma, h: hue },
+      effectiveGamutSettings.gamutMode
+    );
+    
+    if (clampedResult.clamped) {
+      finalLightness = clampedResult.l;
+      finalChroma = clampedResult.c;
+      finalHue = clampedResult.h;
     }
     
-    // Create OKLCH color with final values
+    // Round values to match precision settings for consistency
+    const roundedLightness = Math.round(finalLightness / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
+    const roundedChroma = Math.round(finalChroma / DEFAULT_PRECISION.chroma.step) * DEFAULT_PRECISION.chroma.step;
+    const roundedHue = Math.round(finalHue / DEFAULT_PRECISION.hue.step) * DEFAULT_PRECISION.hue.step;
+    
+    // Create OKLCH color with rounded values
     const oklchColor = oklch({
       mode: 'oklch',
-      l: finalLightness,
-      c: finalChroma,
-      h: finalHue
+      l: roundedLightness,
+      c: roundedChroma,
+      h: roundedHue
     });
     
     // Convert to CSS color
@@ -164,10 +361,10 @@ export function generatePalette(controls: PaletteControls, gamutSettings?: { gam
     
     return {
       step,
-      lightness: finalLightness,
-      chroma: finalChroma,
-      hue: finalHue,
-      oklch: `oklch(${(finalLightness * 100).toFixed(1)}% ${finalChroma.toFixed(3)} ${finalHue.toFixed(1)})`,
+      lightness: roundedLightness,
+      chroma: roundedChroma,
+      hue: roundedHue,
+      oklch: `oklch(${(roundedLightness * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% ${roundedChroma.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)} ${roundedHue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`,
       css: cssColor,
       contrast: Math.round(contrast * 100) / 100
     };
@@ -348,7 +545,7 @@ export function validateColorGamut(color: PaletteColor, targetGamut: ColorGamut)
 /**
  * Validate color and provide warnings
  */
-export function validateColor(color: PaletteColor, controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020'; enforceGamut: boolean }, lightnessSettings?: { mode: 'contrast' | 'range' }): {
+export function validateColor(color: PaletteColor, controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020' }, lightnessSettings?: { mode: 'contrast' | 'range' }): {
   inGamut: boolean;
   gamut: ColorGamut | null;
   gamutValidation: GamutValidation;
@@ -359,22 +556,15 @@ export function validateColor(color: PaletteColor, controls: PaletteControls, ga
   const warnings: string[] = [];
   
   // Use provided gamut settings or defaults for backward compatibility
-  const effectiveGamutSettings = gamutSettings || { gamutMode: 'sRGB', enforceGamut: true };
+  const effectiveGamutSettings = gamutSettings || { gamutMode: 'sRGB' };
   
   // Validate against target gamut
   const gamutValidation = validateColorGamut(color, effectiveGamutSettings.gamutMode);
   const gamut = gamutValidation.detectedGamut;
   const inGamut = gamutValidation.withinGamut;
   
-  if (!inGamut && effectiveGamutSettings.enforceGamut) {
-    if (gamutValidation.requiresGamut) {
-      warnings.push(`Color requires ${gamutValidation.requiresGamut} gamut support (current target: ${effectiveGamutSettings.gamutMode})`);
-    }
-  } else if (!inGamut && !effectiveGamutSettings.enforceGamut) {
-    if (gamutValidation.requiresGamut) {
-      warnings.push(`Color extends beyond ${effectiveGamutSettings.gamutMode} into ${gamutValidation.requiresGamut} gamut`);
-    }
-  }
+  // Since we always clamp colors, gamut warnings are no longer needed
+  // Colors will always be within the selected gamut
   
   // Check contrast accuracy if in contrast mode
   let contrastAccuracy: 'GOOD' | 'OK' | 'POOR' | undefined;
@@ -615,7 +805,12 @@ export function loadPalettesFromStorage(): { palettes: Palette[], activePaletteI
         // Ensure all required properties exist with defaults
         ...defaultControls,
         // Override with actual stored values
-        ...palette.controls
+        ...palette.controls,
+        // Ensure lightnessOverrides exists for backward compatibility
+        lightnessOverrides: palette.controls?.lightnessOverrides || {
+          50: false, 100: false, 200: false, 300: false, 400: false,
+          500: false, 600: false, 700: false, 800: false, 900: false, 950: false
+        }
       }
     }));
     
@@ -687,7 +882,12 @@ export function importPalettes(jsonData: string): { palettes: Palette[], activeP
           // Ensure all required properties exist with defaults
           ...defaultControls,
           // Override with actual imported values
-          ...palette.controls
+          ...palette.controls,
+          // Ensure lightnessOverrides exists for backward compatibility
+          lightnessOverrides: palette.controls?.lightnessOverrides || {
+            50: false, 100: false, 200: false, 300: false, 400: false,
+            500: false, 600: false, 700: false, 800: false, 900: false, 950: false
+          }
         }
       };
     });
@@ -781,12 +981,15 @@ export function convertExternalPalettes(externalData: any): Palette[] {
  * Convert a color to luminance-only by removing chroma
  */
 export function convertToLuminance(color: PaletteColor): PaletteColor {
+  // Round hue to maintain precision consistency
+  const roundedHue = Math.round(color.hue / DEFAULT_PRECISION.hue.step) * DEFAULT_PRECISION.hue.step;
+  
   // Create OKLCH color with chroma = 0 to get pure luminance
   const luminanceColor = oklch({
     mode: 'oklch',
-    l: color.lightness,
+    l: color.lightness, // Already rounded in generatePalette
     c: 0, // Remove all chroma
-    h: color.hue // Keep original hue (though it won't be visible)
+    h: roundedHue
   });
   
   // Convert to CSS color
@@ -795,8 +998,9 @@ export function convertToLuminance(color: PaletteColor): PaletteColor {
   return {
     ...color,
     chroma: 0,
+    hue: roundedHue,
     css: luminanceCss,
-    oklch: `oklch(${(color.lightness * 100).toFixed(1)}% 0 ${color.hue.toFixed(1)})`
+    oklch: `oklch(${(color.lightness * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% 0 ${roundedHue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`
   };
 }
 
@@ -883,7 +1087,12 @@ export function loadDefaultPalettes(): { palettes: Palette[], activePaletteId: s
       // Ensure all required properties exist
       const controls: PaletteControls = {
         ...defaultControls,
-        ...palette.controls
+        ...palette.controls,
+        // Ensure lightnessOverrides exists for backward compatibility
+        lightnessOverrides: palette.controls?.lightnessOverrides || {
+          50: false, 100: false, 200: false, 300: false, 400: false,
+          500: false, 600: false, 700: false, 800: false, 900: false, 950: false
+        }
       };
       
       // Regenerate colors from controls to ensure they're accurate

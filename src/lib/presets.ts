@@ -30,11 +30,26 @@ const defaultLightnessValues = {
   950: 0.22
 };
 
+// Default lightness overrides - all false since we start in auto mode
+const defaultLightnessOverrides = {
+  50: false,
+  100: false,
+  200: false,
+  300: false,
+  400: false,
+  500: false,
+  600: false,
+  700: false,
+  800: false,
+  900: false,
+  950: false
+};
+
 export const defaultControls: PaletteControls = {
   baseHue: 247,
   lightnessMin: 0.95,
   lightnessMax: 0.15,
-  chromaMode: 'smooth',
+  chromaMode: 'curve',
   chromaValues: {
     50: 0.01,
     100: 0.05,
@@ -48,13 +63,18 @@ export const defaultControls: PaletteControls = {
     900: 0.10,
     950: 0.08
   },
+  minChroma: 0.02,
   maxChroma: 0.24,
   chromaPeak: 0.55,
+  chromaCurveType: 'gaussian',
+  chromaEasing: 'none',
   lightHueDrift: -5,
   darkHueDrift: 5,
   backgroundColor: '#ffffff',
   contrastTargets: defaultContrastTargets,
-  lightnessValues: defaultLightnessValues
+  lightnessValues: defaultLightnessValues,
+  lightnessOverrides: defaultLightnessOverrides,
+  lightnessMode: 'auto'
 };
 
 export const presets: { [key: string]: PaletteControls } = {
@@ -62,7 +82,7 @@ export const presets: { [key: string]: PaletteControls } = {
     baseHue: 247,
     lightnessMin: 0.95,
     lightnessMax: 0.15,
-    chromaMode: 'smooth',
+    chromaMode: 'curve',
     chromaValues: {
       50: 0.01,
       100: 0.05,
@@ -76,8 +96,11 @@ export const presets: { [key: string]: PaletteControls } = {
       900: 0.10,
       950: 0.08
     },
+    minChroma: 0.02,
     maxChroma: 0.24,
     chromaPeak: 0.55,
+    chromaCurveType: 'gaussian',
+    chromaEasing: 'none',
     lightHueDrift: -5,
     darkHueDrift: 5,
     backgroundColor: '#ffffff',
@@ -94,14 +117,16 @@ export const presets: { [key: string]: PaletteControls } = {
       800: 0.32,
       900: 0.26,
       950: 0.22
-    }
+    },
+    lightnessOverrides: defaultLightnessOverrides,
+    lightnessMode: 'auto'
   },
   
   purple: {
     baseHue: 302,
     lightnessMin: 0.97,
     lightnessMax: 0.15,
-    chromaMode: 'smooth',
+    chromaMode: 'curve',
     chromaValues: {
       50: 0.01,
       100: 0.04,
@@ -115,8 +140,11 @@ export const presets: { [key: string]: PaletteControls } = {
       900: 0.09,
       950: 0.07
     },
+    minChroma: 0.01,
     maxChroma: 0.24,
     chromaPeak: 0.48,
+    chromaCurveType: 'gaussian',
+    chromaEasing: 'none',
     lightHueDrift: 0,
     darkHueDrift: 15,
     backgroundColor: '#ffffff',
@@ -133,14 +161,16 @@ export const presets: { [key: string]: PaletteControls } = {
       800: 0.32,
       900: 0.27,
       950: 0.23
-    }
+    },
+    lightnessOverrides: defaultLightnessOverrides,
+    lightnessMode: 'auto'
   },
   
   error: {
     baseHue: 30,
     lightnessMin: 0.95,
     lightnessMax: 0.15,
-    chromaMode: 'smooth',
+    chromaMode: 'curve',
     chromaValues: {
       50: 0.02,
       100: 0.05,
@@ -154,8 +184,11 @@ export const presets: { [key: string]: PaletteControls } = {
       900: 0.10,
       950: 0.08
     },
+    minChroma: 0.015,
     maxChroma: 0.23,
     chromaPeak: 0.44,
+    chromaCurveType: 'gaussian',
+    chromaEasing: 'none',
     lightHueDrift: -5,
     darkHueDrift: 5,
     backgroundColor: '#ffffff',
@@ -172,7 +205,9 @@ export const presets: { [key: string]: PaletteControls } = {
       800: 0.32,
       900: 0.27,
       950: 0.23
-    }
+    },
+    lightnessOverrides: defaultLightnessOverrides,
+    lightnessMode: 'auto'
   },
   
   success: {
@@ -193,8 +228,11 @@ export const presets: { [key: string]: PaletteControls } = {
       900: 0.079,
       950: 0.055
     },
+    minChroma: 0.03,
     maxChroma: 0.37,
     chromaPeak: 0.51,
+    chromaCurveType: 'gaussian',
+    chromaEasing: 'none',
     lightHueDrift: -5,
     darkHueDrift: 5,
     backgroundColor: '#ffffff',
@@ -211,14 +249,16 @@ export const presets: { [key: string]: PaletteControls } = {
       800: 0.3,
       900: 0.26,
       950: 0.22
-    }
+    },
+    lightnessOverrides: defaultLightnessOverrides,
+    lightnessMode: 'auto'
   },
   
   warning: {
     baseHue: 60,
     lightnessMin: 0.95,
     lightnessMax: 0.15,
-    chromaMode: 'smooth',
+    chromaMode: 'curve',
     chromaValues: {
       50: 0.02,
       100: 0.05,
@@ -232,8 +272,11 @@ export const presets: { [key: string]: PaletteControls } = {
       900: 0.10,
       950: 0.08
     },
+    minChroma: 0.02,
     maxChroma: 0.28,
     chromaPeak: 0.5,
+    chromaCurveType: 'gaussian',
+    chromaEasing: 'none',
     lightHueDrift: 20,
     darkHueDrift: -20,
     backgroundColor: '#ffffff',
@@ -250,6 +293,8 @@ export const presets: { [key: string]: PaletteControls } = {
       800: 0.32,
       900: 0.27,
       950: 0.23
-    }
+    },
+    lightnessOverrides: defaultLightnessOverrides,
+    lightnessMode: 'auto'
   }
 }; 

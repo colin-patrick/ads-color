@@ -22,7 +22,7 @@ export function HueVisualizer({ colors, className = '' }: HueVisualizerProps) {
 
   return (
     <div 
-      className={`h-12 rounded-lg border border-gray-300 ${className}`}
+      className={`h-12 rounded-lg border border-input ${className}`}
       style={{ 
         background: `linear-gradient(to right, ${colorStops})`,
         boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1)'

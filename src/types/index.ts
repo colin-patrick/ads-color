@@ -2,10 +2,13 @@ export interface PaletteControls {
   baseHue: number;
   lightnessMin: number;
   lightnessMax: number;
-  chromaMode: 'manual' | 'smooth' | 'vibrant';
+  chromaMode: 'manual' | 'curve';
   chromaValues: Record<number, number>;
+  minChroma: number;
   maxChroma: number;
   chromaPeak: number;
+  chromaCurveType: 'flat' | 'gaussian' | 'linear' | 'sine' | 'cubic' | 'quartic';
+  chromaEasing?: 'none' | 'ease-in' | 'ease-out' | 'ease-in-out';
   lightHueDrift: number;  // Hue drift for light colors (50-400)
   darkHueDrift: number;   // Hue drift for dark colors (600-950)
   backgroundColor: string;
@@ -23,8 +26,12 @@ export interface PaletteControls {
     900: number;
     950: number;
   };
-  // Individual lightness values for manual adjustment
+  // Individual lightness values - always reflects current effective values (calculated in auto, adjusted in manual)
   lightnessValues: Record<number, number>;
+  // Track which lightness values have been manually overridden in manual mode
+  lightnessOverrides: Record<number, boolean>;
+  // Lightness calculation mode - always auto with individual overrides
+  lightnessMode: 'auto';
 }
 
 export interface PaletteColor {
@@ -74,12 +81,32 @@ export interface GamutValidation {
 
 export interface GamutSettings {
   gamutMode: 'sRGB' | 'P3' | 'Rec2020';
-  enforceGamut: boolean;
 }
 
 export interface LightnessSettings {
   mode: 'contrast' | 'range';
 }
+
+export interface PrecisionSettings {
+  lightness: {
+    step: number;
+    displayDecimals: number;
+  };
+  chroma: {
+    step: number;
+    displayDecimals: number;
+  };
+  hue: {
+    step: number;
+    displayDecimals: number;
+  };
+}
+
+export const DEFAULT_PRECISION: PrecisionSettings = {
+  lightness: { step: 0.0001, displayDecimals: 2 },
+  chroma: { step: 0.001, displayDecimals: 3 },
+  hue: { step: 0.1, displayDecimals: 2 }
+};
 
 export interface AppState {
   palettes: Palette[];
