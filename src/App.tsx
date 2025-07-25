@@ -4,19 +4,20 @@ import { ControlPanel } from './components/ControlPanel'
 import { GlobalContrastTargets } from './components/GlobalContrastTargets'
 import { PrecisionDemo } from './components/PrecisionDemo'
 import { AppSidebar } from './components/AppSidebar'
-import { SidebarProvider, SidebarTrigger } from './components/ui/sidebar'
+import { SidebarProvider } from './components/ui/sidebar'
 import { Button } from './components/ui/button'
 import { Label } from './components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from './components/ui/sheet'
 import { Dialog, DialogContent } from './components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs'
-import { Moon, Sun } from 'lucide-react'
+
 import { useTheme } from './hooks/use-theme'
 import { generatePalette, copyToClipboard, createNewPalette, getColorFormats, analyzeContrast, getContrastBadge, savePalettesToStorage, loadPalettesFromStorage, loadDefaultPalettes, importPalettes, downloadPalettes, getTextColorForBackground, convertPaletteToLuminance, generateColorOptions, convertExternalPalettes } from './lib/colorGeneration'
 import { defaultControls } from './lib/presets'
 import { PaletteControls, Palette, ColorFormat, GamutSettings, LightnessSettings } from './types'
 import { PaletteToolbar } from './components/PaletteToolbar'
+import { HeaderBar } from './components/HeaderBar'
 
 function App() {
   // Theme state
@@ -519,27 +520,7 @@ function App() {
       />
       <main className="flex-1 h-screen flex flex-col min-w-0 bg-muted/50">
         {/* Fixed Header Bar */}
-        <div className="bg-background border-b border-border px-4 py-4 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-                <SidebarTrigger className="h-9 w-9" />
-              <h1 className="text-xl font-bold text-foreground">ADS Color Generator</h1>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleTheme}
-                className="w-9 h-9 p-0"
-                title="Toggle theme"
-                aria-label="Toggle theme"
-              >
-                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              </Button>
-            </div>
-          </div>
-        </div>
+        <HeaderBar toggleTheme={toggleTheme} />
 
         {/* Main Content Area */}
         <div className="flex-1 flex min-h-0 min-w-0">
