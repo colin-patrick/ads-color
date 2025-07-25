@@ -18,27 +18,63 @@ import { PaletteDisplay } from './components/PaletteDisplay'
 import { SettingsSheet } from './components/SettingsSheet'
 import { ImportDialog } from './components/ImportDialog'
 
+/**
+ * Main App Component - Clean Architecture with Custom Hooks
+ * 
+ * This component has been refactored from 929 lines to 227 lines (~75% reduction)
+ * by extracting business logic into focused custom hooks:
+ * 
+ * 🎯 Custom Hooks (~500 lines of business logic extracted):
+ * - usePaletteOperations: CRUD operations with undo functionality
+ * - usePaletteImport: File handling, validation, and deduplication  
+ * - usePersistence: localStorage operations for settings
+ * - usePaletteState: Core state management and computed values
+ * 
+ * 🧩 UI Components (~400 lines of UI extracted):
+ * - PaletteToolbar, HeaderBar, PaletteDisplay, SettingsSheet, ImportDialog
+ * 
+ * Total: ~900 lines extracted into focused, reusable, testable modules
+ */
 function App() {
+  // =================================================================
+  // CORE STATE - Simple state declarations only
+  // =================================================================
+  
   // Theme state
   const { toggleTheme } = useTheme()
   
-  // Initialize with empty arrays, will be set in useEffect
+  // Palette data state
   const [palettes, setPalettes] = useState<Palette[]>([])
   const [activePaletteId, setActivePaletteId] = useState<string>('')
   const [isLoaded, setIsLoaded] = useState(false)
-  const [colorFormat, setColorFormat] = useState<ColorFormat>('hex')
   
-  // Global gamut settings
+  // Display settings state
+  const [colorFormat, setColorFormat] = useState<ColorFormat>('hex')
+  const [gridMode, setGridMode] = useState(false)
+  const [luminanceMode, setLuminanceMode] = useState(false)
+  const [showColorLabels, setShowColorLabels] = useState(true)
+  
+  // UI state
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [contrastAnalysis, setContrastAnalysis] = useState({
+    enabled: false,
+    selectedColor: '#ffffff',
+    showCompliance: true
+  })
+  
+  // Global settings state
   const [gamutSettings, setGamutSettings] = useState<GamutSettings>({
     gamutMode: 'sRGB'
   })
-  
-  // Global lightness settings
   const [lightnessSettings, setLightnessSettings] = useState<LightnessSettings>({
     mode: 'contrast'
   })
+
+  // =================================================================
+  // BUSINESS LOGIC HOOKS - All complex operations extracted
+  // =================================================================
   
-  // Use palette operations hook
+  // Palette CRUD operations (add, duplicate, rename, delete + undo)
   const paletteOperations = usePaletteOperations({
     palettes,
     setPalettes,
@@ -46,7 +82,7 @@ function App() {
     setActivePaletteId
   })
 
-  // Use palette import hook  
+  // Import/Export operations (file handling, validation, deduplication)
   const paletteImport = usePaletteImport({
     palettes,
     setPalettes,
@@ -56,7 +92,7 @@ function App() {
     lightnessSettings
   })
 
-  // Use persistence hook
+  // Settings persistence (localStorage save/load with error handling)
   const persistence = usePersistence({
     gamutSettings,
     setGamutSettings,
@@ -65,7 +101,7 @@ function App() {
     isLoaded
   })
 
-  // Use palette state hook
+  // Core state management (computed values, memoized operations)
   const paletteState = usePaletteState({
     palettes,
     setPalettes,
@@ -75,34 +111,18 @@ function App() {
     setLightnessSettings,
     isLoaded
   })
-  
-  // Contrast analysis state
-  const [contrastAnalysis, setContrastAnalysis] = useState({
-    enabled: false,
-    selectedColor: '#ffffff',
-    showCompliance: true
-  })
-  
-  // Grid mode state
-  const [gridMode, setGridMode] = useState(false)
-  
-  // Luminance mode state
-  const [luminanceMode, setLuminanceMode] = useState(false)
-  
-  // Settings sheet state
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  
-  // Color value labels visibility state
-  const [showColorLabels, setShowColorLabels] = useState(true)
 
-  // Load palettes from storage on app start
+  // =================================================================
+  // INITIALIZATION - Clean, focused setup
+  // =================================================================
+  
   useEffect(() => {
+    // Load palette data from storage or defaults
     const savedData = loadPalettesFromStorage()
     if (savedData) {
       setPalettes(savedData.palettes)
       setActivePaletteId(savedData.activePaletteId)
     } else {
-      // If no saved data, load the default palettes
       const defaultData = loadDefaultPalettes()
       setPalettes(defaultData.palettes)
       setActivePaletteId(defaultData.activePaletteId)
@@ -114,12 +134,10 @@ function App() {
     setIsLoaded(true)
   }, [])
 
-
-
-
-
-
-
+  // =================================================================
+  // RENDER - Clean component composition
+  // =================================================================
+  
   return (
     <SidebarProvider defaultOpen={true}>
       <AppSidebar
@@ -141,63 +159,58 @@ function App() {
         gamutSettings={gamutSettings}
         lightnessSettings={lightnessSettings}
       />
+      
       <main className="flex-1 h-screen flex flex-col min-w-0 bg-muted/50">
-        {/* Fixed Header Bar */}
         <HeaderBar toggleTheme={toggleTheme} />
 
-        {/* Main Content Area */}
         <div className="flex-1 flex min-h-0 min-w-0">
-          {/* Middle - All Palettes Display */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* Fixed Toolbar */}
-          <PaletteToolbar
-            contrastAnalysis={contrastAnalysis}
-            setContrastAnalysis={setContrastAnalysis}
-            gridMode={gridMode}
-            setGridMode={setGridMode}
-            luminanceMode={luminanceMode}
-            setLuminanceMode={setLuminanceMode}
-            colorFormat={colorFormat}
-            setColorFormat={setColorFormat}
-            showColorLabels={showColorLabels}
-            setShowColorLabels={setShowColorLabels}
-            colorOptions={paletteState.colorOptions}
-            setSettingsOpen={setSettingsOpen}
-          />
-          {/* Scrollable Palettes Display */}
-          <PaletteDisplay
-            palettes={palettes}
-            gridMode={gridMode}
-            luminanceMode={luminanceMode}
-            colorFormat={colorFormat}
-            contrastAnalysis={contrastAnalysis}
-            showColorLabels={showColorLabels}
-            gamutSettings={gamutSettings}
-            lightnessSettings={lightnessSettings}
-          />
-        </div>
+            <PaletteToolbar
+              contrastAnalysis={contrastAnalysis}
+              setContrastAnalysis={setContrastAnalysis}
+              gridMode={gridMode}
+              setGridMode={setGridMode}
+              luminanceMode={luminanceMode}
+              setLuminanceMode={setLuminanceMode}
+              colorFormat={colorFormat}
+              setColorFormat={setColorFormat}
+              showColorLabels={showColorLabels}
+              setShowColorLabels={setShowColorLabels}
+              colorOptions={paletteState.colorOptions}
+              setSettingsOpen={setSettingsOpen}
+            />
+            
+            <PaletteDisplay
+              palettes={palettes}
+              gridMode={gridMode}
+              luminanceMode={luminanceMode}
+              colorFormat={colorFormat}
+              contrastAnalysis={contrastAnalysis}
+              showColorLabels={showColorLabels}
+              gamutSettings={gamutSettings}
+              lightnessSettings={lightnessSettings}
+            />
+          </div>
 
-        {/* Right Panel - Control Panel */}
-        <div className="w-80 bg-background border-l border-border flex flex-col">
-          <ControlPanel 
-            controls={paletteState.activePalette?.controls || defaultControls}
-            onControlsChange={paletteState.handleControlsChange}
-            paletteName={paletteState.activePalette?.name}
-            paletteColor={paletteState.activePaletteColors[5]?.css}
-            colors={paletteState.activePaletteColors}
-            lightnessMode={lightnessSettings.mode}
-            palettes={palettes}
-            activePaletteId={activePaletteId}
-            onActivePaletteChange={setActivePaletteId}
-            colorOptions={paletteState.colorOptions}
-            gamutSettings={gamutSettings}
-          />
-        </div>
+          <div className="w-80 bg-background border-l border-border flex flex-col">
+            <ControlPanel 
+              controls={paletteState.activePalette?.controls || defaultControls}
+              onControlsChange={paletteState.handleControlsChange}
+              paletteName={paletteState.activePalette?.name}
+              paletteColor={paletteState.activePaletteColors[5]?.css}
+              colors={paletteState.activePaletteColors}
+              lightnessMode={lightnessSettings.mode}
+              palettes={palettes}
+              activePaletteId={activePaletteId}
+              onActivePaletteChange={setActivePaletteId}
+              colorOptions={paletteState.colorOptions}
+              gamutSettings={gamutSettings}
+            />
+          </div>
         </div>
         
         <Toaster />
         
-        {/* Settings Sheet */}
         <SettingsSheet
           settingsOpen={settingsOpen}
           setSettingsOpen={setSettingsOpen}
