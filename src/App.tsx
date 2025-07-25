@@ -5,7 +5,9 @@ import { AppSidebar } from './components/AppSidebar'
 import { SidebarProvider } from './components/ui/sidebar'
 
 import { useTheme } from './hooks/use-theme'
-import { generatePalette, createNewPalette, savePalettesToStorage, loadPalettesFromStorage, loadDefaultPalettes, importPalettes, downloadPalettes, generateColorOptions, convertExternalPalettes } from './lib/colorGeneration'
+import { usePaletteOperations } from './hooks/usePaletteOperations'
+import { usePaletteImport } from './hooks/usePaletteImport'
+import { generatePalette, savePalettesToStorage, loadPalettesFromStorage, loadDefaultPalettes, generateColorOptions } from './lib/colorGeneration'
 import { defaultControls } from './lib/presets'
 import { PaletteControls, Palette, ColorFormat, GamutSettings, LightnessSettings } from './types'
 import { PaletteToolbar } from './components/PaletteToolbar'
@@ -34,9 +36,23 @@ function App() {
     mode: 'contrast'
   })
   
-  // Rename palette state
-  const [editingPaletteId, setEditingPaletteId] = useState<string | null>(null)
-  const [editingPaletteName, setEditingPaletteName] = useState<string>('')
+  // Use palette operations hook
+  const paletteOperations = usePaletteOperations({
+    palettes,
+    setPalettes,
+    activePaletteId,
+    setActivePaletteId
+  })
+
+  // Use palette import hook  
+  const paletteImport = usePaletteImport({
+    palettes,
+    setPalettes,
+    activePaletteId,
+    setActivePaletteId,
+    gamutSettings,
+    lightnessSettings
+  })
   
   // Contrast analysis state
   const [contrastAnalysis, setContrastAnalysis] = useState({
@@ -56,10 +72,6 @@ function App() {
   
   // Color value labels visibility state
   const [showColorLabels, setShowColorLabels] = useState(true)
-  
-  // Import confirmation dialog state
-  const [importConfirmOpen, setImportConfirmOpen] = useState(false)
-  const [pendingImportData, setPendingImportData] = useState<{ palettes: Palette[], activePaletteId: string } | null>(null)
 
   // Load palettes from storage on app start
   useEffect(() => {
@@ -137,169 +149,9 @@ function App() {
 
   // Removed the competing effect that was overwriting lightness values
 
-  // Add new palette
-  const handleAddPalette = () => {
-    const newPalette = createNewPalette(`Palette ${palettes.length + 1}`, defaultControls)
-    setPalettes(prev => [...prev, newPalette])
-    setActivePaletteId(newPalette.id)
-  }
 
-  // Duplicate palette
-  const handleDuplicatePalette = (paletteId: string) => {
-    const originalPalette = palettes.find(p => p.id === paletteId)
-    if (!originalPalette) return
-    
-    const duplicatedPalette = createNewPalette(
-      `${originalPalette.name} Copy`,
-      originalPalette.controls
-    )
-    setPalettes(prev => [...prev, duplicatedPalette])
-    setActivePaletteId(duplicatedPalette.id)
-  }
 
-  // Start editing palette name
-  const handleStartRename = (paletteId: string, currentName: string) => {
-    setEditingPaletteId(paletteId)
-    setEditingPaletteName(currentName)
-  }
 
-  // Save renamed palette
-  const handleSaveRename = () => {
-    if (!editingPaletteId || !editingPaletteName.trim()) return
-    
-    setPalettes(prev => prev.map(p => 
-      p.id === editingPaletteId 
-        ? { ...p, name: editingPaletteName.trim(), updatedAt: new Date() }
-        : p
-    ))
-    setEditingPaletteId(null)
-    setEditingPaletteName('')
-  }
-
-  // Cancel rename palette
-  const handleCancelRename = () => {
-    setEditingPaletteId(null)
-    setEditingPaletteName('')
-  }
-
-  // Delete palette
-  const handleDeletePalette = (paletteId: string) => {
-    if (palettes.length <= 1) return // Don't allow deleting the last palette
-    
-    // Get the palette to delete and store it for potential undo
-    const paletteToDelete = palettes.find(p => p.id === paletteId)
-    if (!paletteToDelete) return
-    
-    const paletteName = paletteToDelete.name
-    const wasActivePalette = paletteId === activePaletteId
-    let newActivePaletteId = activePaletteId
-    
-    // If we're deleting the active palette, determine the new active palette
-    if (wasActivePalette) {
-      const remainingPalettes = palettes.filter(p => p.id !== paletteId)
-      if (remainingPalettes.length > 0) {
-        newActivePaletteId = remainingPalettes[0].id
-      }
-    }
-    
-    // Remove the palette
-    setPalettes(prev => prev.filter(p => p.id !== paletteId))
-    
-    // Update active palette if needed
-    if (wasActivePalette) {
-      setActivePaletteId(newActivePaletteId)
-    }
-    
-    // Function to restore the deleted palette
-    const handleUndo = () => {
-      setPalettes(prev => [...prev, paletteToDelete])
-      if (wasActivePalette) {
-        setActivePaletteId(paletteToDelete.id)
-      }
-      toast.success(`Restored palette "${paletteName}"`)
-    }
-    
-    // Show success toast with undo action
-    toast.success(`Deleted palette "${paletteName}"`, {
-      action: {
-        label: 'Undo',
-        onClick: handleUndo,
-      },
-    })
-  }
-
-  // Ensure unique palette IDs by regenerating duplicates
-  const ensureUniquePaletteIds = (newPalettes: Palette[], existingPalettes: Palette[] = []): Palette[] => {
-    const existingIds = new Set(existingPalettes.map(p => p.id));
-    const processedIds = new Set<string>();
-    
-    return newPalettes.map(palette => {
-      let uniqueId = palette.id;
-      
-      // Check if ID conflicts with existing palettes OR has been used in this batch
-      while (existingIds.has(uniqueId) || processedIds.has(uniqueId)) {
-        uniqueId = Math.random().toString(36).substr(2, 9);
-      }
-      
-      processedIds.add(uniqueId);
-      
-      // Only create new palette object if ID changed
-      if (uniqueId !== palette.id) {
-        return {
-          ...palette,
-          id: uniqueId,
-          name: `${palette.name} (Import)`, // Indicate it was imported with new ID
-          updatedAt: new Date()
-        };
-      }
-      
-      return palette;
-    });
-  };
-
-  // Handle import confirmation dialog actions
-  const handleImportReplace = () => {
-    if (pendingImportData) {
-      // Only deduplicate within the imported set (no existing palettes to conflict with)
-      const deduplicatedPalettes = ensureUniquePaletteIds(pendingImportData.palettes, []);
-      
-      setPalettes(deduplicatedPalettes)
-      setActivePaletteId(pendingImportData.activePaletteId)
-      
-      const renamedCount = deduplicatedPalettes.filter((p, i) => p.id !== pendingImportData.palettes[i].id).length;
-      const message = renamedCount > 0 
-        ? `Successfully replaced all palettes! (${renamedCount} had internal duplicate IDs)`
-        : `Successfully replaced all palettes with ${deduplicatedPalettes.length} imported palette(s)!`
-      
-      toast.success(message)
-    }
-    setImportConfirmOpen(false)
-    setPendingImportData(null)
-  }
-
-  const handleImportAdd = () => {
-    if (pendingImportData) {
-      // Deduplicate against existing palettes
-      const deduplicatedPalettes = ensureUniquePaletteIds(pendingImportData.palettes, palettes);
-      
-      setPalettes(prev => [...prev, ...deduplicatedPalettes])
-      setActivePaletteId(pendingImportData.activePaletteId)
-      
-      const renamedCount = deduplicatedPalettes.filter((p, i) => p.id !== pendingImportData.palettes[i].id).length;
-      const message = renamedCount > 0 
-        ? `Successfully added ${deduplicatedPalettes.length} palette(s)! (${renamedCount} were given new IDs to avoid conflicts)`
-        : `Successfully added ${deduplicatedPalettes.length} imported palette(s) to your existing ones!`
-      
-      toast.success(message)
-    }
-    setImportConfirmOpen(false)
-    setPendingImportData(null)
-  }
-
-  const handleImportCancel = () => {
-    setImportConfirmOpen(false)
-    setPendingImportData(null)
-  }
 
 
 
@@ -335,149 +187,7 @@ function App() {
     setLightnessSettings({ mode: 'contrast' })
   }
 
-  // Export palettes to JSON file
-  const handleExportPalettes = () => {
-    downloadPalettes(palettes, activePaletteId, 'color-palettes.json')
-  }
 
-  // Import palettes from JSON file
-  const handleImportPalettes = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      try {
-        const jsonData = e.target?.result as string
-        const importedData = importPalettes(jsonData)
-        
-        if (importedData) {
-          // Validate that imported palettes can generate colors properly
-          const validPalettes = importedData.palettes.filter(palette => {
-            try {
-              const testColors = generatePalette(palette.controls, gamutSettings, lightnessSettings)
-              return testColors.length > 0 && testColors.every(color => 
-                color.css && color.css.match(/^#[0-9a-f]{6}$/i)
-              )
-            } catch (error) {
-              console.warn(`Palette "${palette.name}" failed validation:`, error)
-              return false
-            }
-          })
-          
-          if (validPalettes.length === 0) {
-            toast.error('No valid palettes found in the imported file. Please check the file format.')
-            return
-          }
-          
-          // For native app exports, show dialog to ask user if they want to replace or add to existing palettes
-          if (palettes.length === 0) {
-            // If no existing palettes, just replace (but still check for internal duplicates)
-            const deduplicatedPalettes = ensureUniquePaletteIds(validPalettes, []);
-            setPalettes(deduplicatedPalettes)
-            setActivePaletteId(importedData.activePaletteId || (deduplicatedPalettes.length > 0 ? deduplicatedPalettes[0].id : ''))
-            
-            const skippedCount = importedData.palettes.length - validPalettes.length
-            const renamedCount = deduplicatedPalettes.filter((p, i) => p.id !== validPalettes[i].id).length;
-            
-            let message = `Successfully imported ${deduplicatedPalettes.length} palette(s)!`
-            if (skippedCount > 0 && renamedCount > 0) {
-              message = `Successfully imported ${deduplicatedPalettes.length} palette(s)! (${skippedCount} invalid palette(s) were skipped, ${renamedCount} had duplicate IDs)`
-            } else if (skippedCount > 0) {
-              message = `Successfully imported ${deduplicatedPalettes.length} palette(s)! (${skippedCount} invalid palette(s) were skipped)`
-            } else if (renamedCount > 0) {
-              message = `Successfully imported ${deduplicatedPalettes.length} palette(s)! (${renamedCount} had internal duplicate IDs)`
-            }
-            
-            toast.success(message)
-          } else {
-            // Show confirmation dialog for user choice
-            setPendingImportData({
-              palettes: validPalettes,
-              activePaletteId: importedData.activePaletteId || (validPalettes.length > 0 ? validPalettes[0].id : '')
-            })
-            setImportConfirmOpen(true)
-          }
-          
-          // Clear the input
-          event.target.value = ''
-        } else {
-          toast.error('Failed to import palettes. Please check the file format.')
-        }
-      } catch (error) {
-        console.error('Import error:', error)
-        toast.error('Failed to import palettes. Please check the file format.')
-      }
-    }
-    reader.readAsText(file)
-  }
-
-
-
-  // Import external palettes from JSON file (for external tools like localhost:5185)
-  const handleImportExternal = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      try {
-        const jsonData = e.target?.result as string
-        const parsedData = JSON.parse(jsonData)
-        const importedPalettes = convertExternalPalettes(parsedData)
-        
-        if (importedPalettes && importedPalettes.length > 0) {
-          // Validate that imported palettes can generate colors properly
-          const validPalettes = importedPalettes.filter(palette => {
-            try {
-              const testColors = generatePalette(palette.controls, gamutSettings, lightnessSettings)
-              return testColors.length > 0 && testColors.every(color => 
-                color.css && color.css.match(/^#[0-9a-f]{6}$/i)
-              )
-            } catch (error) {
-              console.warn(`Palette "${palette.name}" failed validation:`, error)
-              return false
-            }
-          })
-          
-          if (validPalettes.length === 0) {
-            toast.error('No valid palettes found in the imported file. Please check the file format.')
-            return
-          }
-          
-          // Ensure unique IDs against existing palettes
-          const deduplicatedPalettes = ensureUniquePaletteIds(validPalettes, palettes);
-          
-          // Add to existing palettes instead of replacing them
-          setPalettes(prev => [...prev, ...deduplicatedPalettes])
-          setActivePaletteId(deduplicatedPalettes[0].id)
-          
-          // Clear the input
-          event.target.value = ''
-          
-          const skippedCount = importedPalettes.length - validPalettes.length
-          const renamedCount = deduplicatedPalettes.filter((p, i) => p.id !== validPalettes[i].id).length;
-          
-          let message = `Successfully imported ${deduplicatedPalettes.length} palette(s) from external tool!`
-          if (skippedCount > 0 && renamedCount > 0) {
-            message = `Successfully imported ${deduplicatedPalettes.length} palette(s) from external tool! (${skippedCount} invalid palette(s) were skipped, ${renamedCount} were given new IDs to avoid conflicts)`
-          } else if (skippedCount > 0) {
-            message = `Successfully imported ${deduplicatedPalettes.length} palette(s) from external tool! (${skippedCount} invalid palette(s) were skipped)`
-          } else if (renamedCount > 0) {
-            message = `Successfully imported ${deduplicatedPalettes.length} palette(s) from external tool! (${renamedCount} were given new IDs to avoid conflicts)`
-          }
-          
-          toast.success(message)
-        } else {
-          toast.error('Failed to import palettes. Please check the file format.')
-        }
-      } catch (error) {
-        console.error('External import error:', error)
-        toast.error('Failed to import palettes. Please check the file format.')
-      }
-    }
-    reader.readAsText(file)
-  }
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -485,18 +195,18 @@ function App() {
         palettes={palettes}
         activePaletteId={activePaletteId}
         onActivePaletteChange={setActivePaletteId}
-        onAddPalette={handleAddPalette}
-        onDuplicatePalette={handleDuplicatePalette}
-        onDeletePalette={handleDeletePalette}
-        onStartRename={handleStartRename}
-        editingPaletteId={editingPaletteId}
-        editingPaletteName={editingPaletteName}
-        onSaveRename={handleSaveRename}
-        onCancelRename={handleCancelRename}
-        onEditingPaletteNameChange={setEditingPaletteName}
-        onExportPalettes={handleExportPalettes}
-        onImportPalettes={handleImportPalettes}
-        onImportExternal={handleImportExternal}
+        onAddPalette={paletteOperations.handleAddPalette}
+        onDuplicatePalette={paletteOperations.handleDuplicatePalette}
+        onDeletePalette={paletteOperations.handleDeletePalette}
+        onStartRename={paletteOperations.handleStartRename}
+        editingPaletteId={paletteOperations.editingPaletteId}
+        editingPaletteName={paletteOperations.editingPaletteName}
+        onSaveRename={paletteOperations.handleSaveRename}
+        onCancelRename={paletteOperations.handleCancelRename}
+        onEditingPaletteNameChange={paletteOperations.setEditingPaletteName}
+        onExportPalettes={paletteImport.handleExportPalettes}
+        onImportPalettes={paletteImport.handleImportPalettes}
+        onImportExternal={paletteImport.handleImportExternal}
         gamutSettings={gamutSettings}
         lightnessSettings={lightnessSettings}
       />
@@ -570,13 +280,13 @@ function App() {
         />
         
         <ImportDialog
-          importConfirmOpen={importConfirmOpen}
-          setImportConfirmOpen={setImportConfirmOpen}
+          importConfirmOpen={paletteImport.importConfirmOpen}
+          setImportConfirmOpen={paletteImport.setImportConfirmOpen}
           palettes={palettes}
-          pendingImportData={pendingImportData}
-          handleImportAdd={handleImportAdd}
-          handleImportReplace={handleImportReplace}
-          handleImportCancel={handleImportCancel}
+          pendingImportData={paletteImport.pendingImportData}
+          handleImportAdd={paletteImport.handleImportAdd}
+          handleImportReplace={paletteImport.handleImportReplace}
+          handleImportCancel={paletteImport.handleImportCancel}
         />
       </main>
     </SidebarProvider>
