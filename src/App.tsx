@@ -1,16 +1,10 @@
 import { useState, useMemo, useEffect } from 'react'
 import { toast, Toaster } from 'sonner'
 import { ControlPanel } from './components/ControlPanel'
-import { GlobalContrastTargets } from './components/GlobalContrastTargets'
-import { PrecisionDemo } from './components/PrecisionDemo'
 import { AppSidebar } from './components/AppSidebar'
 import { SidebarProvider } from './components/ui/sidebar'
 import { Button } from './components/ui/button'
-import { Label } from './components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from './components/ui/sheet'
 import { Dialog, DialogContent } from './components/ui/dialog'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs'
 
 import { useTheme } from './hooks/use-theme'
 import { generatePalette, createNewPalette, savePalettesToStorage, loadPalettesFromStorage, loadDefaultPalettes, importPalettes, downloadPalettes, generateColorOptions, convertExternalPalettes } from './lib/colorGeneration'
@@ -19,6 +13,7 @@ import { PaletteControls, Palette, ColorFormat, GamutSettings, LightnessSettings
 import { PaletteToolbar } from './components/PaletteToolbar'
 import { HeaderBar } from './components/HeaderBar'
 import { PaletteDisplay } from './components/PaletteDisplay'
+import { SettingsSheet } from './components/SettingsSheet'
 
 function App() {
   // Theme state
@@ -543,7 +538,7 @@ function App() {
         </div>
 
         {/* Right Panel - Control Panel */}
-                <div className="w-80 bg-background border-l border-border flex flex-col">
+        <div className="w-80 bg-background border-l border-border flex flex-col">
           <ControlPanel 
             controls={activePalette?.controls || defaultControls}
             onControlsChange={handleControlsChange}
@@ -563,129 +558,17 @@ function App() {
         <Toaster />
         
         {/* Settings Sheet */}
-        <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
-          <SheetContent side="right" className="w-[400px] sm:max-w-[400px]">
-            <SheetHeader>
-              <SheetTitle>Settings</SheetTitle>
-              <SheetDescription>
-                Configure global settings for gamut, lightness mode, and contrast targets.
-              </SheetDescription>
-            </SheetHeader>
-            
-            <Tabs defaultValue="gamut" className="w-full">
-                             <TabsList className="grid w-full grid-cols-4">
-                 <TabsTrigger value="gamut">Gamut</TabsTrigger>
-                 <TabsTrigger value="lightness">Lightness</TabsTrigger>
-                 <TabsTrigger value="contrast">Contrast</TabsTrigger>
-                 <TabsTrigger value="precision">Precision</TabsTrigger>
-               </TabsList>
-              <TabsContent value="gamut">
-                <div className="space-y-6 mt-6">
-                  {/* Gamut Settings Section */}
-                  <div className="space-y-4">
-                    <div className="border-b border-border pb-2">
-                      <h3 className="text-sm font-medium text-foreground">Gamut Settings</h3>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Color Gamut</Label>
-                        <Select value={gamutSettings.gamutMode} onValueChange={(value) => setGamutSettings(prev => ({ ...prev, gamutMode: value as 'sRGB' | 'P3' | 'Rec2020' }))}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="sRGB">sRGB (Standard - Web Safe)</SelectItem>
-                            <SelectItem value="P3">P3 (Wide Gamut - Modern Displays)</SelectItem>
-                            <SelectItem value="Rec2020">Rec2020 (Ultra Wide - HDR)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground">
-                          {gamutSettings.gamutMode === 'sRGB' && 'Compatible with all devices and browsers'}
-                          {gamutSettings.gamutMode === 'P3' && 'Modern displays and Apple devices'}
-                          {gamutSettings.gamutMode === 'Rec2020' && 'HDR displays and future displays'}
-                        </p>
-                      </div>
-                      
-                      <p className="text-xs text-muted-foreground">
-                        Colors are automatically clamped to fit within the selected gamut
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-              <TabsContent value="lightness">
-                <div className="space-y-6 mt-6">
-                  {/* Lightness Mode Settings Section */}
-                  <div className="space-y-4">
-                    <div className="border-b border-border pb-2">
-                      <h3 className="text-sm font-medium text-foreground">Lightness Mode</h3>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Lightness Calculation Mode</Label>
-                        <Select value={lightnessSettings.mode} onValueChange={(value) => setLightnessSettings({ mode: value as 'contrast' | 'range' })}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="contrast">Contrast-based</SelectItem>
-                            <SelectItem value="range">Range-based</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground">
-                          {lightnessSettings.mode === 'contrast' 
-                            ? 'Calculate lightness based on contrast targets against background colors'
-                            : 'Use manual lightness ranges (min/max) for all palettes'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Contrast Targets Section - Only show in contrast mode */}
-                  {lightnessSettings.mode === 'contrast' && (
-                    <div className="space-y-4">
-                      <div className="border-b border-border pb-2">
-                        <h3 className="text-sm font-medium text-foreground">Contrast Targets</h3>
-                      </div>
-                      <GlobalContrastTargets
-                        onApplyToAll={handleApplyContrastToAll}
-                        onApplyToActive={handleApplyContrastToActive}
-                        defaultTargets={activePalette?.controls.contrastTargets}
-                      />
-                    </div>
-                  )}
-                                 </div>
-               </TabsContent>
-               <TabsContent value="contrast">
-                 <div className="space-y-6 mt-6">
-                   {/* Contrast Targets Section */}
-                   {lightnessSettings.mode === 'contrast' && (
-                     <div className="space-y-4">
-                       <div className="border-b border-border pb-2">
-                         <h3 className="text-sm font-medium text-foreground">Contrast Targets</h3>
-                       </div>
-                       <GlobalContrastTargets
-                         onApplyToAll={handleApplyContrastToAll}
-                         onApplyToActive={handleApplyContrastToActive}
-                         defaultTargets={activePalette?.controls.contrastTargets}
-                       />
-                     </div>
-                   )}
-                   {lightnessSettings.mode !== 'contrast' && (
-                     <p className="text-sm text-muted-foreground">
-                       Switch to Contrast-based mode in the Lightness tab to configure contrast targets.
-                     </p>
-                   )}
-                 </div>
-               </TabsContent>
-               <TabsContent value="precision">
-                 <div className="space-y-6 mt-6">
-                   <PrecisionDemo />
-                 </div>
-               </TabsContent>
-            </Tabs>
-          </SheetContent>
-        </Sheet>
+        <SettingsSheet
+          settingsOpen={settingsOpen}
+          setSettingsOpen={setSettingsOpen}
+          gamutSettings={gamutSettings}
+          setGamutSettings={setGamutSettings}
+          lightnessSettings={lightnessSettings}
+          setLightnessSettings={setLightnessSettings}
+          activePalette={activePalette}
+          handleApplyContrastToAll={handleApplyContrastToAll}
+          handleApplyContrastToActive={handleApplyContrastToActive}
+        />
         
         {/* Import Confirmation Dialog */}
         <Dialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
