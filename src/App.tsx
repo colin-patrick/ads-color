@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react'
-import { toast, Toaster } from 'sonner'
+import { useState, useEffect } from 'react'
+import { Toaster } from 'sonner'
 import { ControlPanel } from './components/ControlPanel'
 import { AppSidebar } from './components/AppSidebar'
 import { SidebarProvider } from './components/ui/sidebar'
@@ -8,9 +8,10 @@ import { useTheme } from './hooks/use-theme'
 import { usePaletteOperations } from './hooks/usePaletteOperations'
 import { usePaletteImport } from './hooks/usePaletteImport'
 import { usePersistence } from './hooks/usePersistence'
-import { generatePalette, savePalettesToStorage, loadPalettesFromStorage, loadDefaultPalettes, generateColorOptions } from './lib/colorGeneration'
+import { usePaletteState } from './hooks/usePaletteState'
+import { loadPalettesFromStorage, loadDefaultPalettes } from './lib/colorGeneration'
 import { defaultControls } from './lib/presets'
-import { PaletteControls, Palette, ColorFormat, GamutSettings, LightnessSettings } from './types'
+import { Palette, ColorFormat, GamutSettings, LightnessSettings } from './types'
 import { PaletteToolbar } from './components/PaletteToolbar'
 import { HeaderBar } from './components/HeaderBar'
 import { PaletteDisplay } from './components/PaletteDisplay'
@@ -63,6 +64,17 @@ function App() {
     setLightnessSettings,
     isLoaded
   })
+
+  // Use palette state hook
+  const paletteState = usePaletteState({
+    palettes,
+    setPalettes,
+    activePaletteId,
+    gamutSettings,
+    lightnessSettings,
+    setLightnessSettings,
+    isLoaded
+  })
   
   // Contrast analysis state
   const [contrastAnalysis, setContrastAnalysis] = useState({
@@ -102,79 +114,9 @@ function App() {
     setIsLoaded(true)
   }, [])
 
-  // Auto-save palettes to storage when they change
-  useEffect(() => {
-    if (isLoaded) {
-      savePalettesToStorage(palettes, activePaletteId)
-    }
-  }, [palettes, activePaletteId, isLoaded])
-
-  // Get active palette
-  const activePalette = useMemo(() => 
-    palettes.find(p => p.id === activePaletteId) || palettes[0], 
-    [palettes, activePaletteId]
-  )
-
-  // Generate colors for active palette
-  const activePaletteColors = useMemo(() => 
-    activePalette ? generatePalette(activePalette.controls, gamutSettings, lightnessSettings) : [],
-    [activePalette, gamutSettings, lightnessSettings]
-  )
-
-  // Generate color options for contrast analysis combobox
-  const colorOptions = useMemo(() => 
-    generateColorOptions(palettes, gamutSettings, lightnessSettings),
-    [palettes, gamutSettings, lightnessSettings]
-  )
-
-  // Update active palette controls
-  const handleControlsChange = (newControls: PaletteControls) => {
-    setPalettes(prev => prev.map(p => 
-      p.id === activePaletteId 
-        ? { ...p, controls: newControls, updatedAt: new Date() }
-        : p
-    ))
-  }
-
-  // Removed the competing effect that was overwriting lightness values
 
 
 
-
-
-
-
-  // Apply global contrast targets to all palettes
-  const handleApplyContrastToAll = (contrastTargets: PaletteControls['contrastTargets']) => {
-    setPalettes(prev => prev.map(palette => ({
-      ...palette,
-      controls: {
-        ...palette.controls,
-        contrastTargets
-      },
-      updatedAt: new Date()
-    })))
-    // Switch to contrast mode when applying targets
-    setLightnessSettings({ mode: 'contrast' })
-  }
-
-  // Apply global contrast targets to active palette only
-  const handleApplyContrastToActive = (contrastTargets: PaletteControls['contrastTargets']) => {
-    setPalettes(prev => prev.map(palette => 
-      palette.id === activePaletteId
-        ? {
-            ...palette,
-            controls: {
-              ...palette.controls,
-              contrastTargets
-            },
-            updatedAt: new Date()
-          }
-        : palette
-    ))
-    // Switch to contrast mode when applying targets
-    setLightnessSettings({ mode: 'contrast' })
-  }
 
 
 
@@ -219,7 +161,7 @@ function App() {
             setColorFormat={setColorFormat}
             showColorLabels={showColorLabels}
             setShowColorLabels={setShowColorLabels}
-            colorOptions={colorOptions}
+            colorOptions={paletteState.colorOptions}
             setSettingsOpen={setSettingsOpen}
           />
           {/* Scrollable Palettes Display */}
@@ -238,16 +180,16 @@ function App() {
         {/* Right Panel - Control Panel */}
         <div className="w-80 bg-background border-l border-border flex flex-col">
           <ControlPanel 
-            controls={activePalette?.controls || defaultControls}
-            onControlsChange={handleControlsChange}
-            paletteName={activePalette?.name}
-            paletteColor={activePalette ? generatePalette(activePalette.controls, gamutSettings, lightnessSettings)[5]?.css : undefined}
-            colors={activePaletteColors}
+            controls={paletteState.activePalette?.controls || defaultControls}
+            onControlsChange={paletteState.handleControlsChange}
+            paletteName={paletteState.activePalette?.name}
+            paletteColor={paletteState.activePaletteColors[5]?.css}
+            colors={paletteState.activePaletteColors}
             lightnessMode={lightnessSettings.mode}
             palettes={palettes}
             activePaletteId={activePaletteId}
             onActivePaletteChange={setActivePaletteId}
-            colorOptions={colorOptions}
+            colorOptions={paletteState.colorOptions}
             gamutSettings={gamutSettings}
           />
         </div>
@@ -263,9 +205,9 @@ function App() {
           setGamutSettings={setGamutSettings}
           lightnessSettings={lightnessSettings}
           setLightnessSettings={setLightnessSettings}
-          activePalette={activePalette}
-          handleApplyContrastToAll={handleApplyContrastToAll}
-          handleApplyContrastToActive={handleApplyContrastToActive}
+          activePalette={paletteState.activePalette}
+          handleApplyContrastToAll={paletteState.handleApplyContrastToAll}
+          handleApplyContrastToActive={paletteState.handleApplyContrastToActive}
         />
         
         <ImportDialog
