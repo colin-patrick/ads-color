@@ -7,6 +7,7 @@ import { SidebarProvider } from './components/ui/sidebar'
 import { useTheme } from './hooks/use-theme'
 import { usePaletteOperations } from './hooks/usePaletteOperations'
 import { usePaletteImport } from './hooks/usePaletteImport'
+import { usePersistence } from './hooks/usePersistence'
 import { generatePalette, savePalettesToStorage, loadPalettesFromStorage, loadDefaultPalettes, generateColorOptions } from './lib/colorGeneration'
 import { defaultControls } from './lib/presets'
 import { PaletteControls, Palette, ColorFormat, GamutSettings, LightnessSettings } from './types'
@@ -53,6 +54,15 @@ function App() {
     gamutSettings,
     lightnessSettings
   })
+
+  // Use persistence hook
+  const persistence = usePersistence({
+    gamutSettings,
+    setGamutSettings,
+    lightnessSettings,
+    setLightnessSettings,
+    isLoaded
+  })
   
   // Contrast analysis state
   const [contrastAnalysis, setContrastAnalysis] = useState({
@@ -87,25 +97,7 @@ function App() {
     }
     
     // Load global settings from localStorage
-    const savedGamutSettings = localStorage.getItem('ads-color-generator-gamut-settings')
-    if (savedGamutSettings) {
-      try {
-        const parsedGamutSettings = JSON.parse(savedGamutSettings)
-        setGamutSettings(parsedGamutSettings)
-      } catch (error) {
-        console.error('Failed to parse gamut settings:', error)
-      }
-    }
-    
-    const savedLightnessSettings = localStorage.getItem('ads-color-generator-lightness-settings')
-    if (savedLightnessSettings) {
-      try {
-        const parsedLightnessSettings = JSON.parse(savedLightnessSettings)
-        setLightnessSettings(parsedLightnessSettings)
-      } catch (error) {
-        console.error('Failed to parse lightness settings:', error)
-      }
-    }
+    persistence.loadSettingsFromStorage()
     
     setIsLoaded(true)
   }, [])
@@ -114,11 +106,8 @@ function App() {
   useEffect(() => {
     if (isLoaded) {
       savePalettesToStorage(palettes, activePaletteId)
-      // Save global settings to localStorage
-      localStorage.setItem('ads-color-generator-gamut-settings', JSON.stringify(gamutSettings))
-      localStorage.setItem('ads-color-generator-lightness-settings', JSON.stringify(lightnessSettings))
     }
-  }, [palettes, activePaletteId, isLoaded, gamutSettings, lightnessSettings])
+  }, [palettes, activePaletteId, isLoaded])
 
   // Get active palette
   const activePalette = useMemo(() => 
