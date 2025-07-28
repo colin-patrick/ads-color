@@ -170,7 +170,7 @@ export function ControlPanel({
                   formatDisplay={(value) => `${value.toFixed(DEFAULT_PRECISION.hue.displayDecimals)}°`}
                   className="w-full"
                 />
-                <p className="text-xs text-muted-foreground">Anchor hue at step 500 (middle of palette)</p>
+                <p className="text-xs text-muted-foreground">Anchor hue at middle of palette (step 6)</p>
               </div>
 
               {/* Light Hue Drift */}
