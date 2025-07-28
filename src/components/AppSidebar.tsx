@@ -67,7 +67,7 @@ export function AppSidebar({
     const colors: Record<string, string> = {}
     for (const palette of palettes) {
       const generatedPalette = generatePalette(palette.controls, gamutSettings, lightnessSettings)
-      colors[palette.id] = generatedPalette[5]?.css || '#3b82f6' // Use step 500 as representative color
+      colors[palette.id] = generatedPalette[5]?.css || '#3b82f6' // Use step 6 as representative color
     }
     return colors
   }, [palettes, gamutSettings, lightnessSettings])

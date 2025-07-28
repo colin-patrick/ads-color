@@ -1070,9 +1070,9 @@ export function generateColorOptions(palettes: Palette[], gamutSettings: GamutSe
   COLOR_STEPS.forEach(step => {
     options.push({
       value: `palette-${step}`,
-      label: `Palette ${step}`,
+      label: `Step ${step}`,
       color: '', // No specific color - it's relative
-      group: 'Palette',
+      group: 'Relative to Palette',
       isRelative: true
     })
   })
