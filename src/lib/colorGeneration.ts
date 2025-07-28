@@ -210,11 +210,103 @@ function calculateChromaFactor(
   return applyEasing(baseFactor, easing);
 }
 
+/**
+ * Resolve relative palette background color references
+ * Converts "palette-X" values to actual CSS colors from the current palette
+ */
+export function resolveBackgroundColor(
+  backgroundColor: string, 
+  existingPalette?: PaletteColor[], 
+  fallbackColor: string = '#ffffff'
+): string {
+  // If it's not a relative palette reference, return as-is
+  if (!backgroundColor.startsWith('palette-')) {
+    // Validate that it's a proper color format
+    try {
+      const testColor = oklch(backgroundColor);
+      if (!testColor) {
+        console.warn(`Invalid color format: ${backgroundColor}. Using fallback: ${fallbackColor}`);
+        return fallbackColor;
+      }
+    } catch (error) {
+      console.warn(`Error parsing color ${backgroundColor}:`, error, `Using fallback: ${fallbackColor}`);
+      return fallbackColor;
+    }
+    return backgroundColor;
+  }
+  
+  // Extract step number from "palette-X" format
+  const stepMatch = backgroundColor.match(/^palette-(\d+)$/);
+  if (!stepMatch) {
+    console.warn(`Invalid palette reference format: ${backgroundColor}. Using fallback: ${fallbackColor}`);
+    return fallbackColor;
+  }
+  
+  const stepNumber = parseInt(stepMatch[1], 10);
+  
+  // Validate step number is within valid range
+  if (stepNumber < 1 || stepNumber > 11) {
+    console.warn(`Invalid step number ${stepNumber} in ${backgroundColor}. Must be 1-11. Using fallback: ${fallbackColor}`);
+    return fallbackColor;
+  }
+  
+  // If no existing palette is provided, use fallback
+  if (!existingPalette || existingPalette.length === 0) {
+    console.warn(`No palette available to resolve ${backgroundColor}. Using fallback: ${fallbackColor}`);
+    return fallbackColor;
+  }
+  
+  // Find the color for the requested step
+  const targetColor = existingPalette.find(color => color.step === stepNumber);
+  if (!targetColor) {
+    console.warn(`Step ${stepNumber} not found in palette for ${backgroundColor}. Using fallback: ${fallbackColor}`);
+    return fallbackColor;
+  }
+  
+  // Validate the resolved color
+  try {
+    const testColor = oklch(targetColor.css);
+    if (!testColor) {
+      console.warn(`Resolved color ${targetColor.css} for ${backgroundColor} is invalid. Using fallback: ${fallbackColor}`);
+      return fallbackColor;
+    }
+  } catch (error) {
+    console.warn(`Error parsing resolved color ${targetColor.css} for ${backgroundColor}:`, error, `Using fallback: ${fallbackColor}`);
+    return fallbackColor;
+  }
+  
+  return targetColor.css;
+}
 
 /**
- * Generate a complete 11-step OKLCH color palette
+ * Generate a complete 11-step OKLCH color palette with automatic resolution of relative background colors
  */
-export function generatePalette(controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020' }, lightnessSettings?: { mode: 'contrast' | 'range' }, steps: number[] = COLOR_STEPS): PaletteColor[] {
+export function generatePalette(controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020' }, lightnessSettings?: { mode: 'contrast' | 'range' }, steps: number[] = COLOR_STEPS, existingPalette?: PaletteColor[]): PaletteColor[] {
+  // Handle circular dependency for relative palette references
+  if (controls.backgroundColor.startsWith('palette-') && !existingPalette) {
+    // First pass: generate palette with fallback background color to create initial palette
+    const firstPassPalette = generatePaletteInternal(
+      { ...controls, backgroundColor: '#ffffff' }, // Use white as fallback
+      gamutSettings, 
+      lightnessSettings, 
+      steps
+    );
+    
+    // Second pass: regenerate with resolved background color using first pass results
+    return generatePaletteInternal(controls, gamutSettings, lightnessSettings, steps, firstPassPalette);
+  }
+  
+  // Normal generation path
+  return generatePaletteInternal(controls, gamutSettings, lightnessSettings, steps, existingPalette);
+}
+
+/**
+ * Internal palette generation function
+ */
+function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020' }, lightnessSettings?: { mode: 'contrast' | 'range' }, steps: number[] = COLOR_STEPS, existingPalette?: PaletteColor[]): PaletteColor[] {
+  // Resolve background color early to handle relative palette references
+  const resolvedBackgroundColor = resolveBackgroundColor(controls.backgroundColor, existingPalette);
+  
   return steps.map((step, index) => {
     // Normalize step to 0-1 range using index instead of step values
     const normalizedStep = index / (steps.length - 1);
@@ -263,7 +355,7 @@ export function generatePalette(controls: PaletteControls, gamutSettings?: { gam
         if (tempHue < 0) tempHue += 360;
         
         // Test what happens to chroma after gamut clamping with initial lightness estimate
-        const initialLightness = calculateLightnessForContrast(targetContrast, controls.backgroundColor);
+        const initialLightness = calculateLightnessForContrast(targetContrast, resolvedBackgroundColor);
         const effectiveGamutSettings = gamutSettings || { gamutMode: 'sRGB' };
         const clampedResult = clampColorToGamut(
           { l: initialLightness, c: tempChroma, h: tempHue },
@@ -273,7 +365,7 @@ export function generatePalette(controls: PaletteControls, gamutSettings?: { gam
         // Now calculate lightness using the FINAL chroma values after clamping
         lightness = calculateChromaAwareLightness(
           targetContrast, 
-          controls.backgroundColor, 
+          resolvedBackgroundColor, 
           clampedResult.c,  // Use clamped chroma
           clampedResult.h   // Use clamped hue
         );
@@ -356,7 +448,7 @@ export function generatePalette(controls: PaletteControls, gamutSettings?: { gam
     const cssColor = formatHex(oklchColor) || '#000000';
     
     // Calculate contrast against background
-    const contrastBackground = effectiveLightnessSettings.mode === 'contrast' ? (controls.backgroundColor || '#ffffff') : '#ffffff';
+    const contrastBackground = effectiveLightnessSettings.mode === 'contrast' ? resolvedBackgroundColor : '#ffffff';
     const contrast = wcagContrast(oklchColor, contrastBackground) || 1;
     
     return {
