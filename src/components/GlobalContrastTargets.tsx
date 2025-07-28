@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { PaletteControls } from '../types'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
+import { COLOR_STEPS } from '../lib/colorGeneration'
 
 interface GlobalContrastTargetsProps {
   onApplyToAll: (contrastTargets: PaletteControls['contrastTargets']) => void
@@ -14,21 +15,21 @@ export function GlobalContrastTargets({
   onApplyToActive, 
   defaultTargets 
 }: GlobalContrastTargetsProps) {
-  const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const
+  const steps = COLOR_STEPS
   
   const [targets, setTargets] = useState<PaletteControls['contrastTargets']>(
     defaultTargets || {
-      50: 1.1,
-      100: 1.3,
-      200: 1.7,
-      300: 2.3,
-      400: 3.2,
-      500: 4.5,
-      600: 6.7,
-      700: 9.3,
-      800: 13.1,
-      900: 15.2,
-      950: 17.2
+      1: 1.1,
+      2: 1.3,
+      3: 1.7,
+      4: 2.3,
+      5: 3.2,
+      6: 4.5,
+      7: 6.7,
+      8: 9.3,
+      9: 13.1,
+      10: 15.2,
+      11: 17.2
     }
   )
 

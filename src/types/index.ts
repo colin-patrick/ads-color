@@ -9,23 +9,11 @@ export interface PaletteControls {
   chromaPeak: number;
   chromaCurveType: 'flat' | 'gaussian' | 'linear' | 'sine' | 'cubic' | 'quartic';
   chromaEasing?: 'none' | 'ease-in' | 'ease-out' | 'ease-in-out';
-  lightHueDrift: number;  // Hue drift for light colors (50-400)
-  darkHueDrift: number;   // Hue drift for dark colors (600-950)
+  lightHueDrift: number;  // Hue drift for light colors (steps 1-5)
+  darkHueDrift: number;   // Hue drift for dark colors (steps 7-11)
   backgroundColor: string;
   // Individual contrast targets for each step
-  contrastTargets: {
-    50: number;
-    100: number;
-    200: number;
-    300: number;
-    400: number;
-    500: number;
-    600: number;
-    700: number;
-    800: number;
-    900: number;
-    950: number;
-  };
+  contrastTargets: Record<number, number>;
   // Individual lightness values - always reflects current effective values (calculated in auto, adjusted in manual)
   lightnessValues: Record<number, number>;
   // Track which lightness values have been manually overridden in manual mode
@@ -51,6 +39,7 @@ export interface Palette {
   colors: PaletteColor[];
   createdAt: Date;
   updatedAt: Date;
+  steps?: number[]; // Optional for future extensibility
 }
 
 export type ColorFormat = 'hex' | 'rgb' | 'hsl' | 'oklch'

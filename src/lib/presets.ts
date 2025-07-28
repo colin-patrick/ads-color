@@ -2,47 +2,47 @@ import { PaletteControls } from '../types';
 
 // Professional contrast targets for accessibility
 const defaultContrastTargets = {
-  50: 1.1,
-  100: 1.3,
-  200: 1.7,
-  300: 2.3,
-  400: 3.2,
-  500: 4.5,  // AA compliance
-  600: 6.7,
-  700: 9.3,  // AAA compliance
-  800: 13.1,
-  900: 15.2,
-  950: 17.2
+  1: 1.1,
+  2: 1.3,
+  3: 1.7,
+  4: 2.3,
+  5: 3.2,
+  6: 4.5,  // AA compliance
+  7: 6.7,
+  8: 9.3,  // AAA compliance
+  9: 13.1,
+  10: 15.2,
+  11: 17.2
 };
 
 // Professional lightness values for better contrast
 const defaultLightnessValues = {
-  50: 0.97,
-  100: 0.91,
-  200: 0.83,
-  300: 0.73,
-  400: 0.65,
-  500: 0.56,
-  600: 0.49,
-  700: 0.41,
-  800: 0.32,
-  900: 0.26,
-  950: 0.22
+  1: 0.97,
+  2: 0.91,
+  3: 0.83,
+  4: 0.73,
+  5: 0.65,
+  6: 0.56,
+  7: 0.49,
+  8: 0.41,
+  9: 0.32,
+  10: 0.26,
+  11: 0.22
 };
 
 // Default lightness overrides - all false since we start in auto mode
 const defaultLightnessOverrides = {
-  50: false,
-  100: false,
-  200: false,
-  300: false,
-  400: false,
-  500: false,
-  600: false,
-  700: false,
-  800: false,
-  900: false,
-  950: false
+  1: false,
+  2: false,
+  3: false,
+  4: false,
+  5: false,
+  6: false,
+  7: false,
+  8: false,
+  9: false,
+  10: false,
+  11: false
 };
 
 export const defaultControls: PaletteControls = {
@@ -51,17 +51,17 @@ export const defaultControls: PaletteControls = {
   lightnessMax: 0.15,
   chromaMode: 'curve',
   chromaValues: {
-    50: 0.01,
-    100: 0.05,
-    200: 0.08,
-    300: 0.11,
-    400: 0.13,
-    500: 0.15,
-    600: 0.16,
-    700: 0.14,
-    800: 0.12,
-    900: 0.10,
-    950: 0.08
+    1: 0.01,
+    2: 0.05,
+    3: 0.08,
+    4: 0.11,
+    5: 0.13,
+    6: 0.15,
+    7: 0.16,
+    8: 0.14,
+    9: 0.12,
+    10: 0.10,
+    11: 0.08
   },
   minChroma: 0.02,
   maxChroma: 0.24,
@@ -84,17 +84,17 @@ export const presets: { [key: string]: PaletteControls } = {
     lightnessMax: 0.15,
     chromaMode: 'curve',
     chromaValues: {
-      50: 0.01,
-      100: 0.05,
-      200: 0.08,
-      300: 0.11,
-      400: 0.13,
-      500: 0.15,
-      600: 0.16,
-      700: 0.14,
-      800: 0.12,
-      900: 0.10,
-      950: 0.08
+      1: 0.01,
+      2: 0.05,
+      3: 0.08,
+      4: 0.11,
+      5: 0.13,
+      6: 0.15,
+      7: 0.16,
+      8: 0.14,
+      9: 0.12,
+      10: 0.10,
+      11: 0.08
     },
     minChroma: 0.02,
     maxChroma: 0.24,
@@ -106,17 +106,17 @@ export const presets: { [key: string]: PaletteControls } = {
     backgroundColor: '#ffffff',
     contrastTargets: defaultContrastTargets,
     lightnessValues: {
-      50: 0.97,
-      100: 0.91,
-      200: 0.83,
-      300: 0.73,
-      400: 0.65,
-      500: 0.56,
-      600: 0.49,
-      700: 0.41,
-      800: 0.32,
-      900: 0.26,
-      950: 0.22
+      1: 0.97,
+      2: 0.91,
+      3: 0.83,
+      4: 0.73,
+      5: 0.65,
+      6: 0.56,
+      7: 0.49,
+      8: 0.41,
+      9: 0.32,
+      10: 0.26,
+      11: 0.22
     },
     lightnessOverrides: defaultLightnessOverrides,
     lightnessMode: 'auto'
@@ -128,17 +128,17 @@ export const presets: { [key: string]: PaletteControls } = {
     lightnessMax: 0.15,
     chromaMode: 'curve',
     chromaValues: {
-      50: 0.01,
-      100: 0.04,
-      200: 0.08,
-      300: 0.11,
-      400: 0.13,
-      500: 0.15,
-      600: 0.16,
-      700: 0.14,
-      800: 0.12,
-      900: 0.09,
-      950: 0.07
+      1: 0.01,
+      2: 0.04,
+      3: 0.08,
+      4: 0.11,
+      5: 0.13,
+      6: 0.15,
+      7: 0.16,
+      8: 0.14,
+      9: 0.12,
+      10: 0.09,
+      11: 0.07
     },
     minChroma: 0.01,
     maxChroma: 0.24,

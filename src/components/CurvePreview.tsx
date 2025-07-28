@@ -1,4 +1,5 @@
 import { PaletteControls } from '../types';
+import { COLOR_STEPS } from '../lib/colorGeneration';
 
 // Helper function to apply easing (copied from colorGeneration.ts)
 function applyEasing(factor: number, easing: string = 'none'): number {
@@ -60,11 +61,11 @@ export function CurvePreview({ controls }: CurvePreviewProps) {
   }
 
   // Define the lightness steps (matching the palette generation)
-  const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+  const steps = COLOR_STEPS;
   
   // Calculate chroma values for each step
-  const chromaValues = steps.map(step => {
-    const normalizedStep = (step - 50) / (950 - 50); // Normalize to 0-1
+  const chromaValues = steps.map((_, index) => {
+    const normalizedStep = index / (steps.length - 1); // Normalize to 0-1
     const peak = controls.chromaPeak;
     const chromaPosition = Math.abs(normalizedStep - peak);
     const chromaFactor = calculateChromaFactor(

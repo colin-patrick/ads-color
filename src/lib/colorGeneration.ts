@@ -3,8 +3,8 @@ import { PaletteControls, PaletteColor, Palette, ColorFormatValue, ContrastResul
 import { defaultControls, presets } from './presets';
 import defaultPalettesData from '../data/default-palettes.json';
 
-// Color steps for the 11-step palette
-export const COLOR_STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+// Color steps for the 11-step palette - using sequential numbering 1-11
+export const COLOR_STEPS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
 /**
  * Get the maximum chroma value for a given gamut
@@ -214,12 +214,10 @@ function calculateChromaFactor(
 /**
  * Generate a complete 11-step OKLCH color palette
  */
-export function generatePalette(controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020' }, lightnessSettings?: { mode: 'contrast' | 'range' }): PaletteColor[] {
-  const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
-  
-  return steps.map(step => {
-    // Normalize step to 0-1 range
-    const normalizedStep = (step - 50) / (950 - 50);
+export function generatePalette(controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020' }, lightnessSettings?: { mode: 'contrast' | 'range' }, steps: number[] = COLOR_STEPS): PaletteColor[] {
+  return steps.map((step, index) => {
+    // Normalize step to 0-1 range using index instead of step values
+    const normalizedStep = index / (steps.length - 1);
     
     let lightness: number;
     
@@ -233,7 +231,7 @@ export function generatePalette(controls: PaletteControls, gamutSettings?: { gam
         lightness = controls.lightnessValues[step];
       } else {
         // Calculate lightness automatically
-        const targetContrast = controls.contrastTargets[step as keyof typeof controls.contrastTargets];
+        const targetContrast = controls.contrastTargets[step];
         
         // Determine the final chroma after gamut clamping for chroma-aware calculation
         // First, calculate what the chroma will be after clamping
@@ -251,13 +249,14 @@ export function generatePalette(controls: PaletteControls, gamutSettings?: { gam
           tempChroma = controls.minChroma + (controls.maxChroma - controls.minChroma) * chromaFactor;
         }
         
-        // Calculate hue
+        // Calculate hue using index-based logic
         let tempHue: number;
-        if (step <= 500) {
-          const lightProgress = (500 - step) / (500 - 50);
+        const midIndex = Math.floor(steps.length / 2);
+        if (index <= midIndex) {
+          const lightProgress = (midIndex - index) / midIndex;
           tempHue = controls.baseHue + (lightProgress * controls.lightHueDrift);
         } else {
-          const darkProgress = (step - 500) / (950 - 500);
+          const darkProgress = (index - midIndex) / (steps.length - 1 - midIndex);
           tempHue = controls.baseHue + (darkProgress * controls.darkHueDrift);
         }
         tempHue = tempHue % 360;
@@ -302,16 +301,17 @@ export function generatePalette(controls: PaletteControls, gamutSettings?: { gam
     }
     
     // Calculate hue with three-hue system
-    // Base hue (step 500) is the anchor point in the middle
+    // Base hue (middle step) is the anchor point in the middle
     let hue: number;
+    const midIndex = Math.floor(steps.length / 2);
     
-    if (step <= 500) {
-      // Light colors: interpolate between baseHue + lightHueDrift (at step 50) and baseHue (at step 500)
-      const lightProgress = (500 - step) / (500 - 50); // 1 at step 50, 0 at step 500
+    if (index <= midIndex) {
+      // Light colors: interpolate between baseHue + lightHueDrift (at step 1) and baseHue (at middle step)
+      const lightProgress = (midIndex - index) / midIndex; // 1 at step 1, 0 at middle step
       hue = controls.baseHue + (lightProgress * controls.lightHueDrift);
     } else {
-      // Dark colors: interpolate between baseHue (at step 500) and baseHue + darkHueDrift (at step 950)
-      const darkProgress = (step - 500) / (950 - 500); // 0 at step 500, 1 at step 950
+      // Dark colors: interpolate between baseHue (at middle step) and baseHue + darkHueDrift (at last step)
+      const darkProgress = (index - midIndex) / (steps.length - 1 - midIndex); // 0 at middle step, 1 at last step
       hue = controls.baseHue + (darkProgress * controls.darkHueDrift);
     }
     
@@ -574,7 +574,7 @@ export function validateColor(color: PaletteColor, controls: PaletteControls, ga
   const effectiveLightnessSettings = lightnessSettings || { mode: 'contrast' };
   
   if (effectiveLightnessSettings.mode === 'contrast' && controls.contrastTargets) {
-    const targetContrast = controls.contrastTargets[color.step as keyof typeof controls.contrastTargets];
+    const targetContrast = controls.contrastTargets[color.step];
     if (targetContrast) {
       contrastDelta = Math.abs(color.contrast - targetContrast);
       
@@ -804,13 +804,13 @@ export function loadPalettesFromStorage(): { palettes: Palette[], activePaletteI
       controls: {
         // Ensure all required properties exist with defaults
         ...defaultControls,
-        // Override with actual stored values
+        // Override with actual stored values (migrating step keys if needed)
         ...palette.controls,
-        // Ensure lightnessOverrides exists for backward compatibility
-        lightnessOverrides: palette.controls?.lightnessOverrides || {
-          50: false, 100: false, 200: false, 300: false, 400: false,
-          500: false, 600: false, 700: false, 800: false, 900: false, 950: false
-        }
+        // Migrate old step keys to new format
+        contrastTargets: migrateStepKeys(palette.controls?.contrastTargets || {}),
+        lightnessValues: migrateStepKeys(palette.controls?.lightnessValues || {}),
+        lightnessOverrides: migrateStepKeys(palette.controls?.lightnessOverrides || {}),
+        chromaValues: migrateStepKeys(palette.controls?.chromaValues || {})
       }
     }));
     
@@ -883,11 +883,11 @@ export function importPalettes(jsonData: string): { palettes: Palette[], activeP
           ...defaultControls,
           // Override with actual imported values
           ...palette.controls,
-          // Ensure lightnessOverrides exists for backward compatibility
-          lightnessOverrides: palette.controls?.lightnessOverrides || {
-            50: false, 100: false, 200: false, 300: false, 400: false,
-            500: false, 600: false, 700: false, 800: false, 900: false, 950: false
-          }
+          // Migrate old step keys to new format
+          contrastTargets: migrateStepKeys(palette.controls?.contrastTargets || {}),
+          lightnessValues: migrateStepKeys(palette.controls?.lightnessValues || {}),
+          lightnessOverrides: migrateStepKeys(palette.controls?.lightnessOverrides || {}),
+          chromaValues: migrateStepKeys(palette.controls?.chromaValues || {})
         }
       };
     });
@@ -917,6 +917,27 @@ export function downloadPalettes(palettes: Palette[], activePaletteId: string, f
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+/**
+ * Migration utility to convert old step keys (50, 100, 200...) to new step keys (1, 2, 3...)
+ */
+function migrateStepKeys(recordData: Record<string | number, any>): Record<number, any> {
+  const stepMigration: Record<string | number, number> = {
+    50: 1, 100: 2, 200: 3, 300: 4, 400: 5, 500: 6,
+    600: 7, 700: 8, 800: 9, 900: 10, 950: 11
+  };
+  
+  const migratedData: Record<number, any> = {};
+  
+  for (const [key, value] of Object.entries(recordData)) {
+    const newKey = stepMigration[key] || parseInt(key);
+    if (newKey) {
+      migratedData[newKey] = value;
+    }
+  }
+  
+  return migratedData;
 }
 
 /**
@@ -1046,8 +1067,7 @@ export function generateColorOptions(palettes: Palette[], gamutSettings: GamutSe
   )
 
   // Add relative palette options
-  const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]
-  steps.forEach(step => {
+  COLOR_STEPS.forEach(step => {
     options.push({
       value: `palette-${step}`,
       label: `Palette ${step}`,
@@ -1088,11 +1108,11 @@ export function loadDefaultPalettes(): { palettes: Palette[], activePaletteId: s
       const controls: PaletteControls = {
         ...defaultControls,
         ...palette.controls,
-        // Ensure lightnessOverrides exists for backward compatibility
-        lightnessOverrides: palette.controls?.lightnessOverrides || {
-          50: false, 100: false, 200: false, 300: false, 400: false,
-          500: false, 600: false, 700: false, 800: false, 900: false, 950: false
-        }
+        // Migrate old step keys to new format
+        contrastTargets: migrateStepKeys(palette.controls?.contrastTargets || {}),
+        lightnessValues: migrateStepKeys(palette.controls?.lightnessValues || {}),
+        lightnessOverrides: migrateStepKeys(palette.controls?.lightnessOverrides || {}),
+        chromaValues: migrateStepKeys(palette.controls?.chromaValues || {})
       };
       
       // Regenerate colors from controls to ensure they're accurate

@@ -8,7 +8,7 @@ import { CardContent, CardHeader } from './ui/card'
 import { Label } from './ui/label'
 import { ColorCombobox, ColorOption } from './ui/color-combobox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
-import { generatePalette, getMaxChromaForGamut } from '../lib/colorGeneration'
+import { generatePalette, getMaxChromaForGamut, COLOR_STEPS } from '../lib/colorGeneration'
 import { HueVisualizer } from './HueVisualizer'
 import { CurvePreview } from './CurvePreview'
 import { useMemo } from 'react'
@@ -43,7 +43,7 @@ export function ControlPanel({
   colorOptions,
   gamutSettings
 }: ControlPanelProps) {
-  const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+  const steps = COLOR_STEPS;
 
   // Calculate dynamic max chroma based on current gamut
   const maxChroma = useMemo(() => 
@@ -186,7 +186,7 @@ export function ControlPanel({
                   formatDisplay={(value) => `${value.toFixed(DEFAULT_PRECISION.hue.displayDecimals)}°`}
                   className="w-full"
                 />
-                <p className="text-xs text-muted-foreground">Hue shift for light colors (steps 50-400)</p>
+                <p className="text-xs text-muted-foreground">Hue shift for light colors (steps 1-5)</p>
               </div>
 
               {/* Dark Hue Drift */}
@@ -202,7 +202,7 @@ export function ControlPanel({
                   formatDisplay={(value) => `${value.toFixed(DEFAULT_PRECISION.hue.displayDecimals)}°`}
                   className="w-full"
                 />
-                <p className="text-xs text-muted-foreground">Hue shift for dark colors (steps 600-950)</p>
+                <p className="text-xs text-muted-foreground">Hue shift for dark colors (steps 7-11)</p>
               </div>
             </TabsContent>
 
@@ -424,7 +424,7 @@ export function ControlPanel({
                       min={50}
                       max={100}
                       step={DEFAULT_PRECISION.lightness.step * 100}
-                      label="Max Lightness (Step 50)"
+                      label="Max Lightness (Step 1)"
                       unit="%"
                       formatDisplay={(value) => `${value.toFixed(2)}%`}
                       className="w-full"
@@ -435,7 +435,7 @@ export function ControlPanel({
                       min={0}
                       max={50}
                       step={DEFAULT_PRECISION.lightness.step * 100}
-                      label="Min Lightness (Step 950)"
+                      label="Min Lightness (Step 11)"
                       unit="%"
                       formatDisplay={(value) => `${value.toFixed(2)}%`}
                       className="w-full"
