@@ -1,5 +1,5 @@
-import { useMemo, useEffect, useRef } from 'react'
-import { Plus, Copy, X, FileUp, FileDown, MoreHorizontal, Trash2, Edit, Check } from 'lucide-react'
+import { useMemo, useEffect, useRef, useState } from 'react'
+import { Plus, Copy, X, FileUp, FileDown, MoreHorizontal, Trash2, Edit, Check, FileCode } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { generatePalette } from '../lib/colorGeneration'
 import { Palette, GamutSettings, LightnessSettings } from '../types'
+import { TokenStudioExportDialog } from './TokenStudioExportDialog'
 
 interface AppSidebarProps {
   palettes: Palette[]
@@ -62,6 +63,8 @@ export function AppSidebar({
   gamutSettings,
   lightnessSettings,
 }: AppSidebarProps) {
+  // State for Token Studio export dialog
+  const [tokenStudioDialogOpen, setTokenStudioDialogOpen] = useState(false)
   // Generate color swatches for palettes
   const paletteColors = useMemo(() => {
     const colors: Record<string, string> = {}
@@ -331,6 +334,12 @@ export function AppSidebar({
                 <span>Import External</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => setTokenStudioDialogOpen(true)}>
+                <FileCode className="h-4 w-4" />
+                <span>Export Token Studio</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
           
           <input
@@ -348,6 +357,14 @@ export function AppSidebar({
             className="hidden"
           />
         </SidebarFooter>
+        
+        <TokenStudioExportDialog
+          open={tokenStudioDialogOpen}
+          onOpenChange={setTokenStudioDialogOpen}
+          palettes={palettes}
+          gamutSettings={gamutSettings}
+          lightnessSettings={lightnessSettings}
+        />
     </Sidebar>
   )
 } 
