@@ -158,6 +158,9 @@ function App() {
         onImportExternal={paletteImport.handleImportExternal}
         gamutSettings={gamutSettings}
         lightnessSettings={lightnessSettings}
+        isReorderMode={paletteOperations.isReorderMode}
+        onToggleReorderMode={paletteOperations.handleToggleReorderMode}
+        onReorderPalettes={paletteOperations.handleReorderPalettes}
       />
       
       <main className="flex-1 h-screen flex flex-col min-w-0 bg-muted/50">

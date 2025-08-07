@@ -20,6 +20,9 @@ export const usePaletteOperations = ({
   // Rename palette state
   const [editingPaletteId, setEditingPaletteId] = useState<string | null>(null)
   const [editingPaletteName, setEditingPaletteName] = useState<string>('')
+  
+  // Reorder mode state
+  const [isReorderMode, setIsReorderMode] = useState(false)
 
   // Add new palette
   const handleAddPalette = () => {
@@ -112,11 +115,33 @@ export const usePaletteOperations = ({
     })
   }
 
+  // Reorder palettes
+  const handleReorderPalettes = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return
+    
+    setPalettes(prev => {
+      const newPalettes = [...prev]
+      const [movedPalette] = newPalettes.splice(fromIndex, 1)
+      newPalettes.splice(toIndex, 0, movedPalette)
+      return newPalettes
+    })
+  }
+
+  // Toggle reorder mode
+  const handleToggleReorderMode = () => {
+    setIsReorderMode(prev => !prev)
+    // Exit rename mode when entering reorder mode
+    if (!isReorderMode && editingPaletteId) {
+      handleCancelRename()
+    }
+  }
+
   return {
     // State
     editingPaletteId,
     editingPaletteName,
     setEditingPaletteName,
+    isReorderMode,
     
     // Operations
     handleAddPalette,
@@ -124,6 +149,8 @@ export const usePaletteOperations = ({
     handleStartRename,
     handleSaveRename,
     handleCancelRename,
-    handleDeletePalette
+    handleDeletePalette,
+    handleReorderPalettes,
+    handleToggleReorderMode
   }
 } 

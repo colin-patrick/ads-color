@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useRef, useState } from 'react'
-import { Plus, Copy, X, FileUp, FileDown, MoreHorizontal, Trash2, Edit, Check, FileCode } from 'lucide-react'
+import { Plus, Copy, X, FileUp, FileDown, MoreHorizontal, Trash2, Edit, Check, FileCode, GripVertical } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { generatePalette } from '../lib/colorGeneration'
 import { Palette, GamutSettings, LightnessSettings } from '../types'
 import { TokenStudioExportDialog } from './TokenStudioExportDialog'
@@ -42,6 +43,10 @@ interface AppSidebarProps {
   onImportExternal: (event: React.ChangeEvent<HTMLInputElement>) => void
   gamutSettings: GamutSettings
   lightnessSettings: LightnessSettings
+  // New reorder props
+  isReorderMode: boolean
+  onToggleReorderMode: () => void
+  onReorderPalettes: (fromIndex: number, toIndex: number) => void
 }
 
 export function AppSidebar({
@@ -62,6 +67,9 @@ export function AppSidebar({
   onImportExternal,
   gamutSettings,
   lightnessSettings,
+  isReorderMode,
+  onToggleReorderMode,
+  onReorderPalettes,
 }: AppSidebarProps) {
   // State for Token Studio export dialog
   const [tokenStudioDialogOpen, setTokenStudioDialogOpen] = useState(false)
@@ -166,6 +174,41 @@ export function AppSidebar({
     }
   }, [editingPaletteId, handleEnhancedSave])
 
+  // Drag and drop state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+
+  // Drag handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', index.toString())
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverIndex(index)
+  }
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null)
+  }
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    if (draggedIndex !== null && draggedIndex !== dropIndex) {
+      onReorderPalettes(draggedIndex, dropIndex)
+    }
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
   return (
           <Sidebar collapsible="offcanvas" className="bg-background border-r border-border">
       {/* Live region for screen reader announcements */}
@@ -204,18 +247,46 @@ export function AppSidebar({
         
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Your Palettes</SidebarGroupLabel>
+          <div className="flex items-center justify-between px-2 py-1.5">
+            <SidebarGroupLabel className="text-xs font-medium text-sidebar-foreground/70">
+              Your Palettes
+            </SidebarGroupLabel>
+            <Button
+              variant={isReorderMode ? "default" : "ghost"}
+              size="sm"
+              onClick={onToggleReorderMode}
+              className="h-6 px-2 text-xs"
+            >
+              {isReorderMode ? 'Done' : 'Edit'}
+            </Button>
+          </div>
           <SidebarGroupContent>
                           <SidebarMenu>
-                {palettes.map((palette) => (
-                  <SidebarMenuItem key={palette.id}>
+                {palettes.map((palette, index) => (
+                  <SidebarMenuItem 
+                    key={palette.id}
+                    className={`
+                      ${isReorderMode ? 'cursor-move' : ''}
+                      ${draggedIndex === index ? 'opacity-50' : ''}
+                      ${dragOverIndex === index ? 'border-2 border-blue-500 border-dashed rounded-md' : ''}
+                    `}
+                    draggable={isReorderMode}
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
+                  >
                     <SidebarMenuButton
-                      onClick={() => onActivePaletteChange(palette.id)}
+                      onClick={() => !isReorderMode && onActivePaletteChange(palette.id)}
                       isActive={palette.id === activePaletteId}
                       className="w-full"
                       data-palette-id={palette.id}
                       aria-label={`Switch to ${palette.name} palette`}
                     >
+                      {isReorderMode && (
+                        <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      )}
                       <div
                         className="w-4 h-4 rounded-full border border-sidebar-border flex-shrink-0"
                         style={{ backgroundColor: paletteColors[palette.id] }}
@@ -265,7 +336,8 @@ export function AppSidebar({
                         </span>
                       )}
                     </SidebarMenuButton>
-                    <DropdownMenu>
+                    {!isReorderMode && (
+                      <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <SidebarMenuAction 
                           ref={editingPaletteId === palette.id ? undefined : menuButtonRef}
@@ -295,7 +367,8 @@ export function AppSidebar({
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
-                    </DropdownMenu>
+                      </DropdownMenu>
+                    )}
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
