@@ -1,29 +1,37 @@
+export interface CustomStep {
+  position: number;  // Position in color generation curve (e.g., 1, 1.5, 2, 9.5, 10, 11)
+  tokenName: string; // Name used in Token Studio export (e.g., "95", "85", "90")
+}
+
 export interface PaletteControls {
   baseHue: number;
   lightnessMin: number;
   lightnessMax: number;
   chromaMode: 'manual' | 'curve';
-  chromaValues: Record<number, number>;
+  chromaValues: Record<string, number>; // Changed from Record<number, number>
   minChroma: number;
   maxChroma: number;
   chromaPeak: number;
   chromaCurveType: 'flat' | 'gaussian' | 'linear' | 'sine' | 'cubic' | 'quartic';
   chromaEasing?: 'none' | 'ease-in' | 'ease-out' | 'ease-in-out';
-  lightHueDrift: number;  // Hue drift for light colors (steps 1-5)
-  darkHueDrift: number;   // Hue drift for dark colors (steps 7-11)
+  lightHueDrift: number;  // Hue drift for light colors (extended range)
+  darkHueDrift: number;   // Hue drift for dark colors (extended range)
   backgroundColor: string;
+  // Custom steps array replacing hardcoded 1-11
+  steps: CustomStep[];
   // Individual contrast targets for each step
-  contrastTargets: Record<number, number>;
+  contrastTargets: Record<string, number>; // Changed from Record<number, number>
   // Individual lightness values - always reflects current effective values (calculated in auto, adjusted in manual)
-  lightnessValues: Record<number, number>;
+  lightnessValues: Record<string, number>; // Changed from Record<number, number>
   // Track which lightness values have been manually overridden in manual mode
-  lightnessOverrides: Record<number, boolean>;
+  lightnessOverrides: Record<string, boolean>; // Changed from Record<number, boolean>
   // Lightness calculation mode - always auto with individual overrides
   lightnessMode: 'auto';
 }
 
 export interface PaletteColor {
-  step: number;
+  step: number; // Keep as number for position in curve calculations
+  tokenName: string; // Token name for export (e.g., "95", "85")
   lightness: number;
   chroma: number;
   hue: number;

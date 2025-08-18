@@ -109,7 +109,7 @@ export function PaletteDisplay({
                                 color: getTextColorForBackground(color)
                               }}
                             >
-                              {color.step}
+                              {color.tokenName}
                             </div>
                           </div>
                           
@@ -200,7 +200,7 @@ export function PaletteDisplay({
                                   color: getTextColorForBackground(color)
                                 }}
                               >
-                                {color.step}
+                                {color.tokenName}
                               </div>
                             </div>
                             

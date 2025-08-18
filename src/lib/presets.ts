@@ -1,7 +1,8 @@
 import { PaletteControls } from '../types';
+import { getDefaultSteps, convertToStringRecord } from './migration';
 
 // Professional contrast targets for accessibility
-const defaultContrastTargets = {
+const defaultContrastTargetsNumeric = {
   1: 1.1,
   2: 1.3,
   3: 1.7,
@@ -16,7 +17,7 @@ const defaultContrastTargets = {
 };
 
 // Professional lightness values for better contrast
-const defaultLightnessValues = {
+const defaultLightnessValuesNumeric = {
   1: 0.97,
   2: 0.91,
   3: 0.83,
@@ -31,7 +32,7 @@ const defaultLightnessValues = {
 };
 
 // Default lightness overrides - all false since we start in auto mode
-const defaultLightnessOverrides = {
+const defaultLightnessOverridesNumeric = {
   1: false,
   2: false,
   3: false,
@@ -45,12 +46,17 @@ const defaultLightnessOverrides = {
   11: false
 };
 
+// Convert to string keys for new format
+const defaultContrastTargets = convertToStringRecord(defaultContrastTargetsNumeric);
+const defaultLightnessValues = convertToStringRecord(defaultLightnessValuesNumeric);
+const defaultLightnessOverrides = convertToStringRecord(defaultLightnessOverridesNumeric);
+
 export const defaultControls: PaletteControls = {
   baseHue: 247,
   lightnessMin: 0.95,
   lightnessMax: 0.15,
   chromaMode: 'curve',
-  chromaValues: {
+  chromaValues: convertToStringRecord({
     1: 0.01,
     2: 0.05,
     3: 0.08,
@@ -62,7 +68,7 @@ export const defaultControls: PaletteControls = {
     9: 0.12,
     10: 0.10,
     11: 0.08
-  },
+  }),
   minChroma: 0.02,
   maxChroma: 0.24,
   chromaPeak: 0.55,
@@ -71,6 +77,7 @@ export const defaultControls: PaletteControls = {
   lightHueDrift: -5,
   darkHueDrift: 5,
   backgroundColor: '#ffffff',
+  steps: getDefaultSteps(),
   contrastTargets: defaultContrastTargets,
   lightnessValues: defaultLightnessValues,
   lightnessOverrides: defaultLightnessOverrides,
@@ -83,7 +90,7 @@ export const presets: { [key: string]: PaletteControls } = {
     lightnessMin: 0.95,
     lightnessMax: 0.15,
     chromaMode: 'curve',
-    chromaValues: {
+    chromaValues: convertToStringRecord({
       1: 0.01,
       2: 0.05,
       3: 0.08,
@@ -95,7 +102,7 @@ export const presets: { [key: string]: PaletteControls } = {
       9: 0.12,
       10: 0.10,
       11: 0.08
-    },
+    }),
     minChroma: 0.02,
     maxChroma: 0.24,
     chromaPeak: 0.55,
@@ -104,8 +111,9 @@ export const presets: { [key: string]: PaletteControls } = {
     lightHueDrift: -5,
     darkHueDrift: 5,
     backgroundColor: '#ffffff',
+    steps: getDefaultSteps(),
     contrastTargets: defaultContrastTargets,
-    lightnessValues: {
+    lightnessValues: convertToStringRecord({
       1: 0.97,
       2: 0.91,
       3: 0.83,
@@ -117,7 +125,7 @@ export const presets: { [key: string]: PaletteControls } = {
       9: 0.32,
       10: 0.26,
       11: 0.22
-    },
+    }),
     lightnessOverrides: defaultLightnessOverrides,
     lightnessMode: 'auto'
   },
@@ -127,7 +135,7 @@ export const presets: { [key: string]: PaletteControls } = {
     lightnessMin: 0.97,
     lightnessMax: 0.15,
     chromaMode: 'curve',
-    chromaValues: {
+    chromaValues: convertToStringRecord({
       1: 0.01,
       2: 0.04,
       3: 0.08,
@@ -139,7 +147,7 @@ export const presets: { [key: string]: PaletteControls } = {
       9: 0.12,
       10: 0.09,
       11: 0.07
-    },
+    }),
     minChroma: 0.01,
     maxChroma: 0.24,
     chromaPeak: 0.48,
@@ -148,8 +156,9 @@ export const presets: { [key: string]: PaletteControls } = {
     lightHueDrift: 0,
     darkHueDrift: 15,
     backgroundColor: '#ffffff',
+    steps: getDefaultSteps(),
     contrastTargets: defaultContrastTargets,
-    lightnessValues: {
+    lightnessValues: convertToStringRecord({
       1: 0.97,
       2: 0.91,
       3: 0.83,
@@ -161,7 +170,7 @@ export const presets: { [key: string]: PaletteControls } = {
       9: 0.32,
       10: 0.27,
       11: 0.23
-    },
+    }),
     lightnessOverrides: defaultLightnessOverrides,
     lightnessMode: 'auto'
   },
@@ -171,7 +180,7 @@ export const presets: { [key: string]: PaletteControls } = {
     lightnessMin: 0.95,
     lightnessMax: 0.15,
     chromaMode: 'curve',
-    chromaValues: {
+    chromaValues: convertToStringRecord({
       1: 0.02,
       2: 0.05,
       3: 0.08,
@@ -183,7 +192,7 @@ export const presets: { [key: string]: PaletteControls } = {
       9: 0.12,
       10: 0.10,
       11: 0.08
-    },
+    }),
     minChroma: 0.015,
     maxChroma: 0.23,
     chromaPeak: 0.44,
@@ -192,8 +201,9 @@ export const presets: { [key: string]: PaletteControls } = {
     lightHueDrift: -5,
     darkHueDrift: 5,
     backgroundColor: '#ffffff',
+    steps: getDefaultSteps(),
     contrastTargets: defaultContrastTargets,
-    lightnessValues: {
+    lightnessValues: convertToStringRecord({
       1: 0.97,
       2: 0.92,
       3: 0.84,
@@ -205,7 +215,7 @@ export const presets: { [key: string]: PaletteControls } = {
       9: 0.32,
       10: 0.27,
       11: 0.23
-    },
+    }),
     lightnessOverrides: defaultLightnessOverrides,
     lightnessMode: 'auto'
   },
@@ -215,7 +225,7 @@ export const presets: { [key: string]: PaletteControls } = {
     lightnessMin: 0.95,
     lightnessMax: 0.15,
     chromaMode: 'manual',
-    chromaValues: {
+    chromaValues: convertToStringRecord({
       1: 0.052,
       2: 0.098,
       3: 0.137,
@@ -227,7 +237,7 @@ export const presets: { [key: string]: PaletteControls } = {
       9: 0.09,
       10: 0.079,
       11: 0.055
-    },
+    }),
     minChroma: 0.03,
     maxChroma: 0.37,
     chromaPeak: 0.51,
@@ -236,8 +246,9 @@ export const presets: { [key: string]: PaletteControls } = {
     lightHueDrift: -5,
     darkHueDrift: 5,
     backgroundColor: '#ffffff',
+    steps: getDefaultSteps(),
     contrastTargets: defaultContrastTargets,
-    lightnessValues: {
+    lightnessValues: convertToStringRecord({
       1: 0.95,
       2: 0.9,
       3: 0.82,
@@ -249,7 +260,7 @@ export const presets: { [key: string]: PaletteControls } = {
       9: 0.3,
       10: 0.26,
       11: 0.22
-    },
+    }),
     lightnessOverrides: defaultLightnessOverrides,
     lightnessMode: 'auto'
   },
@@ -259,7 +270,7 @@ export const presets: { [key: string]: PaletteControls } = {
     lightnessMin: 0.95,
     lightnessMax: 0.15,
     chromaMode: 'curve',
-    chromaValues: {
+    chromaValues: convertToStringRecord({
       1: 0.02,
       2: 0.05,
       3: 0.08,
@@ -271,7 +282,7 @@ export const presets: { [key: string]: PaletteControls } = {
       9: 0.12,
       10: 0.10,
       11: 0.08
-    },
+    }),
     minChroma: 0.02,
     maxChroma: 0.28,
     chromaPeak: 0.5,
@@ -280,8 +291,9 @@ export const presets: { [key: string]: PaletteControls } = {
     lightHueDrift: 20,
     darkHueDrift: -20,
     backgroundColor: '#ffffff',
+    steps: getDefaultSteps(),
     contrastTargets: defaultContrastTargets,
-    lightnessValues: {
+    lightnessValues: convertToStringRecord({
       1: 0.9671120588933685,
       2: 0.9116559261129418,
       3: 0.8279919808823784,
@@ -293,7 +305,7 @@ export const presets: { [key: string]: PaletteControls } = {
       9: 0.32,
       10: 0.27,
       11: 0.23
-    },
+    }),
     lightnessOverrides: defaultLightnessOverrides,
     lightnessMode: 'auto'
   }

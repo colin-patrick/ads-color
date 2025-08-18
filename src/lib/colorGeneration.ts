@@ -1,6 +1,7 @@
 import { oklch, rgb, hsl, wcagContrast, formatHex, formatRgb, formatHsl, p3, rec2020 } from 'culori';
 import { PaletteControls, PaletteColor, Palette, ColorFormatValue, ContrastResult, ColorGamut, GamutValidation, GamutSettings, LightnessSettings, DEFAULT_PRECISION } from '../types';
 import { defaultControls, presets } from './presets';
+import { migratePaletteControls } from './migration';
 import defaultPalettesData from '../data/default-palettes.json';
 
 // Color steps for the 11-step palette - using sequential numbering 1-11
@@ -279,9 +280,9 @@ export function resolveBackgroundColor(
 }
 
 /**
- * Generate a complete 11-step OKLCH color palette with automatic resolution of relative background colors
+ * Generate a complete OKLCH color palette with automatic resolution of relative background colors
  */
-export function generatePalette(controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020' }, lightnessSettings?: { mode: 'contrast' | 'range' }, steps: number[] = COLOR_STEPS, existingPalette?: PaletteColor[]): PaletteColor[] {
+export function generatePalette(controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020' }, lightnessSettings?: { mode: 'contrast' | 'range' }, existingPalette?: PaletteColor[]): PaletteColor[] {
   // Handle circular dependency for relative palette references
   if (controls.backgroundColor.startsWith('palette-') && !existingPalette) {
     // First pass: generate palette with fallback background color to create initial palette
@@ -289,25 +290,29 @@ export function generatePalette(controls: PaletteControls, gamutSettings?: { gam
       { ...controls, backgroundColor: '#ffffff' }, // Use white as fallback
       gamutSettings, 
       lightnessSettings, 
-      steps
+      existingPalette
     );
     
     // Second pass: regenerate with resolved background color using first pass results
-    return generatePaletteInternal(controls, gamutSettings, lightnessSettings, steps, firstPassPalette);
+    return generatePaletteInternal(controls, gamutSettings, lightnessSettings, firstPassPalette);
   }
   
   // Normal generation path
-  return generatePaletteInternal(controls, gamutSettings, lightnessSettings, steps, existingPalette);
+  return generatePaletteInternal(controls, gamutSettings, lightnessSettings, existingPalette);
 }
 
 /**
  * Internal palette generation function
  */
-function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020' }, lightnessSettings?: { mode: 'contrast' | 'range' }, steps: number[] = COLOR_STEPS, existingPalette?: PaletteColor[]): PaletteColor[] {
+function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020' }, lightnessSettings?: { mode: 'contrast' | 'range' }, existingPalette?: PaletteColor[]): PaletteColor[] {
   // Resolve background color early to handle relative palette references
   const resolvedBackgroundColor = resolveBackgroundColor(controls.backgroundColor, existingPalette);
   
-  return steps.map((step, index) => {
+  // Use dynamic steps from controls
+  const steps = controls.steps || [];
+  
+  return steps.map((stepInfo, index) => {
+    const step = stepInfo.position;
     // Normalize step to 0-1 range using index instead of step values
     const normalizedStep = index / (steps.length - 1);
     
@@ -318,18 +323,19 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
     
     if (effectiveLightnessSettings.mode === 'contrast') {
       // Always auto mode with individual overrides
-      if (controls.lightnessOverrides?.[step] && controls.lightnessValues[step] !== undefined) {
+      const stepKey = step.toString();
+      if (controls.lightnessOverrides?.[stepKey] && controls.lightnessValues[stepKey] !== undefined) {
         // Step has been manually overridden
-        lightness = controls.lightnessValues[step];
+        lightness = controls.lightnessValues[stepKey];
       } else {
         // Calculate lightness automatically
-        const targetContrast = controls.contrastTargets[step];
+        const targetContrast = controls.contrastTargets[stepKey];
         
         // Determine the final chroma after gamut clamping for chroma-aware calculation
         // First, calculate what the chroma will be after clamping
         let tempChroma: number;
         if (controls.chromaMode === 'manual') {
-          tempChroma = controls.chromaValues[step] ?? 0.1;
+          tempChroma = controls.chromaValues[stepKey] ?? 0.1;
         } else { // curve mode
           const peak = controls.chromaPeak;
           const chromaPosition = Math.abs(normalizedStep - peak);
@@ -377,8 +383,9 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
     
     // Calculate chroma based on mode
     let chroma: number;
+    const stepKey = step.toString();
     if (controls.chromaMode === 'manual') {
-      chroma = controls.chromaValues[step] ?? 0.1;
+      chroma = controls.chromaValues[stepKey] ?? 0.1;
     } else { // curve mode
       // Curve-based distribution
       const peak = controls.chromaPeak; // Use configurable peak position
@@ -392,18 +399,20 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
       chroma = controls.minChroma + (controls.maxChroma - controls.minChroma) * chromaFactor;
     }
     
-    // Calculate hue with three-hue system
-    // Base hue (middle step) is the anchor point in the middle
+    // Calculate hue with fixed anchor at position 6 (extended range with Option B)
     let hue: number;
-    const midIndex = Math.floor(steps.length / 2);
+    const anchorPosition = 6; // Fixed anchor point
     
-    if (index <= midIndex) {
-      // Light colors: interpolate between baseHue + lightHueDrift (at step 1) and baseHue (at middle step)
-      const lightProgress = (midIndex - index) / midIndex; // 1 at step 1, 0 at middle step
+    if (step <= anchorPosition) {
+      // Light colors: interpolate between baseHue + lightHueDrift (at position 1) and baseHue (at position 6)
+      // Extended range: positions < 1 get more extreme light drift
+      const lightProgress = (anchorPosition - step) / (anchorPosition - 1); // 1 at position 1, 0 at position 6
       hue = controls.baseHue + (lightProgress * controls.lightHueDrift);
     } else {
-      // Dark colors: interpolate between baseHue (at middle step) and baseHue + darkHueDrift (at last step)
-      const darkProgress = (index - midIndex) / (steps.length - 1 - midIndex); // 0 at middle step, 1 at last step
+      // Dark colors: interpolate between baseHue (at position 6) and baseHue + darkHueDrift (at position 11)
+      // Extended range: positions > 11 get more extreme dark drift, scaled proportionally
+      const maxDarkPosition = 11; // Original maximum position
+      const darkProgress = (step - anchorPosition) / (maxDarkPosition - anchorPosition); // 0 at position 6, 1 at position 11, >1 for positions >11
       hue = controls.baseHue + (darkProgress * controls.darkHueDrift);
     }
     
@@ -453,6 +462,7 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
     
     return {
       step,
+      tokenName: stepInfo.tokenName,
       lightness: roundedLightness,
       chroma: roundedChroma,
       hue: roundedHue,
@@ -666,7 +676,7 @@ export function validateColor(color: PaletteColor, controls: PaletteControls, ga
   const effectiveLightnessSettings = lightnessSettings || { mode: 'contrast' };
   
   if (effectiveLightnessSettings.mode === 'contrast' && controls.contrastTargets) {
-    const targetContrast = controls.contrastTargets[color.step];
+    const targetContrast = controls.contrastTargets[color.step.toString()];
     if (targetContrast) {
       contrastDelta = Math.abs(color.contrast - targetContrast);
       
@@ -803,7 +813,7 @@ export function getTextColorForBackground(color: PaletteColor): string {
  */
 export function generateCSSVariables(palette: PaletteColor[], paletteName: string = 'palette'): string {
   const cssVariables = palette.map(color => 
-    `  --${paletteName}-${color.step}: ${color.css};`
+    `  --${paletteName}-${color.tokenName}: ${color.css};`
   ).join('\n');
   
   return `:root {\n${cssVariables}\n}`;
@@ -814,9 +824,9 @@ export function generateCSSVariables(palette: PaletteColor[], paletteName: strin
  */
 export function generateTailwindConfig(palette: PaletteColor[], paletteName: string = 'custom'): string {
   const colorObject = palette.reduce((acc, color) => {
-    acc[color.step] = color.css;
+    acc[color.tokenName] = color.css;
     return acc;
-  }, {} as Record<number, string>);
+  }, {} as Record<string, string>);
   
   return `// Add to your tailwind.config.js colors section
 colors: {
@@ -893,17 +903,8 @@ export function loadPalettesFromStorage(): { palettes: Palette[], activePaletteI
       ...palette,
       createdAt: new Date(palette.createdAt),
       updatedAt: new Date(palette.updatedAt),
-      controls: {
-        // Ensure all required properties exist with defaults
-        ...defaultControls,
-        // Override with actual stored values (migrating step keys if needed)
-        ...palette.controls,
-        // Migrate old step keys to new format
-        contrastTargets: migrateStepKeys(palette.controls?.contrastTargets || {}),
-        lightnessValues: migrateStepKeys(palette.controls?.lightnessValues || {}),
-        lightnessOverrides: migrateStepKeys(palette.controls?.lightnessOverrides || {}),
-        chromaValues: migrateStepKeys(palette.controls?.chromaValues || {})
-      }
+      // Apply migration if needed
+      controls: migratePaletteControls(palette.controls || {})
     }));
     
     return {
@@ -973,13 +974,8 @@ export function importPalettes(jsonData: string): { palettes: Palette[], activeP
         controls: {
           // Ensure all required properties exist with defaults
           ...defaultControls,
-          // Override with actual imported values
-          ...palette.controls,
-          // Migrate old step keys to new format
-          contrastTargets: migrateStepKeys(palette.controls?.contrastTargets || {}),
-          lightnessValues: migrateStepKeys(palette.controls?.lightnessValues || {}),
-          lightnessOverrides: migrateStepKeys(palette.controls?.lightnessOverrides || {}),
-          chromaValues: migrateStepKeys(palette.controls?.chromaValues || {})
+          // Apply migration to ensure new format
+          ...migratePaletteControls(palette.controls || {})
         }
       };
     });
@@ -1011,26 +1007,7 @@ export function downloadPalettes(palettes: Palette[], activePaletteId: string, f
   URL.revokeObjectURL(url);
 }
 
-/**
- * Migration utility to convert old step keys (50, 100, 200...) to new step keys (1, 2, 3...)
- */
-function migrateStepKeys(recordData: Record<string | number, any>): Record<number, any> {
-  const stepMigration: Record<string | number, number> = {
-    50: 1, 100: 2, 200: 3, 300: 4, 400: 5, 500: 6,
-    600: 7, 700: 8, 800: 9, 900: 10, 950: 11
-  };
-  
-  const migratedData: Record<number, any> = {};
-  
-  for (const [key, value] of Object.entries(recordData)) {
-    const newKey = stepMigration[key] || parseInt(key);
-    if (newKey) {
-      migratedData[newKey] = value;
-    }
-  }
-  
-  return migratedData;
-}
+
 
 /**
  * Convert external palette data to internal format
@@ -1158,16 +1135,20 @@ export function generateColorOptions(palettes: Palette[], gamutSettings: GamutSe
     }
   )
 
-  // Add relative palette options
-  COLOR_STEPS.forEach(step => {
+  // Add relative palette options - use common steps 1-11 for relative references
+  // Token Studio mapping from step numbers (1-11) to token names
+  const stepToTokenMapping = ['95', '90', '80', '70', '60', '50', '40', '30', '20', '15', '10'];
+  
+  for (let step = 1; step <= 11; step++) {
+    const tokenName = stepToTokenMapping[step - 1]; // Array is 0-indexed
     options.push({
       value: `palette-${step}`,
-      label: `Step ${step}`,
+      label: `Step ${tokenName}`,
       color: '', // No specific color - it's relative
       group: 'Relative to Palette',
       isRelative: true
     })
-  })
+  }
 
   // Add colors from all palettes
   palettes.forEach(palette => {
@@ -1176,7 +1157,7 @@ export function generateColorOptions(palettes: Palette[], gamutSettings: GamutSe
     colors.forEach(color => {
       options.push({
         value: color.css,
-        label: `${palette.name} ${color.step}`,
+        label: `${palette.name} ${color.tokenName}`,
         color: color.css,
         group: palette.name
       })
@@ -1196,27 +1177,19 @@ export function loadDefaultPalettes(): { palettes: Palette[], activePaletteId: s
     
     // Convert the data to proper Palette objects and regenerate colors
     const palettes = importData.palettes.map((palette: any) => {
-      // Ensure all required properties exist
-      const controls: PaletteControls = {
-        ...defaultControls,
-        ...palette.controls,
-        // Migrate old step keys to new format
-        contrastTargets: migrateStepKeys(palette.controls?.contrastTargets || {}),
-        lightnessValues: migrateStepKeys(palette.controls?.lightnessValues || {}),
-        lightnessOverrides: migrateStepKeys(palette.controls?.lightnessOverrides || {}),
-        chromaValues: migrateStepKeys(palette.controls?.chromaValues || {})
-      };
+      // Migrate and ensure all required properties exist
+      const controls: PaletteControls = migratePaletteControls(palette.controls || {});
       
-      // Regenerate colors from controls to ensure they're accurate
+      // Regenerate colors from controls to ensure they're accurate with new system
       const colors = generatePalette(controls);
       
       return {
         id: palette.id,
         name: palette.name,
         controls,
-        colors,
+        colors, // Use freshly generated colors
         createdAt: palette.createdAt ? new Date(palette.createdAt) : new Date(),
-        updatedAt: palette.updatedAt ? new Date(palette.updatedAt) : new Date(),
+        updatedAt: new Date(), // Update timestamp since we regenerated colors
       };
     });
     

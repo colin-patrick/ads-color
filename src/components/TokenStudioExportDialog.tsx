@@ -26,17 +26,13 @@ export function TokenStudioExportDialog({
   const generateTokenStudioJson = () => {
     const tokenStudioData: Record<string, Record<string, { value: string; type: string }>> = {}
 
-    // Mapping from step numbers (1-11) to token names
-    const stepToTokenMapping = [95, 90, 80, 70, 60, 50, 40, 30, 20, 15, 10]
-
     palettes.forEach(palette => {
       const colors = generatePalette(palette.controls, gamutSettings, lightnessSettings)
       const paletteTokens: Record<string, { value: string; type: string }> = {}
       
-      // Add the generated colors with new mapping
-      colors.forEach((color, index) => {
-        const tokenName = stepToTokenMapping[index].toString()
-        paletteTokens[tokenName] = {
+      // Add the generated colors using their dynamic token names
+      colors.forEach((color) => {
+        paletteTokens[color.tokenName] = {
           value: color.css,
           type: "color"
         }

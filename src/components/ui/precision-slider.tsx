@@ -16,6 +16,9 @@ interface PrecisionSliderProps {
   formatDisplay?: (value: number) => string
   className?: string
   showNumberInput?: boolean
+  // New props for editable label
+  editableLabel?: boolean
+  onLabelChange?: (newLabel: string) => void
 }
 
 export function PrecisionSlider({
@@ -28,7 +31,9 @@ export function PrecisionSlider({
   unit = '',
   formatDisplay,
   className,
-  showNumberInput = true
+  showNumberInput = true,
+  editableLabel = false,
+  onLabelChange
 }: PrecisionSliderProps) {
   
   // Extract numeric value for the input field
@@ -76,7 +81,22 @@ export function PrecisionSlider({
   return (
     <div className={cn("space-y-3", className)}>
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">{label}</label>
+        {editableLabel && onLabelChange ? (
+          <div className="relative max-w-[120px]">
+            <Input
+              value={label}
+              onChange={(e) => onLabelChange(e.target.value)}
+              className={cn(
+                "text-sm font-medium bg-transparent border border-transparent px-2 py-1 h-auto shadow-none",
+                "focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-input focus-visible:bg-background",
+                "hover:border-input hover:bg-muted/30 rounded-md transition-colors"
+              )}
+              placeholder="Token name"
+            />
+          </div>
+        ) : (
+          <label className="text-sm font-medium">{label}</label>
+        )}
         {showNumberInput && (
           <div className="flex items-center gap-1">
             <Input

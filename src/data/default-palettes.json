@@ -1,12 +1,12 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-07-28T19:41:22.403Z",
+  "exportedAt": "2025-08-14T21:04:10.774Z",
   "palettes": [
     {
-      "id": "dz88w3qf7",
-      "name": "Purple",
+      "id": "z4udxjgw6",
+      "name": "neutral",
       "controls": {
-        "baseHue": 303.5,
+        "baseHue": 298.5,
         "lightnessMin": 0.95,
         "lightnessMax": 0.15,
         "chromaMode": "curve",
@@ -23,13 +23,13 @@
           "10": 0.1,
           "11": 0.08
         },
-        "minChroma": 0.03,
-        "maxChroma": 0.268,
+        "minChroma": 0.002,
+        "maxChroma": 0.008,
         "chromaPeak": 0.48,
-        "chromaCurveType": "gaussian",
+        "chromaCurveType": "flat",
         "chromaEasing": "none",
-        "lightHueDrift": 5,
-        "darkHueDrift": -5,
+        "lightHueDrift": 0,
+        "darkHueDrift": 0,
         "backgroundColor": "#ffffff",
         "contrastTargets": {
           "1": 1.1,
@@ -37,7 +37,7 @@
           "3": 1.7,
           "4": 2.3,
           "5": 3.2,
-          "6": 4.7,
+          "6": 4.5,
           "7": 6.7,
           "8": 9.3,
           "9": 13.1,
@@ -45,8 +45,8 @@
           "11": 17.2
         },
         "lightnessValues": {
-          "1": 0.9671120588933685,
-          "2": 0.91,
+          "1": 0.9570000000000001,
+          "2": 0.9373,
           "3": 0.83,
           "4": 0.73,
           "5": 0.65,
@@ -55,20 +55,20 @@
           "8": 0.41,
           "9": 0.32,
           "10": 0.26,
-          "11": 0.22
+          "11": 0.2232
         },
         "lightnessOverrides": {
-          "1": false,
+          "1": true,
           "2": false,
           "3": false,
           "4": false,
           "5": false,
           "6": false,
-          "7": true,
+          "7": false,
           "8": false,
           "9": false,
           "10": false,
-          "11": false
+          "11": true
         },
         "lightnessMode": "auto",
         "sourceColorInput": "#8223d2",
@@ -76,113 +76,289 @@
       },
       "colors": [
         {
-          "step": 50,
-          "lightness": 0.97,
-          "chroma": 0.020084979691345296,
-          "hue": 240,
-          "oklch": "oklch(97.0% 2.008% 240.0)",
-          "css": "#eaf7ff",
-          "contrast": 1.09
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.02,
+          "hue": 308.5,
+          "oklch": "oklch(96.71% 0.020 308.50)",
+          "css": "#f8f1ff",
+          "contrast": 1.11
         },
         {
-          "step": 100,
-          "lightness": 0.9311111111111111,
-          "chroma": 0.03091520013908379,
-          "hue": 241.38918542133544,
-          "oklch": "oklch(93.1% 3.092% 241.4)",
-          "css": "#d7ebfc",
-          "contrast": 1.22
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.055,
+          "hue": 307.5,
+          "oklch": "oklch(91.17% 0.055 307.50)",
+          "css": "#ecd9ff",
+          "contrast": 1.32
         },
         {
-          "step": 200,
-          "lightness": 0.8533333333333333,
-          "chroma": 0.06473762917058326,
-          "hue": 244,
-          "oklch": "oklch(85.3% 6.474% 244.0)",
-          "css": "#abd4f7",
-          "contrast": 1.55
+          "step": 3,
+          "lightness": 0.8388,
+          "chroma": 0.10200000000000001,
+          "hue": 306.5,
+          "oklch": "oklch(83.88% 0.102 306.50)",
+          "css": "#dbb9ff",
+          "contrast": 1.69
         },
         {
-          "step": 300,
-          "lightness": 0.7755555555555556,
-          "chroma": 0.1149880515906385,
-          "hue": 246.12835554495183,
-          "oklch": "oklch(77.6% 11.499% 246.1)",
-          "css": "#75bdfb",
-          "contrast": 2.01
+          "step": 4,
+          "lightness": 0.757,
+          "chroma": 0.157,
+          "hue": 305.5,
+          "oklch": "oklch(75.70% 0.157 305.50)",
+          "css": "#c894ff",
+          "contrast": 2.3
         },
         {
-          "step": 400,
-          "lightness": 0.6977777777777778,
-          "chroma": 0.17324465166333267,
-          "hue": 247.51754096628727,
-          "oklch": "oklch(69.8% 17.324% 247.5)",
-          "css": "#25a3ff",
-          "contrast": 2.68
+          "step": 5,
+          "lightness": 0.6798000000000001,
+          "chroma": 0.211,
+          "hue": 304.5,
+          "oklch": "oklch(67.98% 0.211 304.50)",
+          "css": "#b66eff",
+          "contrast": 3.16
         },
         {
-          "step": 500,
-          "lightness": 0.62,
-          "chroma": 0.2214002737393037,
-          "hue": 248,
-          "oklch": "oklch(62.0% 22.140% 248.0)",
-          "css": "#0088ff",
-          "contrast": 3.66
+          "step": 6,
+          "lightness": 0.5922000000000001,
+          "chroma": 0.267,
+          "hue": 303.5,
+          "oklch": "oklch(59.22% 0.267 303.50)",
+          "css": "#a237fb",
+          "contrast": 4.69
         },
         {
-          "step": 600,
-          "lightness": 0.5422222222222222,
-          "chroma": 0.23999802469948683,
-          "hue": 247.51754096628727,
-          "oklch": "oklch(54.2% 24.000% 247.5)",
-          "css": "#006df0",
-          "contrast": 5.1
+          "step": 7,
+          "lightness": 0.505,
+          "chroma": 0.241,
+          "hue": 302.5,
+          "oklch": "oklch(50.50% 0.241 302.50)",
+          "css": "#8223d2",
+          "contrast": 6.72
         },
         {
-          "step": 700,
-          "lightness": 0.46444444444444444,
-          "chroma": 0.2206725824522096,
-          "hue": 246.12835554495183,
-          "oklch": "oklch(46.4% 22.067% 246.1)",
-          "css": "#0056ca",
-          "contrast": 7.11
+          "step": 8,
+          "lightness": 0.4212,
+          "chroma": 0.187,
+          "hue": 301.5,
+          "oklch": "oklch(42.12% 0.187 301.50)",
+          "css": "#6222a0",
+          "contrast": 9.3
         },
         {
-          "step": 800,
-          "lightness": 0.3866666666666666,
-          "chroma": 0.17210769331833953,
-          "hue": 244,
-          "oklch": "oklch(38.7% 17.211% 244.0)",
-          "css": "#004497",
-          "contrast": 9.79
+          "step": 9,
+          "lightness": 0.3247,
+          "chroma": 0.123,
+          "hue": 300.5,
+          "oklch": "oklch(32.47% 0.123 300.50)",
+          "css": "#3f1e68",
+          "contrast": 13.14
         },
         {
-          "step": 900,
-          "lightness": 0.3088888888888889,
-          "chroma": 0.1138579570307056,
-          "hue": 241.38918542133544,
-          "oklch": "oklch(30.9% 11.386% 241.4)",
-          "css": "#003363",
-          "contrast": 13.16
+          "step": 10,
+          "lightness": 0.27290000000000003,
+          "chroma": 0.065,
+          "hue": 299.5,
+          "oklch": "oklch(27.29% 0.065 299.50)",
+          "css": "#2c1f42",
+          "contrast": 15.23
         },
         {
-          "step": 950,
-          "lightness": 0.27,
-          "chroma": 0.08706360324574876,
-          "hue": 240,
-          "oklch": "oklch(27.0% 8.706% 240.0)",
-          "css": "#002a4c",
-          "contrast": 14.99
+          "step": 11,
+          "lightness": 0.2257,
+          "chroma": 0.03,
+          "hue": 298.5,
+          "oklch": "oklch(22.57% 0.030 298.50)",
+          "css": "#1e1928",
+          "contrast": 17.18
         }
       ],
-      "createdAt": "2025-07-16T16:32:45.955Z",
-      "updatedAt": "2025-07-28T18:56:44.859Z"
+      "createdAt": "2025-07-28T19:39:52.892Z",
+      "updatedAt": "2025-08-14T20:59:28.020Z"
     },
     {
-      "id": "eg9ktlsty",
-      "name": "Error",
+      "id": "asihoakqe",
+      "name": "neutral-extended",
       "controls": {
-        "baseHue": 30,
+        "baseHue": 298.5,
+        "lightnessMin": 0.95,
+        "lightnessMax": 0.15,
+        "chromaMode": "curve",
+        "chromaValues": {
+          "1": 0.0015,
+          "2": 0.002,
+          "3": 0.004,
+          "4": 0.004,
+          "5": 0.004,
+          "6": 0.009,
+          "7": 0.006,
+          "8": 0.005,
+          "9": 0.004,
+          "10": 0.003,
+          "11": 0.002
+        },
+        "minChroma": 0.001,
+        "maxChroma": 0.008,
+        "chromaPeak": 0.48,
+        "chromaCurveType": "flat",
+        "chromaEasing": "none",
+        "lightHueDrift": 0,
+        "darkHueDrift": 0,
+        "backgroundColor": "#ffffff",
+        "contrastTargets": {
+          "1": 1.1,
+          "2": 1.3,
+          "3": 1.7,
+          "4": 2.3,
+          "5": 3.2,
+          "6": 4.5,
+          "7": 6.7,
+          "8": 9.3,
+          "9": 13.1,
+          "10": 15.2,
+          "11": 17.2
+        },
+        "lightnessValues": {
+          "1": 0.9843000000000001,
+          "2": 0.9373,
+          "3": 0.8879,
+          "4": 0.8667,
+          "5": 0.8471,
+          "6": 0.623,
+          "7": 0.34619999999999995,
+          "8": 0.3326,
+          "9": 0.2903,
+          "10": 0.2458,
+          "11": 0.1809
+        },
+        "lightnessOverrides": {
+          "1": true,
+          "2": true,
+          "3": true,
+          "4": true,
+          "5": true,
+          "6": true,
+          "7": true,
+          "8": true,
+          "9": true,
+          "10": true,
+          "11": true
+        },
+        "lightnessMode": "auto",
+        "sourceColorInput": "#8223d2",
+        "sourceColorActive": "input"
+      },
+      "colors": [
+        {
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.002,
+          "hue": 308.5,
+          "oklch": "oklch(96.71% 0.002 308.50)",
+          "css": "#f4f4f5",
+          "contrast": 1.1
+        },
+        {
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.003,
+          "hue": 307.5,
+          "oklch": "oklch(91.17% 0.003 307.50)",
+          "css": "#e2e1e3",
+          "contrast": 1.3
+        },
+        {
+          "step": 3,
+          "lightness": 0.8280000000000001,
+          "chroma": 0.005,
+          "hue": 306.5,
+          "oklch": "oklch(82.80% 0.005 306.50)",
+          "css": "#c7c6c9",
+          "contrast": 1.7
+        },
+        {
+          "step": 4,
+          "lightness": 0.7408,
+          "chroma": 0.007,
+          "hue": 305.5,
+          "oklch": "oklch(74.08% 0.007 305.50)",
+          "css": "#acaaaf",
+          "contrast": 2.3
+        },
+        {
+          "step": 5,
+          "lightness": 0.6527000000000001,
+          "chroma": 0.008,
+          "hue": 304.5,
+          "oklch": "oklch(65.27% 0.008 304.50)",
+          "css": "#918f94",
+          "contrast": 3.21
+        },
+        {
+          "step": 6,
+          "lightness": 0.5681,
+          "chroma": 0.008,
+          "hue": 303.5,
+          "oklch": "oklch(56.81% 0.008 303.50)",
+          "css": "#78767b",
+          "contrast": 4.51
+        },
+        {
+          "step": 7,
+          "lightness": 0.4743,
+          "chroma": 0.007,
+          "hue": 302.5,
+          "oklch": "oklch(47.43% 0.007 302.50)",
+          "css": "#5d5b5f",
+          "contrast": 6.72
+        },
+        {
+          "step": 8,
+          "lightness": 0.3977,
+          "chroma": 0.006,
+          "hue": 301.5,
+          "oklch": "oklch(39.77% 0.006 301.50)",
+          "css": "#47464a",
+          "contrast": 9.32
+        },
+        {
+          "step": 9,
+          "lightness": 0.31120000000000003,
+          "chroma": 0.004,
+          "hue": 300.5,
+          "oklch": "oklch(31.12% 0.004 300.50)",
+          "css": "#313032",
+          "contrast": 13.12
+        },
+        {
+          "step": 10,
+          "lightness": 0.2672,
+          "chroma": 0.003,
+          "hue": 299.5,
+          "oklch": "oklch(26.72% 0.003 299.50)",
+          "css": "#262527",
+          "contrast": 15.21
+        },
+        {
+          "step": 11,
+          "lightness": 0.2227,
+          "chroma": 0.002,
+          "hue": 298.5,
+          "oklch": "oklch(22.27% 0.002 298.50)",
+          "css": "#1b1b1c",
+          "contrast": 17.21
+        }
+      ],
+      "createdAt": "2025-08-14T19:18:04.444Z",
+      "updatedAt": "2025-08-14T21:01:31.171Z"
+    },
+    {
+      "id": "7zzvyg4ax",
+      "name": "crimson",
+      "controls": {
+        "baseHue": 25.1,
         "lightnessMin": 0.95,
         "lightnessMax": 0.15,
         "chromaMode": "curve",
@@ -199,13 +375,13 @@
           "10": 0.1,
           "11": 0.08
         },
-        "minChroma": 0.02,
-        "maxChroma": 0.2,
-        "chromaPeak": 0.48,
+        "minChroma": 0.047,
+        "maxChroma": 0.217,
+        "chromaPeak": 0.5,
         "chromaCurveType": "gaussian",
-        "chromaEasing": "none",
-        "lightHueDrift": 5,
-        "darkHueDrift": -5,
+        "chromaEasing": "ease-in",
+        "lightHueDrift": 5.2,
+        "darkHueDrift": -5.6,
         "backgroundColor": "#ffffff",
         "contrastTargets": {
           "1": 1.1,
@@ -213,7 +389,7 @@
           "3": 1.7,
           "4": 2.3,
           "5": 3.2,
-          "6": 4.7,
+          "6": 4.5,
           "7": 6.7,
           "8": 9.3,
           "9": 13.1,
@@ -251,113 +427,638 @@
       },
       "colors": [
         {
-          "step": 50,
-          "lightness": 0.97,
-          "chroma": 0.020084979691345296,
-          "hue": 240,
-          "oklch": "oklch(97.0% 2.008% 240.0)",
-          "css": "#eaf7ff",
-          "contrast": 1.09
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.016,
+          "hue": 35,
+          "oklch": "oklch(96.71% 0.016 35.00)",
+          "css": "#fff1ed",
+          "contrast": 1.11
         },
         {
-          "step": 100,
-          "lightness": 0.9311111111111111,
-          "chroma": 0.03091520013908379,
-          "hue": 241.38918542133544,
-          "oklch": "oklch(93.1% 3.092% 241.4)",
-          "css": "#d7ebfc",
-          "contrast": 1.22
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.046,
+          "hue": 34,
+          "oklch": "oklch(91.17% 0.046 34.00)",
+          "css": "#ffd8ce",
+          "contrast": 1.32
         },
         {
-          "step": 200,
-          "lightness": 0.8533333333333333,
-          "chroma": 0.06473762917058326,
-          "hue": 244,
-          "oklch": "oklch(85.3% 6.474% 244.0)",
-          "css": "#abd4f7",
-          "contrast": 1.55
+          "step": 3,
+          "lightness": 0.8388,
+          "chroma": 0.09,
+          "hue": 33,
+          "oklch": "oklch(83.88% 0.090 33.00)",
+          "css": "#ffb5a5",
+          "contrast": 1.69
         },
         {
-          "step": 300,
-          "lightness": 0.7755555555555556,
-          "chroma": 0.1149880515906385,
-          "hue": 246.12835554495183,
-          "oklch": "oklch(77.6% 11.499% 246.1)",
-          "css": "#75bdfb",
-          "contrast": 2.01
+          "step": 4,
+          "lightness": 0.757,
+          "chroma": 0.146,
+          "hue": 32,
+          "oklch": "oklch(75.70% 0.146 32.00)",
+          "css": "#ff8a74",
+          "contrast": 2.3
         },
         {
-          "step": 400,
-          "lightness": 0.6977777777777778,
-          "chroma": 0.17324465166333267,
-          "hue": 247.51754096628727,
-          "oklch": "oklch(69.8% 17.324% 247.5)",
-          "css": "#25a3ff",
-          "contrast": 2.68
+          "step": 5,
+          "lightness": 0.6744,
+          "chroma": 0.191,
+          "hue": 31,
+          "oklch": "oklch(67.44% 0.191 31.00)",
+          "css": "#f55d47",
+          "contrast": 3.2
         },
         {
-          "step": 500,
-          "lightness": 0.62,
-          "chroma": 0.2214002737393037,
-          "hue": 248,
-          "oklch": "oklch(62.0% 22.140% 248.0)",
-          "css": "#0088ff",
-          "contrast": 3.66
+          "step": 6,
+          "lightness": 0.5818,
+          "chroma": 0.199,
+          "hue": 30,
+          "oklch": "oklch(58.18% 0.199 30.00)",
+          "css": "#d73727",
+          "contrast": 4.68
         },
         {
-          "step": 600,
-          "lightness": 0.5422222222222222,
-          "chroma": 0.23999802469948683,
-          "hue": 247.51754096628727,
-          "oklch": "oklch(54.2% 24.000% 247.5)",
-          "css": "#006df0",
-          "contrast": 5.1
+          "step": 7,
+          "lightness": 0.4948,
+          "chroma": 0.18,
+          "hue": 29,
+          "oklch": "oklch(49.48% 0.180 29.00)",
+          "css": "#b1221a",
+          "contrast": 6.73
         },
         {
-          "step": 700,
-          "lightness": 0.46444444444444444,
-          "chroma": 0.2206725824522096,
-          "hue": 246.12835554495183,
-          "oklch": "oklch(46.4% 22.067% 246.1)",
-          "css": "#0056ca",
-          "contrast": 7.11
+          "step": 8,
+          "lightness": 0.4142,
+          "chroma": 0.139,
+          "hue": 28,
+          "oklch": "oklch(41.42% 0.139 28.00)",
+          "css": "#87201b",
+          "contrast": 9.3
         },
         {
-          "step": 800,
-          "lightness": 0.3866666666666666,
-          "chroma": 0.17210769331833953,
-          "hue": 244,
-          "oklch": "oklch(38.7% 17.211% 244.0)",
-          "css": "#004497",
-          "contrast": 9.79
+          "step": 9,
+          "lightness": 0.322,
+          "chroma": 0.09,
+          "hue": 27,
+          "oklch": "oklch(32.20% 0.090 27.00)",
+          "css": "#591c18",
+          "contrast": 13.09
         },
         {
-          "step": 900,
-          "lightness": 0.3088888888888889,
-          "chroma": 0.1138579570307056,
-          "hue": 241.38918542133544,
-          "oklch": "oklch(30.9% 11.386% 241.4)",
-          "css": "#003363",
-          "contrast": 13.16
+          "step": 10,
+          "lightness": 0.27290000000000003,
+          "chroma": 0.047,
+          "hue": 26,
+          "oklch": "oklch(27.29% 0.047 26.00)",
+          "css": "#3b1d1b",
+          "contrast": 15.19
         },
         {
-          "step": 950,
-          "lightness": 0.27,
-          "chroma": 0.08706360324574876,
-          "hue": 240,
-          "oklch": "oklch(27.0% 8.706% 240.0)",
-          "css": "#002a4c",
-          "contrast": 14.99
+          "step": 11,
+          "lightness": 0.2257,
+          "chroma": 0.02,
+          "hue": 25,
+          "oklch": "oklch(22.57% 0.020 25.00)",
+          "css": "#251817",
+          "contrast": 17.17
         }
       ],
-      "createdAt": "2025-07-16T16:34:01.577Z",
-      "updatedAt": "2025-07-28T18:55:19.487Z"
+      "createdAt": "2025-07-28T21:57:38.911Z",
+      "updatedAt": "2025-08-13T18:23:38.015Z"
     },
     {
-      "id": "70znve9ih",
-      "name": "Success",
+      "id": "r1hocmf0t",
+      "name": "orange",
       "controls": {
-        "baseHue": 144,
+        "baseHue": 50,
+        "lightnessMin": 0.95,
+        "lightnessMax": 0.15,
+        "chromaMode": "curve",
+        "chromaValues": {
+          "1": 0.01,
+          "2": 0.05,
+          "3": 0.08,
+          "4": 0.11,
+          "5": 0.13,
+          "6": 0.15,
+          "7": 0.16,
+          "8": 0.14,
+          "9": 0.12,
+          "10": 0.1,
+          "11": 0.08
+        },
+        "minChroma": 0.047,
+        "maxChroma": 0.292,
+        "chromaPeak": 0.48,
+        "chromaCurveType": "gaussian",
+        "chromaEasing": "ease-in",
+        "lightHueDrift": 5.2,
+        "darkHueDrift": -5.6,
+        "backgroundColor": "#ffffff",
+        "contrastTargets": {
+          "1": 1.1,
+          "2": 1.3,
+          "3": 1.7,
+          "4": 2.3,
+          "5": 3.2,
+          "6": 4.5,
+          "7": 6.7,
+          "8": 9.3,
+          "9": 13.1,
+          "10": 15.2,
+          "11": 17.2
+        },
+        "lightnessValues": {
+          "1": 0.97,
+          "2": 0.91,
+          "3": 0.83,
+          "4": 0.73,
+          "5": 0.65,
+          "6": 0.56,
+          "7": 0.49,
+          "8": 0.41,
+          "9": 0.32,
+          "10": 0.26,
+          "11": 0.22
+        },
+        "lightnessOverrides": {
+          "1": false,
+          "2": false,
+          "3": false,
+          "4": false,
+          "5": false,
+          "6": false,
+          "7": false,
+          "8": false,
+          "9": false,
+          "10": false,
+          "11": false
+        },
+        "lightnessMode": "auto",
+        "sourceColorActive": null
+      },
+      "colors": [
+        {
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.016,
+          "hue": 31.200000000000003,
+          "oklch": "oklch(96.71% 0.016 31.20)",
+          "css": "#fff1ee",
+          "contrast": 1.11
+        },
+        {
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.046,
+          "hue": 30.200000000000003,
+          "oklch": "oklch(91.17% 0.046 30.20)",
+          "css": "#ffd7d0",
+          "contrast": 1.32
+        },
+        {
+          "step": 3,
+          "lightness": 0.8388,
+          "chroma": 0.089,
+          "hue": 29.200000000000003,
+          "oklch": "oklch(83.88% 0.089 29.20)",
+          "css": "#ffb5a9",
+          "contrast": 1.69
+        },
+        {
+          "step": 4,
+          "lightness": 0.757,
+          "chroma": 0.146,
+          "hue": 28.200000000000003,
+          "oklch": "oklch(75.70% 0.146 28.20)",
+          "css": "#ff897b",
+          "contrast": 2.3
+        },
+        {
+          "step": 5,
+          "lightness": 0.6744,
+          "chroma": 0.191,
+          "hue": 27.200000000000003,
+          "oklch": "oklch(67.44% 0.191 27.20)",
+          "css": "#f65c51",
+          "contrast": 3.21
+        },
+        {
+          "step": 6,
+          "lightness": 0.5818,
+          "chroma": 0.199,
+          "hue": 26.200000000000003,
+          "oklch": "oklch(58.18% 0.199 26.20)",
+          "css": "#d83535",
+          "contrast": 4.7
+        },
+        {
+          "step": 7,
+          "lightness": 0.4948,
+          "chroma": 0.18,
+          "hue": 25.200000000000003,
+          "oklch": "oklch(49.48% 0.180 25.20)",
+          "css": "#b12026",
+          "contrast": 6.74
+        },
+        {
+          "step": 8,
+          "lightness": 0.4142,
+          "chroma": 0.139,
+          "hue": 24.200000000000003,
+          "oklch": "oklch(41.42% 0.139 24.20)",
+          "css": "#871f23",
+          "contrast": 9.31
+        },
+        {
+          "step": 9,
+          "lightness": 0.322,
+          "chroma": 0.09,
+          "hue": 23.200000000000003,
+          "oklch": "oklch(32.20% 0.090 23.20)",
+          "css": "#591c1c",
+          "contrast": 13.1
+        },
+        {
+          "step": 10,
+          "lightness": 0.27290000000000003,
+          "chroma": 0.047,
+          "hue": 22.200000000000003,
+          "oklch": "oklch(27.29% 0.047 22.20)",
+          "css": "#3b1d1c",
+          "contrast": 15.19
+        },
+        {
+          "step": 11,
+          "lightness": 0.2257,
+          "chroma": 0.02,
+          "hue": 21.200000000000003,
+          "oklch": "oklch(22.57% 0.020 21.20)",
+          "css": "#251818",
+          "contrast": 17.17
+        }
+      ],
+      "createdAt": "2025-07-28T21:58:53.175Z",
+      "updatedAt": "2025-08-13T17:46:24.860Z"
+    },
+    {
+      "id": "jz49kd2a8",
+      "name": "amber",
+      "controls": {
+        "baseHue": 63,
+        "lightnessMin": 0.95,
+        "lightnessMax": 0.15,
+        "chromaMode": "curve",
+        "chromaValues": {
+          "1": 0.01,
+          "2": 0.05,
+          "3": 0.08,
+          "4": 0.11,
+          "5": 0.13,
+          "6": 0.15,
+          "7": 0.16,
+          "8": 0.14,
+          "9": 0.12,
+          "10": 0.1,
+          "11": 0.08
+        },
+        "minChroma": 0.047,
+        "maxChroma": 0.32,
+        "chromaPeak": 0.41,
+        "chromaCurveType": "gaussian",
+        "chromaEasing": "ease-in",
+        "lightHueDrift": 33.2,
+        "darkHueDrift": -9.8,
+        "backgroundColor": "#ffffff",
+        "contrastTargets": {
+          "1": 1.1,
+          "2": 1.3,
+          "3": 1.7,
+          "4": 2.3,
+          "5": 3.2,
+          "6": 4.5,
+          "7": 6.7,
+          "8": 9.3,
+          "9": 13.1,
+          "10": 15.2,
+          "11": 17.2
+        },
+        "lightnessValues": {
+          "1": 0.97,
+          "2": 0.91,
+          "3": 0.83,
+          "4": 0.73,
+          "5": 0.65,
+          "6": 0.56,
+          "7": 0.49,
+          "8": 0.41,
+          "9": 0.32,
+          "10": 0.26,
+          "11": 0.22
+        },
+        "lightnessOverrides": {
+          "1": false,
+          "2": false,
+          "3": false,
+          "4": false,
+          "5": false,
+          "6": false,
+          "7": false,
+          "8": false,
+          "9": false,
+          "10": false,
+          "11": false
+        },
+        "lightnessMode": "auto",
+        "sourceColorActive": null
+      },
+      "colors": [
+        {
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.018000000000000002,
+          "hue": 51.400000000000006,
+          "oklch": "oklch(96.71% 0.018 51.40)",
+          "css": "#fff1e9",
+          "contrast": 1.1
+        },
+        {
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.051000000000000004,
+          "hue": 50.400000000000006,
+          "oklch": "oklch(91.17% 0.051 50.40)",
+          "css": "#ffd9c4",
+          "contrast": 1.32
+        },
+        {
+          "step": 3,
+          "lightness": 0.8388,
+          "chroma": 0.098,
+          "hue": 49.400000000000006,
+          "oklch": "oklch(83.88% 0.098 49.40)",
+          "css": "#ffb791",
+          "contrast": 1.68
+        },
+        {
+          "step": 4,
+          "lightness": 0.757,
+          "chroma": 0.158,
+          "hue": 48.400000000000006,
+          "oklch": "oklch(75.70% 0.158 48.40)",
+          "css": "#ff8e4d",
+          "contrast": 2.28
+        },
+        {
+          "step": 5,
+          "lightness": 0.669,
+          "chroma": 0.184,
+          "hue": 47.400000000000006,
+          "oklch": "oklch(66.90% 0.184 47.40)",
+          "css": "#eb6800",
+          "contrast": 3.22
+        },
+        {
+          "step": 6,
+          "lightness": 0.5714,
+          "chroma": 0.16,
+          "hue": 46.400000000000006,
+          "oklch": "oklch(57.14% 0.160 46.40)",
+          "css": "#c05100",
+          "contrast": 4.73
+        },
+        {
+          "step": 7,
+          "lightness": 0.48660000000000003,
+          "chroma": 0.138,
+          "hue": 45.400000000000006,
+          "oklch": "oklch(48.66% 0.138 45.40)",
+          "css": "#9c3f00",
+          "contrast": 6.74
+        },
+        {
+          "step": 8,
+          "lightness": 0.40950000000000003,
+          "chroma": 0.11800000000000001,
+          "hue": 44.400000000000006,
+          "oklch": "oklch(40.95% 0.118 44.40)",
+          "css": "#7c2f00",
+          "contrast": 9.3
+        },
+        {
+          "step": 9,
+          "lightness": 0.3206,
+          "chroma": 0.094,
+          "hue": 43.400000000000006,
+          "oklch": "oklch(32.06% 0.094 43.40)",
+          "css": "#581e00",
+          "contrast": 13.11
+        },
+        {
+          "step": 10,
+          "lightness": 0.27290000000000003,
+          "chroma": 0.061,
+          "hue": 42.400000000000006,
+          "oklch": "oklch(27.29% 0.061 42.40)",
+          "css": "#3f1c0d",
+          "contrast": 15.22
+        },
+        {
+          "step": 11,
+          "lightness": 0.2257,
+          "chroma": 0.03,
+          "hue": 41.400000000000006,
+          "oklch": "oklch(22.57% 0.030 41.40)",
+          "css": "#281711",
+          "contrast": 17.19
+        }
+      ],
+      "createdAt": "2025-07-28T22:07:16.324Z",
+      "updatedAt": "2025-08-13T19:00:49.645Z"
+    },
+    {
+      "id": "3syesgfe3",
+      "name": "yellow",
+      "controls": {
+        "baseHue": 120,
+        "lightnessMin": 0.95,
+        "lightnessMax": 0.15,
+        "chromaMode": "curve",
+        "chromaValues": {
+          "1": 0.01,
+          "2": 0.05,
+          "3": 0.08,
+          "4": 0.11,
+          "5": 0.13,
+          "6": 0.15,
+          "7": 0.16,
+          "8": 0.14,
+          "9": 0.12,
+          "10": 0.1,
+          "11": 0.08
+        },
+        "minChroma": 0.132,
+        "maxChroma": 0.292,
+        "chromaPeak": 0.48,
+        "chromaCurveType": "gaussian",
+        "chromaEasing": "ease-in",
+        "lightHueDrift": 2,
+        "darkHueDrift": 0,
+        "backgroundColor": "#ffffff",
+        "contrastTargets": {
+          "1": 1.1,
+          "2": 1.3,
+          "3": 1.7,
+          "4": 2.3,
+          "5": 3.2,
+          "6": 4.5,
+          "7": 6.7,
+          "8": 9.3,
+          "9": 13.1,
+          "10": 15.2,
+          "11": 17.2
+        },
+        "lightnessValues": {
+          "1": 0.97,
+          "2": 0.91,
+          "3": 0.83,
+          "4": 0.73,
+          "5": 0.65,
+          "6": 0.56,
+          "7": 0.49,
+          "8": 0.41,
+          "9": 0.32,
+          "10": 0.26,
+          "11": 0.22
+        },
+        "lightnessOverrides": {
+          "1": false,
+          "2": false,
+          "3": false,
+          "4": false,
+          "5": false,
+          "6": false,
+          "7": false,
+          "8": false,
+          "9": false,
+          "10": false,
+          "11": false
+        },
+        "lightnessMode": "auto",
+        "sourceColorActive": null
+      },
+      "colors": [
+        {
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.056,
+          "hue": 96,
+          "oklch": "oklch(96.71% 0.056 96.00)",
+          "css": "#fff5ca",
+          "contrast": 1.1
+        },
+        {
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.127,
+          "hue": 92.9,
+          "oklch": "oklch(91.17% 0.127 92.90)",
+          "css": "#ffe079",
+          "contrast": 1.3
+        },
+        {
+          "step": 3,
+          "lightness": 0.8280000000000001,
+          "chroma": 0.169,
+          "hue": 89.7,
+          "oklch": "oklch(82.80% 0.169 89.70)",
+          "css": "#f2c002",
+          "contrast": 1.71
+        },
+        {
+          "step": 4,
+          "lightness": 0.7408,
+          "chroma": 0.152,
+          "hue": 86.60000000000001,
+          "oklch": "oklch(74.08% 0.152 86.60)",
+          "css": "#d5a300",
+          "contrast": 2.32
+        },
+        {
+          "step": 5,
+          "lightness": 0.6527000000000001,
+          "chroma": 0.134,
+          "hue": 83.4,
+          "oklch": "oklch(65.27% 0.134 83.40)",
+          "css": "#b78701",
+          "contrast": 3.24
+        },
+        {
+          "step": 6,
+          "lightness": 0.5611,
+          "chroma": 0.116,
+          "hue": 80.30000000000001,
+          "oklch": "oklch(56.11% 0.116 80.30)",
+          "css": "#986c00",
+          "contrast": 4.7
+        },
+        {
+          "step": 7,
+          "lightness": 0.47840000000000005,
+          "chroma": 0.1,
+          "hue": 77.2,
+          "oklch": "oklch(47.84% 0.100 77.20)",
+          "css": "#7c5400",
+          "contrast": 6.69
+        },
+        {
+          "step": 8,
+          "lightness": 0.40240000000000004,
+          "chroma": 0.085,
+          "hue": 74.2,
+          "oklch": "oklch(40.24% 0.085 74.20)",
+          "css": "#634000",
+          "contrast": 9.26
+        },
+        {
+          "step": 9,
+          "lightness": 0.3139,
+          "chroma": 0.068,
+          "hue": 71.10000000000001,
+          "oklch": "oklch(31.39% 0.068 71.10)",
+          "css": "#462a00",
+          "contrast": 13.14
+        },
+        {
+          "step": 10,
+          "lightness": 0.2701,
+          "chroma": 0.059000000000000004,
+          "hue": 68.10000000000001,
+          "oklch": "oklch(27.01% 0.059 68.10)",
+          "css": "#392000",
+          "contrast": 15.22
+        },
+        {
+          "step": 11,
+          "lightness": 0.2257,
+          "chroma": 0.051000000000000004,
+          "hue": 65,
+          "oklch": "oklch(22.57% 0.051 65.00)",
+          "css": "#2c1600",
+          "contrast": 17.21
+        }
+      ],
+      "createdAt": "2025-07-28T22:11:04.571Z",
+      "updatedAt": "2025-08-13T18:53:39.128Z"
+    },
+    {
+      "id": "5vv3ppv0m",
+      "name": "green",
+      "controls": {
+        "baseHue": 159.3,
         "lightnessMin": 0.95,
         "lightnessMax": 0.15,
         "chromaMode": "curve",
@@ -374,13 +1075,13 @@
           "10": 0.1,
           "11": 0.08
         },
-        "minChroma": 0.02,
-        "maxChroma": 0.2,
+        "minChroma": 0.047,
+        "maxChroma": 0.292,
         "chromaPeak": 0.48,
-        "chromaCurveType": "gaussian",
-        "chromaEasing": "none",
-        "lightHueDrift": 5,
-        "darkHueDrift": -5,
+        "chromaCurveType": "sine",
+        "chromaEasing": "ease-in",
+        "lightHueDrift": 5.2,
+        "darkHueDrift": -5.6,
         "backgroundColor": "#ffffff",
         "contrastTargets": {
           "1": 1.1,
@@ -388,7 +1089,7 @@
           "3": 1.7,
           "4": 2.3,
           "5": 3.2,
-          "6": 4.7,
+          "6": 4.5,
           "7": 6.7,
           "8": 9.3,
           "9": 13.1,
@@ -401,7 +1102,7 @@
           "3": 0.83,
           "4": 0.73,
           "5": 0.65,
-          "6": 0.56,
+          "6": 0.5516,
           "7": 0.49,
           "8": 0.41,
           "9": 0.32,
@@ -414,7 +1115,7 @@
           "3": false,
           "4": false,
           "5": false,
-          "6": false,
+          "6": true,
           "7": false,
           "8": false,
           "9": false,
@@ -426,136 +1127,136 @@
       },
       "colors": [
         {
-          "step": 50,
-          "lightness": 0.97,
-          "chroma": 0.020084979691345296,
-          "hue": 240,
-          "oklch": "oklch(97.0% 2.008% 240.0)",
-          "css": "#eaf7ff",
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.026000000000000002,
+          "hue": 149,
+          "oklch": "oklch(96.71% 0.026 149.00)",
+          "css": "#e9f9eb",
           "contrast": 1.09
         },
         {
-          "step": 100,
-          "lightness": 0.9311111111111111,
-          "chroma": 0.03091520013908379,
-          "hue": 241.38918542133544,
-          "oklch": "oklch(93.1% 3.092% 241.4)",
-          "css": "#d7ebfc",
-          "contrast": 1.22
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.063,
+          "hue": 148,
+          "oklch": "oklch(91.17% 0.063 148.00)",
+          "css": "#c6eecb",
+          "contrast": 1.27
         },
         {
-          "step": 200,
-          "lightness": 0.8533333333333333,
-          "chroma": 0.06473762917058326,
-          "hue": 244,
-          "oklch": "oklch(85.3% 6.474% 244.0)",
-          "css": "#abd4f7",
-          "contrast": 1.55
+          "step": 3,
+          "lightness": 0.8151,
+          "chroma": 0.11,
+          "hue": 147,
+          "oklch": "oklch(81.51% 0.110 147.00)",
+          "css": "#92d699",
+          "contrast": 1.71
         },
         {
-          "step": 300,
-          "lightness": 0.7755555555555556,
-          "chroma": 0.1149880515906385,
-          "hue": 246.12835554495183,
-          "oklch": "oklch(77.6% 11.499% 246.1)",
-          "css": "#75bdfb",
-          "contrast": 2.01
+          "step": 4,
+          "lightness": 0.7292000000000001,
+          "chroma": 0.157,
+          "hue": 146,
+          "oklch": "oklch(72.92% 0.157 146.00)",
+          "css": "#5dc168",
+          "contrast": 2.26
         },
         {
-          "step": 400,
-          "lightness": 0.6977777777777778,
-          "chroma": 0.17324465166333267,
-          "hue": 247.51754096628727,
-          "oklch": "oklch(69.8% 17.324% 247.5)",
-          "css": "#25a3ff",
-          "contrast": 2.68
+          "step": 5,
+          "lightness": 0.6323000000000001,
+          "chroma": 0.191,
+          "hue": 145,
+          "oklch": "oklch(63.23% 0.191 145.00)",
+          "css": "#18a633",
+          "contrast": 3.22
         },
         {
-          "step": 500,
-          "lightness": 0.62,
-          "chroma": 0.2214002737393037,
-          "hue": 248,
-          "oklch": "oklch(62.0% 22.140% 248.0)",
-          "css": "#0088ff",
-          "contrast": 3.66
+          "step": 6,
+          "lightness": 0.5402,
+          "chroma": 0.17500000000000002,
+          "hue": 144,
+          "oklch": "oklch(54.02% 0.175 144.00)",
+          "css": "#008719",
+          "contrast": 4.71
         },
         {
-          "step": 600,
-          "lightness": 0.5422222222222222,
-          "chroma": 0.23999802469948683,
-          "hue": 247.51754096628727,
-          "oklch": "oklch(54.2% 24.000% 247.5)",
-          "css": "#006df0",
-          "contrast": 5.1
+          "step": 7,
+          "lightness": 0.4595,
+          "chroma": 0.154,
+          "hue": 143,
+          "oklch": "oklch(45.95% 0.154 143.00)",
+          "css": "#006c06",
+          "contrast": 6.7
         },
         {
-          "step": 700,
-          "lightness": 0.46444444444444444,
-          "chroma": 0.2206725824522096,
-          "hue": 246.12835554495183,
-          "oklch": "oklch(46.4% 22.067% 246.1)",
-          "css": "#0056ca",
-          "contrast": 7.11
+          "step": 8,
+          "lightness": 0.38530000000000003,
+          "chroma": 0.13,
+          "hue": 142,
+          "oklch": "oklch(38.53% 0.130 142.00)",
+          "css": "#045300",
+          "contrast": 9.31
         },
         {
-          "step": 800,
-          "lightness": 0.3866666666666666,
-          "chroma": 0.17210769331833953,
-          "hue": 244,
-          "oklch": "oklch(38.7% 17.211% 244.0)",
-          "css": "#004497",
-          "contrast": 9.79
+          "step": 9,
+          "lightness": 0.3027,
+          "chroma": 0.09,
+          "hue": 141,
+          "oklch": "oklch(30.27% 0.090 141.00)",
+          "css": "#0e3907",
+          "contrast": 13.11
         },
         {
-          "step": 900,
-          "lightness": 0.3088888888888889,
-          "chroma": 0.1138579570307056,
-          "hue": 241.38918542133544,
-          "oklch": "oklch(30.9% 11.386% 241.4)",
-          "css": "#003363",
-          "contrast": 13.16
+          "step": 10,
+          "lightness": 0.263,
+          "chroma": 0.047,
+          "hue": 140,
+          "oklch": "oklch(26.30% 0.047 140.00)",
+          "css": "#182a14",
+          "contrast": 15.18
         },
         {
-          "step": 950,
-          "lightness": 0.27,
-          "chroma": 0.08706360324574876,
-          "hue": 240,
-          "oklch": "oklch(27.0% 8.706% 240.0)",
-          "css": "#002a4c",
-          "contrast": 14.99
+          "step": 11,
+          "lightness": 0.221,
+          "chroma": 0.02,
+          "hue": 139,
+          "oklch": "oklch(22.10% 0.020 139.00)",
+          "css": "#161d14",
+          "contrast": 17.19
         }
       ],
-      "createdAt": "2025-07-16T16:34:06.516Z",
-      "updatedAt": "2025-07-28T18:54:59.119Z"
+      "createdAt": "2025-07-28T22:13:55.830Z",
+      "updatedAt": "2025-08-13T18:53:28.219Z"
     },
     {
-      "id": "nf6myiwl5",
-      "name": "Warning",
+      "id": "gda3p1ql1",
+      "name": "teal",
       "controls": {
-        "baseHue": 55,
+        "baseHue": 194.4,
         "lightnessMin": 0.95,
         "lightnessMax": 0.15,
         "chromaMode": "curve",
         "chromaValues": {
-          "1": 0.067,
-          "2": 0.113,
-          "3": 0.133,
+          "1": 0.01,
+          "2": 0.077,
+          "3": 0.125,
           "4": 0.154,
-          "5": 0.162,
-          "6": 0.15,
+          "5": 0.176,
+          "6": 0.164,
           "7": 0.16,
           "8": 0.14,
           "9": 0.12,
           "10": 0.1,
           "11": 0.08
         },
-        "minChroma": 0.02,
-        "maxChroma": 0.2,
-        "chromaPeak": 0.48,
+        "minChroma": 0.047,
+        "maxChroma": 0.292,
+        "chromaPeak": 0.47,
         "chromaCurveType": "gaussian",
-        "chromaEasing": "none",
-        "lightHueDrift": 25,
-        "darkHueDrift": -15,
+        "chromaEasing": "ease-in",
+        "lightHueDrift": 5.2,
+        "darkHueDrift": -5.6,
         "backgroundColor": "#ffffff",
         "contrastTargets": {
           "1": 1.1,
@@ -563,7 +1264,7 @@
           "3": 1.7,
           "4": 2.3,
           "5": 3.2,
-          "6": 4.7,
+          "6": 4.5,
           "7": 6.7,
           "8": 9.3,
           "9": 13.1,
@@ -573,10 +1274,10 @@
         "lightnessValues": {
           "1": 0.97,
           "2": 0.91,
-          "3": 0.8279919808823784,
+          "3": 0.83,
           "4": 0.73,
           "5": 0.65,
-          "6": 0.56,
+          "6": 0.5516,
           "7": 0.49,
           "8": 0.41,
           "9": 0.32,
@@ -589,126 +1290,125 @@
           "3": false,
           "4": false,
           "5": false,
-          "6": false,
+          "6": true,
           "7": false,
           "8": false,
           "9": false,
           "10": false,
           "11": false
         },
-        "lightnessMode": "manual",
-        "sourceColorInput": "220",
-        "sourceColorActive": "input"
+        "lightnessMode": "auto",
+        "sourceColorActive": null
       },
       "colors": [
         {
-          "step": 50,
-          "lightness": 0.97,
-          "chroma": 0.020084979691345296,
-          "hue": 240,
-          "oklch": "oklch(97.0% 2.008% 240.0)",
-          "css": "#eaf7ff",
-          "contrast": 1.09
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.045,
+          "hue": 164.5,
+          "oklch": "oklch(96.71% 0.045 164.50)",
+          "css": "#d9feec",
+          "contrast": 1.08
         },
         {
-          "step": 100,
-          "lightness": 0.9311111111111111,
-          "chroma": 0.03091520013908379,
-          "hue": 241.38918542133544,
-          "oklch": "oklch(93.1% 3.092% 241.4)",
-          "css": "#d7ebfc",
-          "contrast": 1.22
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.073,
+          "hue": 163.5,
+          "oklch": "oklch(91.17% 0.073 163.50)",
+          "css": "#b6f2d5",
+          "contrast": 1.26
         },
         {
-          "step": 200,
-          "lightness": 0.8533333333333333,
-          "chroma": 0.06473762917058326,
-          "hue": 244,
-          "oklch": "oklch(85.3% 6.474% 244.0)",
-          "css": "#abd4f7",
-          "contrast": 1.55
+          "step": 3,
+          "lightness": 0.8151,
+          "chroma": 0.11,
+          "hue": 162.4,
+          "oklch": "oklch(81.51% 0.110 162.40)",
+          "css": "#7bd9ad",
+          "contrast": 1.7
         },
         {
-          "step": 300,
-          "lightness": 0.7755555555555556,
-          "chroma": 0.1149880515906385,
-          "hue": 246.12835554495183,
-          "oklch": "oklch(77.6% 11.499% 246.1)",
-          "css": "#75bdfb",
-          "contrast": 2.01
+          "step": 4,
+          "lightness": 0.7177,
+          "chroma": 0.146,
+          "hue": 161.4,
+          "oklch": "oklch(71.77% 0.146 161.40)",
+          "css": "#2fbf86",
+          "contrast": 2.35
         },
         {
-          "step": 400,
-          "lightness": 0.6977777777777778,
-          "chroma": 0.17324465166333267,
-          "hue": 247.51754096628727,
-          "oklch": "oklch(69.8% 17.324% 247.5)",
-          "css": "#25a3ff",
-          "contrast": 2.68
+          "step": 5,
+          "lightness": 0.6323000000000001,
+          "chroma": 0.14200000000000002,
+          "hue": 160.3,
+          "oklch": "oklch(63.23% 0.142 160.30)",
+          "css": "#02a36c",
+          "contrast": 3.24
         },
         {
-          "step": 500,
-          "lightness": 0.62,
-          "chroma": 0.2214002737393037,
-          "hue": 248,
-          "oklch": "oklch(62.0% 22.140% 248.0)",
-          "css": "#0088ff",
-          "contrast": 3.66
+          "step": 6,
+          "lightness": 0.5516,
+          "chroma": 0.126,
+          "hue": 159.3,
+          "oklch": "oklch(55.16% 0.126 159.30)",
+          "css": "#018857",
+          "contrast": 4.53
         },
         {
-          "step": 600,
-          "lightness": 0.5422222222222222,
-          "chroma": 0.23999802469948683,
-          "hue": 247.51754096628727,
-          "oklch": "oklch(54.2% 24.000% 247.5)",
-          "css": "#006df0",
-          "contrast": 5.1
+          "step": 7,
+          "lightness": 0.46130000000000004,
+          "chroma": 0.108,
+          "hue": 158.20000000000002,
+          "oklch": "oklch(46.13% 0.108 158.20)",
+          "css": "#006a41",
+          "contrast": 6.71
         },
         {
-          "step": 700,
-          "lightness": 0.46444444444444444,
-          "chroma": 0.2206725824522096,
-          "hue": 246.12835554495183,
-          "oklch": "oklch(46.4% 22.067% 246.1)",
-          "css": "#0056ca",
-          "contrast": 7.11
+          "step": 8,
+          "lightness": 0.38680000000000003,
+          "chroma": 0.092,
+          "hue": 157.10000000000002,
+          "oklch": "oklch(38.68% 0.092 157.10)",
+          "css": "#005230",
+          "contrast": 9.31
         },
         {
-          "step": 800,
-          "lightness": 0.3866666666666666,
-          "chroma": 0.17210769331833953,
-          "hue": 244,
-          "oklch": "oklch(38.7% 17.211% 244.0)",
-          "css": "#004497",
-          "contrast": 9.79
+          "step": 9,
+          "lightness": 0.3027,
+          "chroma": 0.073,
+          "hue": 155.9,
+          "oklch": "oklch(30.27% 0.073 155.90)",
+          "css": "#01391e",
+          "contrast": 13.11
         },
         {
-          "step": 900,
-          "lightness": 0.3088888888888889,
-          "chroma": 0.1138579570307056,
-          "hue": 241.38918542133544,
-          "oklch": "oklch(30.9% 11.386% 241.4)",
-          "css": "#003363",
-          "contrast": 13.16
+          "step": 10,
+          "lightness": 0.2609,
+          "chroma": 0.061,
+          "hue": 154.8,
+          "oklch": "oklch(26.09% 0.061 154.80)",
+          "css": "#032d16",
+          "contrast": 15.17
         },
         {
-          "step": 950,
-          "lightness": 0.27,
-          "chroma": 0.08706360324574876,
-          "hue": 240,
-          "oklch": "oklch(27.0% 8.706% 240.0)",
-          "css": "#002a4c",
-          "contrast": 14.99
+          "step": 11,
+          "lightness": 0.2192,
+          "chroma": 0.04,
+          "hue": 153.70000000000002,
+          "oklch": "oklch(21.92% 0.040 153.70)",
+          "css": "#092012",
+          "contrast": 17.15
         }
       ],
-      "createdAt": "2025-07-16T16:46:59.235Z",
-      "updatedAt": "2025-07-28T18:57:29.293Z"
+      "createdAt": "2025-08-11T18:51:45.093Z",
+      "updatedAt": "2025-08-13T18:04:18.900Z"
     },
     {
-      "id": "z4udxjgw6",
-      "name": "Neutral",
+      "id": "igjwj7494",
+      "name": "sky",
       "controls": {
-        "baseHue": 303.5,
+        "baseHue": 229.5,
         "lightnessMin": 0.95,
         "lightnessMax": 0.15,
         "chromaMode": "curve",
@@ -725,13 +1425,13 @@
           "10": 0.1,
           "11": 0.08
         },
-        "minChroma": 0,
-        "maxChroma": 0.01,
+        "minChroma": 0.047,
+        "maxChroma": 0.196,
         "chromaPeak": 0.48,
         "chromaCurveType": "gaussian",
-        "chromaEasing": "none",
-        "lightHueDrift": 5,
-        "darkHueDrift": -5,
+        "chromaEasing": "ease-in",
+        "lightHueDrift": 5.2,
+        "darkHueDrift": -5.6,
         "backgroundColor": "#ffffff",
         "contrastTargets": {
           "1": 1.1,
@@ -739,7 +1439,7 @@
           "3": 1.7,
           "4": 2.3,
           "5": 3.2,
-          "6": 4.7,
+          "6": 4.5,
           "7": 6.7,
           "8": 9.3,
           "9": 13.1,
@@ -766,6 +1466,534 @@
           "4": false,
           "5": false,
           "6": false,
+          "7": false,
+          "8": false,
+          "9": false,
+          "10": false,
+          "11": false
+        },
+        "lightnessMode": "auto",
+        "sourceColorInput": "#8223d2",
+        "sourceColorActive": "input"
+      },
+      "colors": [
+        {
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.016,
+          "hue": 274.7,
+          "oklch": "oklch(96.71% 0.016 274.70)",
+          "css": "#f1f4ff",
+          "contrast": 1.1
+        },
+        {
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.042,
+          "hue": 273.7,
+          "oklch": "oklch(91.17% 0.042 273.70)",
+          "css": "#d9e1ff",
+          "contrast": 1.3
+        },
+        {
+          "step": 3,
+          "lightness": 0.8280000000000001,
+          "chroma": 0.085,
+          "hue": 272.6,
+          "oklch": "oklch(82.80% 0.085 272.60)",
+          "css": "#b4c4ff",
+          "contrast": 1.72
+        },
+        {
+          "step": 4,
+          "lightness": 0.7408,
+          "chroma": 0.133,
+          "hue": 271.6,
+          "oklch": "oklch(74.08% 0.133 271.60)",
+          "css": "#8da5ff",
+          "contrast": 2.34
+        },
+        {
+          "step": 5,
+          "lightness": 0.6636000000000001,
+          "chroma": 0.178,
+          "hue": 270.5,
+          "oklch": "oklch(66.36% 0.178 270.50)",
+          "css": "#6b88ff",
+          "contrast": 3.17
+        },
+        {
+          "step": 6,
+          "lightness": 0.5850000000000001,
+          "chroma": 0.226,
+          "hue": 269.5,
+          "oklch": "oklch(58.50% 0.226 269.50)",
+          "css": "#4a68ff",
+          "contrast": 4.46
+        },
+        {
+          "step": 7,
+          "lightness": 0.4928,
+          "chroma": 0.23500000000000001,
+          "hue": 268.40000000000003,
+          "oklch": "oklch(49.28% 0.235 268.40)",
+          "css": "#2f47e3",
+          "contrast": 6.71
+        },
+        {
+          "step": 8,
+          "lightness": 0.4071,
+          "chroma": 0.151,
+          "hue": 267.3,
+          "oklch": "oklch(40.71% 0.151 267.30)",
+          "css": "#263f9a",
+          "contrast": 9.28
+        },
+        {
+          "step": 9,
+          "lightness": 0.3139,
+          "chroma": 0.083,
+          "hue": 266.1,
+          "oklch": "oklch(31.39% 0.083 266.10)",
+          "css": "#1d2e5b",
+          "contrast": 13.13
+        },
+        {
+          "step": 10,
+          "lightness": 0.2686,
+          "chroma": 0.052000000000000005,
+          "hue": 265,
+          "oklch": "oklch(26.86% 0.052 265.00)",
+          "css": "#19253f",
+          "contrast": 15.2
+        },
+        {
+          "step": 11,
+          "lightness": 0.2242,
+          "chroma": 0.047,
+          "hue": 263.90000000000003,
+          "oklch": "oklch(22.42% 0.047 263.90)",
+          "css": "#101b31",
+          "contrast": 17.19
+        }
+      ],
+      "createdAt": "2025-08-11T17:32:01.157Z",
+      "updatedAt": "2025-08-13T17:36:16.325Z"
+    },
+    {
+      "id": "gc1aa0bpy",
+      "name": "blue",
+      "controls": {
+        "baseHue": 269.4,
+        "lightnessMin": 0.95,
+        "lightnessMax": 0.15,
+        "chromaMode": "curve",
+        "chromaValues": {
+          "1": 0.01,
+          "2": 0.05,
+          "3": 0.08,
+          "4": 0.11,
+          "5": 0.13,
+          "6": 0.16,
+          "7": 0.16,
+          "8": 0.14,
+          "9": 0.12,
+          "10": 0.1,
+          "11": 0.08
+        },
+        "minChroma": 0.047,
+        "maxChroma": 0.252,
+        "chromaPeak": 0.48,
+        "chromaCurveType": "gaussian",
+        "chromaEasing": "ease-in",
+        "lightHueDrift": 5.2,
+        "darkHueDrift": -5.6,
+        "backgroundColor": "#ffffff",
+        "contrastTargets": {
+          "1": 1.1,
+          "2": 1.3,
+          "3": 1.7,
+          "4": 2.3,
+          "5": 3.2,
+          "6": 4.5,
+          "7": 6.7,
+          "8": 9.3,
+          "9": 13.1,
+          "10": 15.2,
+          "11": 17.2
+        },
+        "lightnessValues": {
+          "1": 0.9671120588933685,
+          "2": 0.91,
+          "3": 0.83,
+          "4": 0.73,
+          "5": 0.65,
+          "6": 0.581,
+          "7": 0.505,
+          "8": 0.41,
+          "9": 0.32,
+          "10": 0.26,
+          "11": 0.22
+        },
+        "lightnessOverrides": {
+          "1": false,
+          "2": false,
+          "3": false,
+          "4": false,
+          "5": false,
+          "6": true,
+          "7": false,
+          "8": false,
+          "9": false,
+          "10": false,
+          "11": false
+        },
+        "lightnessMode": "auto",
+        "sourceColorInput": "#8223d2",
+        "sourceColorActive": "input"
+      },
+      "colors": [
+        {
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.02,
+          "hue": 308.5,
+          "oklch": "oklch(96.71% 0.020 308.50)",
+          "css": "#f8f1ff",
+          "contrast": 1.11
+        },
+        {
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.055,
+          "hue": 307.5,
+          "oklch": "oklch(91.17% 0.055 307.50)",
+          "css": "#ecd9ff",
+          "contrast": 1.32
+        },
+        {
+          "step": 3,
+          "lightness": 0.8388,
+          "chroma": 0.10200000000000001,
+          "hue": 306.5,
+          "oklch": "oklch(83.88% 0.102 306.50)",
+          "css": "#dbb9ff",
+          "contrast": 1.69
+        },
+        {
+          "step": 4,
+          "lightness": 0.757,
+          "chroma": 0.157,
+          "hue": 305.5,
+          "oklch": "oklch(75.70% 0.157 305.50)",
+          "css": "#c894ff",
+          "contrast": 2.3
+        },
+        {
+          "step": 5,
+          "lightness": 0.6798000000000001,
+          "chroma": 0.211,
+          "hue": 304.5,
+          "oklch": "oklch(67.98% 0.211 304.50)",
+          "css": "#b66eff",
+          "contrast": 3.16
+        },
+        {
+          "step": 6,
+          "lightness": 0.5922000000000001,
+          "chroma": 0.267,
+          "hue": 303.5,
+          "oklch": "oklch(59.22% 0.267 303.50)",
+          "css": "#a237fb",
+          "contrast": 4.69
+        },
+        {
+          "step": 7,
+          "lightness": 0.505,
+          "chroma": 0.241,
+          "hue": 302.5,
+          "oklch": "oklch(50.50% 0.241 302.50)",
+          "css": "#8223d2",
+          "contrast": 6.72
+        },
+        {
+          "step": 8,
+          "lightness": 0.4212,
+          "chroma": 0.187,
+          "hue": 301.5,
+          "oklch": "oklch(42.12% 0.187 301.50)",
+          "css": "#6222a0",
+          "contrast": 9.3
+        },
+        {
+          "step": 9,
+          "lightness": 0.3247,
+          "chroma": 0.123,
+          "hue": 300.5,
+          "oklch": "oklch(32.47% 0.123 300.50)",
+          "css": "#3f1e68",
+          "contrast": 13.14
+        },
+        {
+          "step": 10,
+          "lightness": 0.27290000000000003,
+          "chroma": 0.065,
+          "hue": 299.5,
+          "oklch": "oklch(27.29% 0.065 299.50)",
+          "css": "#2c1f42",
+          "contrast": 15.23
+        },
+        {
+          "step": 11,
+          "lightness": 0.2257,
+          "chroma": 0.03,
+          "hue": 298.5,
+          "oklch": "oklch(22.57% 0.030 298.50)",
+          "css": "#1e1928",
+          "contrast": 17.18
+        }
+      ],
+      "createdAt": "2025-07-28T22:26:08.183Z",
+      "updatedAt": "2025-08-13T17:36:21.010Z"
+    },
+    {
+      "id": "vv9yl6wv7",
+      "name": "violet",
+      "controls": {
+        "baseHue": 288,
+        "lightnessMin": 0.95,
+        "lightnessMax": 0.15,
+        "chromaMode": "curve",
+        "chromaValues": {
+          "1": 0.01,
+          "2": 0.05,
+          "3": 0.08,
+          "4": 0.11,
+          "5": 0.13,
+          "6": 0.16,
+          "7": 0.16,
+          "8": 0.14,
+          "9": 0.12,
+          "10": 0.1,
+          "11": 0.08
+        },
+        "minChroma": 0.047,
+        "maxChroma": 0.311,
+        "chromaPeak": 0.46,
+        "chromaCurveType": "gaussian",
+        "chromaEasing": "ease-in",
+        "lightHueDrift": 5.2,
+        "darkHueDrift": -5.6,
+        "backgroundColor": "#ffffff",
+        "contrastTargets": {
+          "1": 1.1,
+          "2": 1.3,
+          "3": 1.7,
+          "4": 2.3,
+          "5": 3.2,
+          "6": 4.5,
+          "7": 6.7,
+          "8": 9.3,
+          "9": 13.1,
+          "10": 15.2,
+          "11": 17.2
+        },
+        "lightnessValues": {
+          "1": 0.9671120588933685,
+          "2": 0.91,
+          "3": 0.83,
+          "4": 0.73,
+          "5": 0.65,
+          "6": 0.6017,
+          "7": 0.505,
+          "8": 0.41,
+          "9": 0.32,
+          "10": 0.26,
+          "11": 0.22
+        },
+        "lightnessOverrides": {
+          "1": false,
+          "2": false,
+          "3": false,
+          "4": false,
+          "5": false,
+          "6": true,
+          "7": true,
+          "8": false,
+          "9": false,
+          "10": false,
+          "11": false
+        },
+        "lightnessMode": "auto",
+        "sourceColorInput": "#8223d2",
+        "sourceColorActive": "input"
+      },
+      "colors": [
+        {
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.02,
+          "hue": 309,
+          "oklch": "oklch(96.71% 0.020 309.00)",
+          "css": "#f8f1ff",
+          "contrast": 1.11
+        },
+        {
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.055,
+          "hue": 308,
+          "oklch": "oklch(91.17% 0.055 308.00)",
+          "css": "#ecd9ff",
+          "contrast": 1.32
+        },
+        {
+          "step": 3,
+          "lightness": 0.8388,
+          "chroma": 0.10300000000000001,
+          "hue": 306.90000000000003,
+          "oklch": "oklch(83.88% 0.103 306.90)",
+          "css": "#dcb9ff",
+          "contrast": 1.7
+        },
+        {
+          "step": 4,
+          "lightness": 0.757,
+          "chroma": 0.158,
+          "hue": 305.90000000000003,
+          "oklch": "oklch(75.70% 0.158 305.90)",
+          "css": "#c994ff",
+          "contrast": 2.3
+        },
+        {
+          "step": 5,
+          "lightness": 0.6798000000000001,
+          "chroma": 0.212,
+          "hue": 304.8,
+          "oklch": "oklch(67.98% 0.212 304.80)",
+          "css": "#b76dff",
+          "contrast": 3.16
+        },
+        {
+          "step": 6,
+          "lightness": 0.6017,
+          "chroma": 0.269,
+          "hue": 303.8,
+          "oklch": "oklch(60.17% 0.269 303.80)",
+          "css": "#a53aff",
+          "contrast": 4.51
+        },
+        {
+          "step": 7,
+          "lightness": 0.505,
+          "chroma": 0.24,
+          "hue": 302.7,
+          "oklch": "oklch(50.50% 0.240 302.70)",
+          "css": "#8223d2",
+          "contrast": 6.72
+        },
+        {
+          "step": 8,
+          "lightness": 0.41650000000000004,
+          "chroma": 0.154,
+          "hue": 301.6,
+          "oklch": "oklch(41.65% 0.154 301.60)",
+          "css": "#5d2f90",
+          "contrast": 9.26
+        },
+        {
+          "step": 9,
+          "lightness": 0.31930000000000003,
+          "chroma": 0.084,
+          "hue": 300.40000000000003,
+          "oklch": "oklch(31.93% 0.084 300.40)",
+          "css": "#3a2756",
+          "contrast": 13.12
+        },
+        {
+          "step": 10,
+          "lightness": 0.27290000000000003,
+          "chroma": 0.052000000000000005,
+          "hue": 299.3,
+          "oklch": "oklch(27.29% 0.052 299.30)",
+          "css": "#2b213d",
+          "contrast": 15.16
+        },
+        {
+          "step": 11,
+          "lightness": 0.2273,
+          "chroma": 0.047,
+          "hue": 298.2,
+          "oklch": "oklch(22.73% 0.047 298.20)",
+          "css": "#1f172f",
+          "contrast": 17.19
+        }
+      ],
+      "createdAt": "2025-08-11T17:30:07.534Z",
+      "updatedAt": "2025-08-13T18:38:16.770Z"
+    },
+    {
+      "id": "ngl52x1t2",
+      "name": "purple",
+      "controls": {
+        "baseHue": 303.8,
+        "lightnessMin": 0.95,
+        "lightnessMax": 0.15,
+        "chromaMode": "curve",
+        "chromaValues": {
+          "1": 0.01,
+          "2": 0.05,
+          "3": 0.08,
+          "4": 0.11,
+          "5": 0.13,
+          "6": 0.16,
+          "7": 0.16,
+          "8": 0.14,
+          "9": 0.12,
+          "10": 0.1,
+          "11": 0.08
+        },
+        "minChroma": 0.047,
+        "maxChroma": 0.292,
+        "chromaPeak": 0.48,
+        "chromaCurveType": "gaussian",
+        "chromaEasing": "ease-in",
+        "lightHueDrift": 5.2,
+        "darkHueDrift": -5.6,
+        "backgroundColor": "#ffffff",
+        "contrastTargets": {
+          "1": 1.1,
+          "2": 1.3,
+          "3": 1.7,
+          "4": 2.3,
+          "5": 3.2,
+          "6": 4.5,
+          "7": 6.7,
+          "8": 9.3,
+          "9": 13.1,
+          "10": 15.2,
+          "11": 17.2
+        },
+        "lightnessValues": {
+          "1": 0.9671120588933685,
+          "2": 0.91,
+          "3": 0.83,
+          "4": 0.73,
+          "5": 0.65,
+          "6": 0.6017,
+          "7": 0.505,
+          "8": 0.41,
+          "9": 0.32,
+          "10": 0.26,
+          "11": 0.22
+        },
+        "lightnessOverrides": {
+          "1": false,
+          "2": false,
+          "3": false,
+          "4": false,
+          "5": false,
+          "6": true,
           "7": true,
           "8": false,
           "9": false,
@@ -877,13 +2105,717 @@
           "contrast": 17.18
         }
       ],
-      "createdAt": "2025-07-28T19:39:52.892Z",
-      "updatedAt": "2025-07-28T19:40:19.729Z"
+      "createdAt": "2025-07-28T22:32:09.548Z",
+      "updatedAt": "2025-08-11T17:20:39.287Z"
+    },
+    {
+      "id": "8ugfmxmy0",
+      "name": "magenta",
+      "controls": {
+        "baseHue": 331.1,
+        "lightnessMin": 0.95,
+        "lightnessMax": 0.15,
+        "chromaMode": "curve",
+        "chromaValues": {
+          "1": 0.01,
+          "2": 0.05,
+          "3": 0.08,
+          "4": 0.11,
+          "5": 0.13,
+          "6": 0.16,
+          "7": 0.16,
+          "8": 0.14,
+          "9": 0.12,
+          "10": 0.1,
+          "11": 0.08
+        },
+        "minChroma": 0.047,
+        "maxChroma": 0.269,
+        "chromaPeak": 0.5,
+        "chromaCurveType": "gaussian",
+        "chromaEasing": "ease-in",
+        "lightHueDrift": 5.2,
+        "darkHueDrift": -5.6,
+        "backgroundColor": "#ffffff",
+        "contrastTargets": {
+          "1": 1.1,
+          "2": 1.3,
+          "3": 1.7,
+          "4": 2.3,
+          "5": 3.2,
+          "6": 4.5,
+          "7": 6.7,
+          "8": 9.3,
+          "9": 13.1,
+          "10": 15.2,
+          "11": 17.2
+        },
+        "lightnessValues": {
+          "1": 0.9671120588933685,
+          "2": 0.91,
+          "3": 0.83,
+          "4": 0.73,
+          "5": 0.65,
+          "6": 0.5853,
+          "7": 0.505,
+          "8": 0.41,
+          "9": 0.32,
+          "10": 0.26,
+          "11": 0.22
+        },
+        "lightnessOverrides": {
+          "1": false,
+          "2": false,
+          "3": false,
+          "4": false,
+          "5": false,
+          "6": false,
+          "7": false,
+          "8": false,
+          "9": false,
+          "10": false,
+          "11": false
+        },
+        "lightnessMode": "auto",
+        "sourceColorInput": "#8223d2",
+        "sourceColorActive": "input"
+      },
+      "colors": [
+        {
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.02,
+          "hue": 308.5,
+          "oklch": "oklch(96.71% 0.020 308.50)",
+          "css": "#f8f1ff",
+          "contrast": 1.11
+        },
+        {
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.055,
+          "hue": 307.5,
+          "oklch": "oklch(91.17% 0.055 307.50)",
+          "css": "#ecd9ff",
+          "contrast": 1.32
+        },
+        {
+          "step": 3,
+          "lightness": 0.8388,
+          "chroma": 0.10200000000000001,
+          "hue": 306.5,
+          "oklch": "oklch(83.88% 0.102 306.50)",
+          "css": "#dbb9ff",
+          "contrast": 1.69
+        },
+        {
+          "step": 4,
+          "lightness": 0.757,
+          "chroma": 0.157,
+          "hue": 305.5,
+          "oklch": "oklch(75.70% 0.157 305.50)",
+          "css": "#c894ff",
+          "contrast": 2.3
+        },
+        {
+          "step": 5,
+          "lightness": 0.6798000000000001,
+          "chroma": 0.211,
+          "hue": 304.5,
+          "oklch": "oklch(67.98% 0.211 304.50)",
+          "css": "#b66eff",
+          "contrast": 3.16
+        },
+        {
+          "step": 6,
+          "lightness": 0.5922000000000001,
+          "chroma": 0.267,
+          "hue": 303.5,
+          "oklch": "oklch(59.22% 0.267 303.50)",
+          "css": "#a237fb",
+          "contrast": 4.69
+        },
+        {
+          "step": 7,
+          "lightness": 0.505,
+          "chroma": 0.241,
+          "hue": 302.5,
+          "oklch": "oklch(50.50% 0.241 302.50)",
+          "css": "#8223d2",
+          "contrast": 6.72
+        },
+        {
+          "step": 8,
+          "lightness": 0.4212,
+          "chroma": 0.187,
+          "hue": 301.5,
+          "oklch": "oklch(42.12% 0.187 301.50)",
+          "css": "#6222a0",
+          "contrast": 9.3
+        },
+        {
+          "step": 9,
+          "lightness": 0.3247,
+          "chroma": 0.123,
+          "hue": 300.5,
+          "oklch": "oklch(32.47% 0.123 300.50)",
+          "css": "#3f1e68",
+          "contrast": 13.14
+        },
+        {
+          "step": 10,
+          "lightness": 0.27290000000000003,
+          "chroma": 0.065,
+          "hue": 299.5,
+          "oklch": "oklch(27.29% 0.065 299.50)",
+          "css": "#2c1f42",
+          "contrast": 15.23
+        },
+        {
+          "step": 11,
+          "lightness": 0.2257,
+          "chroma": 0.03,
+          "hue": 298.5,
+          "oklch": "oklch(22.57% 0.030 298.50)",
+          "css": "#1e1928",
+          "contrast": 17.18
+        }
+      ],
+      "createdAt": "2025-07-28T22:32:18.286Z",
+      "updatedAt": "2025-08-11T18:28:01.101Z"
+    },
+    {
+      "id": "v8xhho988",
+      "name": "pink",
+      "controls": {
+        "baseHue": 358.7,
+        "lightnessMin": 0.95,
+        "lightnessMax": 0.15,
+        "chromaMode": "curve",
+        "chromaValues": {
+          "1": 0.01,
+          "2": 0.05,
+          "3": 0.08,
+          "4": 0.11,
+          "5": 0.13,
+          "6": 0.16,
+          "7": 0.16,
+          "8": 0.14,
+          "9": 0.12,
+          "10": 0.1,
+          "11": 0.08
+        },
+        "minChroma": 0.045,
+        "maxChroma": 0.246,
+        "chromaPeak": 0.48,
+        "chromaCurveType": "gaussian",
+        "chromaEasing": "ease-in",
+        "lightHueDrift": 5.2,
+        "darkHueDrift": -5.6,
+        "backgroundColor": "#ffffff",
+        "contrastTargets": {
+          "1": 1.1,
+          "2": 1.3,
+          "3": 1.7,
+          "4": 2.3,
+          "5": 3.2,
+          "6": 4.5,
+          "7": 6.7,
+          "8": 9.3,
+          "9": 13.1,
+          "10": 15.2,
+          "11": 17.2
+        },
+        "lightnessValues": {
+          "1": 0.9671120588933685,
+          "2": 0.91,
+          "3": 0.83,
+          "4": 0.73,
+          "5": 0.65,
+          "6": 0.5853,
+          "7": 0.505,
+          "8": 0.41,
+          "9": 0.32,
+          "10": 0.26,
+          "11": 0.22
+        },
+        "lightnessOverrides": {
+          "1": false,
+          "2": false,
+          "3": false,
+          "4": false,
+          "5": false,
+          "6": false,
+          "7": false,
+          "8": false,
+          "9": false,
+          "10": false,
+          "11": false
+        },
+        "lightnessMode": "auto",
+        "sourceColorInput": "#8223d2",
+        "sourceColorActive": "input"
+      },
+      "colors": [
+        {
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.027,
+          "hue": 328.6,
+          "oklch": "oklch(96.71% 0.027 328.60)",
+          "css": "#ffeefd",
+          "contrast": 1.11
+        },
+        {
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.078,
+          "hue": 327.6,
+          "oklch": "oklch(91.17% 0.078 327.60)",
+          "css": "#ffd0fd",
+          "contrast": 1.34
+        },
+        {
+          "step": 3,
+          "lightness": 0.8495,
+          "chroma": 0.14400000000000002,
+          "hue": 326.6,
+          "oklch": "oklch(84.95% 0.144 326.60)",
+          "css": "#ffabff",
+          "contrast": 1.68
+        },
+        {
+          "step": 4,
+          "lightness": 0.7732,
+          "chroma": 0.211,
+          "hue": 325.6,
+          "oklch": "oklch(77.32% 0.211 325.60)",
+          "css": "#f77efd",
+          "contrast": 2.25
+        },
+        {
+          "step": 5,
+          "lightness": 0.6853,
+          "chroma": 0.256,
+          "hue": 324.6,
+          "oklch": "oklch(68.53% 0.256 324.60)",
+          "css": "#e24cef",
+          "contrast": 3.21
+        },
+        {
+          "step": 6,
+          "lightness": 0.5922000000000001,
+          "chroma": 0.267,
+          "hue": 323.6,
+          "oklch": "oklch(59.22% 0.267 323.60)",
+          "css": "#c41ad5",
+          "contrast": 4.73
+        },
+        {
+          "step": 7,
+          "lightness": 0.505,
+          "chroma": 0.23900000000000002,
+          "hue": 322.6,
+          "oklch": "oklch(50.50% 0.239 322.60)",
+          "css": "#9f00b1",
+          "contrast": 6.75
+        },
+        {
+          "step": 8,
+          "lightness": 0.42360000000000003,
+          "chroma": 0.187,
+          "hue": 321.6,
+          "oklch": "oklch(42.36% 0.187 321.60)",
+          "css": "#791389",
+          "contrast": 9.27
+        },
+        {
+          "step": 9,
+          "lightness": 0.32730000000000004,
+          "chroma": 0.123,
+          "hue": 320.6,
+          "oklch": "oklch(32.73% 0.123 320.60)",
+          "css": "#4f175a",
+          "contrast": 13.09
+        },
+        {
+          "step": 10,
+          "lightness": 0.2758,
+          "chroma": 0.065,
+          "hue": 319.6,
+          "oklch": "oklch(27.58% 0.065 319.60)",
+          "css": "#351c3c",
+          "contrast": 15.16
+        },
+        {
+          "step": 11,
+          "lightness": 0.2257,
+          "chroma": 0.03,
+          "hue": 318.6,
+          "oklch": "oklch(22.57% 0.030 318.60)",
+          "css": "#221725",
+          "contrast": 17.21
+        }
+      ],
+      "createdAt": "2025-07-28T22:32:56.705Z",
+      "updatedAt": "2025-08-13T18:54:36.392Z"
+    },
+    {
+      "id": "juzjvsiet",
+      "name": "rose",
+      "controls": {
+        "baseHue": 12.5,
+        "lightnessMin": 0.95,
+        "lightnessMax": 0.15,
+        "chromaMode": "curve",
+        "chromaValues": {
+          "1": 0.01,
+          "2": 0.05,
+          "3": 0.08,
+          "4": 0.11,
+          "5": 0.13,
+          "6": 0.16,
+          "7": 0.16,
+          "8": 0.14,
+          "9": 0.12,
+          "10": 0.1,
+          "11": 0.08
+        },
+        "minChroma": 0.045,
+        "maxChroma": 0.231,
+        "chromaPeak": 0.48,
+        "chromaCurveType": "gaussian",
+        "chromaEasing": "ease-in",
+        "lightHueDrift": 5.2,
+        "darkHueDrift": -5.6,
+        "backgroundColor": "#ffffff",
+        "contrastTargets": {
+          "1": 1.1,
+          "2": 1.3,
+          "3": 1.7,
+          "4": 2.3,
+          "5": 3.2,
+          "6": 4.5,
+          "7": 6.7,
+          "8": 9.3,
+          "9": 13.1,
+          "10": 15.2,
+          "11": 17.2
+        },
+        "lightnessValues": {
+          "1": 0.9671120588933685,
+          "2": 0.91,
+          "3": 0.83,
+          "4": 0.73,
+          "5": 0.65,
+          "6": 0.5853,
+          "7": 0.505,
+          "8": 0.41,
+          "9": 0.32,
+          "10": 0.26,
+          "11": 0.22
+        },
+        "lightnessOverrides": {
+          "1": false,
+          "2": false,
+          "3": false,
+          "4": false,
+          "5": false,
+          "6": false,
+          "7": false,
+          "8": false,
+          "9": false,
+          "10": false,
+          "11": false
+        },
+        "lightnessMode": "auto",
+        "sourceColorInput": "#8223d2",
+        "sourceColorActive": "input"
+      },
+      "colors": [
+        {
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.017,
+          "hue": 3.9000000000000004,
+          "oklch": "oklch(96.71% 0.017 3.90)",
+          "css": "#fff0f3",
+          "contrast": 1.11
+        },
+        {
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.048,
+          "hue": 2.9000000000000004,
+          "oklch": "oklch(91.17% 0.048 2.90)",
+          "css": "#ffd5df",
+          "contrast": 1.32
+        },
+        {
+          "step": 3,
+          "lightness": 0.8388,
+          "chroma": 0.095,
+          "hue": 1.8,
+          "oklch": "oklch(83.88% 0.095 1.80)",
+          "css": "#ffb0c5",
+          "contrast": 1.71
+        },
+        {
+          "step": 4,
+          "lightness": 0.757,
+          "chroma": 0.158,
+          "hue": 0.8,
+          "oklch": "oklch(75.70% 0.158 0.80)",
+          "css": "#ff81aa",
+          "contrast": 2.34
+        },
+        {
+          "step": 5,
+          "lightness": 0.6853,
+          "chroma": 0.224,
+          "hue": 359.70000000000005,
+          "oklch": "oklch(68.53% 0.224 359.70)",
+          "css": "#ff4995",
+          "contrast": 3.16
+        },
+        {
+          "step": 6,
+          "lightness": 0.5985,
+          "chroma": 0.243,
+          "hue": 358.70000000000005,
+          "oklch": "oklch(59.85% 0.243 358.70)",
+          "css": "#e5017d",
+          "contrast": 4.53
+        },
+        {
+          "step": 7,
+          "lightness": 0.4989,
+          "chroma": 0.203,
+          "hue": 357.6,
+          "oklch": "oklch(49.89% 0.203 357.60)",
+          "css": "#b30163",
+          "contrast": 6.77
+        },
+        {
+          "step": 8,
+          "lightness": 0.4142,
+          "chroma": 0.133,
+          "hue": 356.5,
+          "oklch": "oklch(41.42% 0.133 356.50)",
+          "css": "#7f224d",
+          "contrast": 9.34
+        },
+        {
+          "step": 9,
+          "lightness": 0.322,
+          "chroma": 0.076,
+          "hue": 355.3,
+          "oklch": "oklch(32.20% 0.076 355.30)",
+          "css": "#502135",
+          "contrast": 13.06
+        },
+        {
+          "step": 10,
+          "lightness": 0.27290000000000003,
+          "chroma": 0.049,
+          "hue": 354.20000000000005,
+          "oklch": "oklch(27.29% 0.049 354.20)",
+          "css": "#3a1c29",
+          "contrast": 15.23
+        },
+        {
+          "step": 11,
+          "lightness": 0.2288,
+          "chroma": 0.045,
+          "hue": 353.1,
+          "oklch": "oklch(22.88% 0.045 353.10)",
+          "css": "#2c131e",
+          "contrast": 17.19
+        }
+      ],
+      "createdAt": "2025-08-13T17:37:01.657Z",
+      "updatedAt": "2025-08-13T17:39:04.935Z"
+    },
+    {
+      "id": "8fwy7bole",
+      "name": "purple-muted",
+      "controls": {
+        "baseHue": 310,
+        "lightnessMin": 0.95,
+        "lightnessMax": 0.15,
+        "chromaMode": "curve",
+        "chromaValues": {
+          "1": 0.01,
+          "2": 0.05,
+          "3": 0.08,
+          "4": 0.11,
+          "5": 0.13,
+          "6": 0.16,
+          "7": 0.16,
+          "8": 0.14,
+          "9": 0.12,
+          "10": 0.1,
+          "11": 0.08
+        },
+        "minChroma": 0.038,
+        "maxChroma": 0.04,
+        "chromaPeak": 0.51,
+        "chromaCurveType": "gaussian",
+        "chromaEasing": "none",
+        "lightHueDrift": 0,
+        "darkHueDrift": -4,
+        "backgroundColor": "#ffffff",
+        "contrastTargets": {
+          "1": 1.1,
+          "2": 1.3,
+          "3": 1.7,
+          "4": 2.3,
+          "5": 3.2,
+          "6": 4.5,
+          "7": 6.7,
+          "8": 9.3,
+          "9": 13.1,
+          "10": 15.2,
+          "11": 17.2
+        },
+        "lightnessValues": {
+          "1": 0.9671120588933685,
+          "2": 0.91,
+          "3": 0.83,
+          "4": 0.73,
+          "5": 0.65,
+          "6": 0.5853,
+          "7": 0.505,
+          "8": 0.41,
+          "9": 0.32,
+          "10": 0.26,
+          "11": 0.22
+        },
+        "lightnessOverrides": {
+          "1": false,
+          "2": false,
+          "3": false,
+          "4": false,
+          "5": false,
+          "6": false,
+          "7": false,
+          "8": false,
+          "9": false,
+          "10": false,
+          "11": false
+        },
+        "lightnessMode": "auto",
+        "sourceColorInput": "#8223d2",
+        "sourceColorActive": "input"
+      },
+      "colors": [
+        {
+          "step": 1,
+          "lightness": 0.9671000000000001,
+          "chroma": 0.027,
+          "hue": 329,
+          "oklch": "oklch(96.71% 0.027 329.00)",
+          "css": "#ffeefd",
+          "contrast": 1.11
+        },
+        {
+          "step": 2,
+          "lightness": 0.9117000000000001,
+          "chroma": 0.038,
+          "hue": 325.20000000000005,
+          "oklch": "oklch(91.17% 0.038 325.20)",
+          "css": "#efdaf0",
+          "contrast": 1.32
+        },
+        {
+          "step": 3,
+          "lightness": 0.8280000000000001,
+          "chroma": 0.038,
+          "hue": 321.40000000000003,
+          "oklch": "oklch(82.80% 0.038 321.40)",
+          "css": "#d3bfd6",
+          "contrast": 1.72
+        },
+        {
+          "step": 4,
+          "lightness": 0.7408,
+          "chroma": 0.038,
+          "hue": 317.6,
+          "oklch": "oklch(74.08% 0.038 317.60)",
+          "css": "#b5a4bb",
+          "contrast": 2.33
+        },
+        {
+          "step": 5,
+          "lightness": 0.6527000000000001,
+          "chroma": 0.038,
+          "hue": 313.8,
+          "oklch": "oklch(65.27% 0.038 313.80)",
+          "css": "#9989a1",
+          "contrast": 3.25
+        },
+        {
+          "step": 6,
+          "lightness": 0.5611,
+          "chroma": 0.038,
+          "hue": 310,
+          "oklch": "oklch(56.11% 0.038 310.00)",
+          "css": "#7c6f86",
+          "contrast": 4.7
+        },
+        {
+          "step": 7,
+          "lightness": 0.505,
+          "chroma": 0.038,
+          "hue": 309.6,
+          "oklch": "oklch(50.50% 0.038 309.60)",
+          "css": "#6b5f75",
+          "contrast": 5.97
+        },
+        {
+          "step": 8,
+          "lightness": 0.40240000000000004,
+          "chroma": 0.038,
+          "hue": 309.20000000000005,
+          "oklch": "oklch(40.24% 0.038 309.20)",
+          "css": "#4e4358",
+          "contrast": 9.26
+        },
+        {
+          "step": 9,
+          "lightness": 0.31520000000000004,
+          "chroma": 0.038,
+          "hue": 308.90000000000003,
+          "oklch": "oklch(31.52% 0.038 308.90)",
+          "css": "#372c40",
+          "contrast": 13.09
+        },
+        {
+          "step": 10,
+          "lightness": 0.2701,
+          "chroma": 0.038,
+          "hue": 308.5,
+          "oklch": "oklch(27.01% 0.038 308.50)",
+          "css": "#2c2135",
+          "contrast": 15.24
+        },
+        {
+          "step": 11,
+          "lightness": 0.2257,
+          "chroma": 0.038,
+          "hue": 308.1,
+          "oklch": "oklch(22.57% 0.038 308.10)",
+          "css": "#21172a",
+          "contrast": 17.24
+        }
+      ],
+      "createdAt": "2025-07-29T21:37:53.694Z",
+      "updatedAt": "2025-07-31T16:26:14.336Z"
     }
   ],
-  "activePaletteId": "dz88w3qf7",
+  "activePaletteId": "asihoakqe",
   "metadata": {
-    "totalPalettes": 5,
+    "totalPalettes": 16,
     "tool": "ADS Color Generator"
   }
 }

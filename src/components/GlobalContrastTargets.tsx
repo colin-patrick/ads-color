@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { PaletteControls } from '../types'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
-import { COLOR_STEPS } from '../lib/colorGeneration'
 
 interface GlobalContrastTargetsProps {
   onApplyToAll: (contrastTargets: PaletteControls['contrastTargets']) => void
@@ -15,26 +14,28 @@ export function GlobalContrastTargets({
   onApplyToActive, 
   defaultTargets 
 }: GlobalContrastTargetsProps) {
-  const steps = COLOR_STEPS
+  const steps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] // Default 11 steps
+  // Token Studio mapping for display
+  const stepToTokenMapping = ['95', '90', '80', '70', '60', '50', '40', '30', '20', '15', '10']
   
   const [targets, setTargets] = useState<PaletteControls['contrastTargets']>(
     defaultTargets || {
-      1: 1.1,
-      2: 1.3,
-      3: 1.7,
-      4: 2.3,
-      5: 3.2,
-      6: 4.5,
-      7: 6.7,
-      8: 9.3,
-      9: 13.1,
-      10: 15.2,
-      11: 17.2
+      "1": 1.1,
+      "2": 1.3,
+      "3": 1.7,
+      "4": 2.3,
+      "5": 3.2,
+      "6": 4.5,
+      "7": 6.7,
+      "8": 9.3,
+      "9": 13.1,
+      "10": 15.2,
+      "11": 17.2
     }
   )
 
-  const updateTarget = (step: typeof steps[number], value: number) => {
-    setTargets(prev => ({ ...prev, [step]: value }))
+  const updateTarget = (step: number, value: number) => {
+    setTargets(prev => ({ ...prev, [step.toString()]: value }))
   }
 
 
@@ -46,12 +47,12 @@ export function GlobalContrastTargets({
       </div>
 
       <div className="space-y-2">
-        {steps.map(step => (
+        {steps.map((step, index) => (
           <div key={step} className="flex items-center space-x-3">
-            <span className="text-sm font-mono text-muted-foreground w-8">{step}</span>
+            <span className="text-sm font-mono text-muted-foreground w-8">{stepToTokenMapping[index]}</span>
             <Input
               type="number"
-              value={targets[step]}
+              value={targets[step.toString()]}
               onChange={(e) => updateTarget(step, parseFloat(e.target.value) || 1)}
               min="1"
               max="21"
