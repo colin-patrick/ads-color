@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PaletteControls } from '../types'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -14,29 +14,45 @@ export function GlobalContrastTargets({
   onApplyToActive, 
   defaultTargets 
 }: GlobalContrastTargetsProps) {
-  const steps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] // Default 11 steps
+  // Only show core color steps (1-11) for global contrast targets
+  // Steps 0 (white) and 12 (black) are hardcoded and don't use contrast-based calculation
+  const steps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] // Core color steps only
   // Token Studio mapping for display
   const stepToTokenMapping = ['95', '90', '80', '70', '60', '50', '40', '30', '20', '15', '10']
   
+  // Default contrast targets (current system defaults)
+  const systemDefaults = {
+    "1": 1.1,
+    "2": 1.3,
+    "3": 1.7,
+    "4": 2.3,
+    "5": 3.2,
+    "6": 4.5,
+    "7": 6.7,
+    "8": 9.3,
+    "9": 13.1,
+    "10": 15.2,
+    "11": 17.2
+  }
+
   const [targets, setTargets] = useState<PaletteControls['contrastTargets']>(
-    defaultTargets || {
-      "1": 1.1,
-      "2": 1.3,
-      "3": 1.7,
-      "4": 2.3,
-      "5": 3.2,
-      "6": 4.5,
-      "7": 6.7,
-      "8": 9.3,
-      "9": 13.1,
-      "10": 15.2,
-      "11": 17.2
-    }
+    defaultTargets || systemDefaults
   )
 
   const updateTarget = (step: number, value: number) => {
     setTargets(prev => ({ ...prev, [step.toString()]: value }))
   }
+
+  const resetToSystemDefaults = () => {
+    setTargets(systemDefaults)
+  }
+
+  // Update targets when defaultTargets changes (when switching palettes)
+  useEffect(() => {
+    if (defaultTargets) {
+      setTargets(defaultTargets)
+    }
+  }, [defaultTargets])
 
 
 
@@ -44,6 +60,14 @@ export function GlobalContrastTargets({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground">Global Contrast Targets</h3>
+        <Button 
+          onClick={resetToSystemDefaults}
+          variant="outline" 
+          size="sm"
+          className="text-xs"
+        >
+          Reset to Defaults
+        </Button>
       </div>
 
       <div className="space-y-2">

@@ -1,5 +1,4 @@
 import { PaletteControls } from '../types';
-import { COLOR_STEPS } from '../lib/colorGeneration';
 
 // Helper function to apply easing (copied from colorGeneration.ts)
 function applyEasing(factor: number, easing: string = 'none'): number {
@@ -60,12 +59,14 @@ export function CurvePreview({ controls }: CurvePreviewProps) {
     return null;
   }
 
-  // Define the lightness steps (matching the palette generation)
-  const steps = COLOR_STEPS;
+  // Use the color steps from controls (1-11, the core color-generating steps)
+  const colorSteps = (controls.steps || []).filter(step => 
+    Number.isInteger(step) && step >= 1 && step <= 11
+  ).sort((a, b) => a - b);
   
-  // Calculate chroma values for each step
-  const chromaValues = steps.map((_, index) => {
-    const normalizedStep = index / (steps.length - 1); // Normalize to 0-1
+  // Calculate chroma values for each color step
+  const chromaValues = colorSteps.map((_: number, index: number) => {
+    const normalizedStep = index / (colorSteps.length - 1); // Normalize to 0-1
     const peak = controls.chromaPeak;
     const chromaPosition = Math.abs(normalizedStep - peak);
     const chromaFactor = calculateChromaFactor(
@@ -84,8 +85,8 @@ export function CurvePreview({ controls }: CurvePreviewProps) {
   const graphHeight = height - padding * 2;
 
   // Create path points
-  const points = chromaValues.map((chroma, index) => {
-    const x = padding + (index / (steps.length - 1)) * graphWidth;
+  const points = chromaValues.map((chroma: number, index: number) => {
+    const x = padding + (index / (colorSteps.length - 1)) * graphWidth;
     const y = padding + (1 - (chroma - controls.minChroma) / (controls.maxChroma - controls.minChroma)) * graphHeight;
     return `${x},${y}`;
   }).join(' ');
@@ -115,8 +116,8 @@ export function CurvePreview({ controls }: CurvePreviewProps) {
           />
           
           {/* Data points */}
-          {chromaValues.map((chroma, index) => {
-            const x = padding + (index / (steps.length - 1)) * graphWidth;
+          {chromaValues.map((chroma: number, index: number) => {
+            const x = padding + (index / (colorSteps.length - 1)) * graphWidth;
             const y = padding + (1 - (chroma - controls.minChroma) / (controls.maxChroma - controls.minChroma)) * graphHeight;
             return (
               <circle

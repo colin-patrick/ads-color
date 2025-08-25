@@ -1,11 +1,119 @@
-import { oklch, rgb, hsl, wcagContrast, formatHex, formatRgb, formatHsl, p3, rec2020 } from 'culori';
+import { oklch, rgb, hsl, wcagContrast, wcagLuminance, formatHex, formatRgb, formatHsl, p3, rec2020 } from 'culori';
 import { PaletteControls, PaletteColor, Palette, ColorFormatValue, ContrastResult, ColorGamut, GamutValidation, GamutSettings, LightnessSettings, DEFAULT_PRECISION } from '../types';
 import { defaultControls, presets } from './presets';
 import { migratePaletteControls } from './migration';
 import defaultPalettesData from '../data/default-palettes.json';
 
-// Color steps for the 11-step palette - using sequential numbering 1-11
-export const COLOR_STEPS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+// Token Studio mapping from step numbers to token names
+const STEP_TO_TOKEN_MAPPING: Record<number, string> = {
+  0: '100',
+  1: '95',
+  2: '90',
+  3: '80',
+  4: '70',
+  5: '60',
+  6: '50',
+  7: '40',
+  8: '30',
+  9: '20',
+  10: '15',
+  11: '10',
+  12: '0'
+};
+
+/**
+ * Generate token name for a step
+ */
+function generateTokenName(step: number, customTokenNames?: Record<string, string>): string {
+  // Check for custom token name first
+  if (customTokenNames?.[step.toString()]) {
+    return customTokenNames[step.toString()];
+  }
+  
+  // Core steps have predefined names
+  if (STEP_TO_TOKEN_MAPPING[step]) {
+    return STEP_TO_TOKEN_MAPPING[step];
+  }
+  
+  // Intermediate steps: generate based on neighboring core steps
+  const floor = Math.floor(step);
+  const ceil = Math.ceil(step);
+  
+  if (floor === ceil) {
+    // Shouldn't happen, but fallback
+    return `step-${step}`;
+  }
+  
+  const floorToken = STEP_TO_TOKEN_MAPPING[floor] || floor.toString();
+  const ceilToken = STEP_TO_TOKEN_MAPPING[ceil] || ceil.toString();
+  
+  return `${floorToken}-${ceilToken}`;
+}
+
+/**
+ * Check if a step is a color step (1-11, not white/black endpoints)
+ */
+function isColorStep(step: number): boolean {
+  return Number.isInteger(step) && step >= 1 && step <= 11;
+}
+
+/**
+ * Interpolate between two colors for intermediate steps
+ */
+function interpolateColors(color1: PaletteColor, color2: PaletteColor, ratio: number, targetStep: number): PaletteColor {
+  // Linear interpolation for OKLCH values
+  const lightness = color1.lightness + (color2.lightness - color1.lightness) * ratio;
+  const chroma = color1.chroma + (color2.chroma - color1.chroma) * ratio;
+  
+  // Handle hue interpolation (accounting for circular nature)
+  let hue1 = color1.hue;
+  let hue2 = color2.hue;
+  
+  // Find shortest path around the color wheel
+  const hueDiff = hue2 - hue1;
+  if (Math.abs(hueDiff) > 180) {
+    if (hueDiff > 0) {
+      hue1 += 360;
+    } else {
+      hue2 += 360;
+    }
+  }
+  
+  let hue = hue1 + (hue2 - hue1) * ratio;
+  
+  // Normalize hue to 0-360 range
+  hue = hue % 360;
+  if (hue < 0) hue += 360;
+  
+  // Round values to precision
+  const roundedLightness = Math.round(lightness / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
+  const roundedChroma = Math.round(chroma / DEFAULT_PRECISION.chroma.step) * DEFAULT_PRECISION.chroma.step;
+  const roundedHue = Math.round(hue / DEFAULT_PRECISION.hue.step) * DEFAULT_PRECISION.hue.step;
+  
+  // Create OKLCH color
+  const oklchColor = oklch({
+    mode: 'oklch',
+    l: roundedLightness,
+    c: roundedChroma,
+    h: roundedHue
+  });
+  
+  const cssColor = formatHex(oklchColor) || '#000000';
+  
+  // Interpolate contrast (though this might not be perfectly accurate)
+  const contrast = color1.contrast + (color2.contrast - color1.contrast) * ratio;
+  
+  return {
+    step: targetStep,
+    tokenName: generateTokenName(targetStep), // Will be updated by the calling function
+    lightness: roundedLightness,
+    chroma: roundedChroma,
+    hue: roundedHue,
+    oklch: `oklch(${(roundedLightness * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% ${roundedChroma.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)} ${roundedHue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`,
+    css: cssColor,
+    contrast: Math.round(contrast * 100) / 100
+  };
+}
 
 /**
  * Get the maximum chroma value for a given gamut
@@ -35,7 +143,7 @@ export function isValidHexColor(hex: string): boolean {
 function getLuminance(hexColor: string): number {
   const color = oklch(hexColor);
   if (!color) return 0;
-  return wcagContrast(color, '#000000') / 21;
+  return wcagLuminance(color);
 }
 
 /**
@@ -76,8 +184,9 @@ export function calculateChromaAwareLightness(
   backgroundColor: string,
   chroma: number,
   hue: number,
-  maxIterations: number = 20,
-  tolerance: number = 0.05
+  gamutMode: 'sRGB' | 'P3' | 'Rec2020' = 'sRGB',
+  maxIterations: number = 50,
+  tolerance: number = 0.01
 ): number {
   // Start with the simple calculation as initial guess
   let lightness = calculateLightnessForContrast(targetContrast, backgroundColor);
@@ -87,21 +196,29 @@ export function calculateChromaAwareLightness(
     return lightness;
   }
   
+  // Calculate background luminance once and reuse
+  const backgroundLuminance = getLuminance(backgroundColor);
+  const isLightBackground = backgroundLuminance > 0.18;
+  
   // Use binary search to find the correct lightness
   let lowerBound = 0;
   let upperBound = 1;
   let iterations = 0;
   
   while (iterations < maxIterations) {
-    // Create test color with current lightness
+    // Create test color with current lightness and apply gamut clamping immediately
+    const testColorUnclamped = { l: lightness, c: chroma, h: hue };
+    const clampedColor = clampColorToGamut(testColorUnclamped, gamutMode);
+    
+    // Create the actual color that will be used (with clamped values)
     const testColor = oklch({
       mode: 'oklch',
-      l: lightness,
-      c: chroma,
-      h: hue
+      l: clampedColor.l,
+      c: clampedColor.c,
+      h: clampedColor.h
     });
     
-    // Calculate actual contrast
+    // Calculate actual contrast with the clamped color
     const actualContrast = wcagContrast(testColor, backgroundColor) || 1;
     const contrastDelta = Math.abs(actualContrast - targetContrast);
     
@@ -114,8 +231,7 @@ export function calculateChromaAwareLightness(
     // Adjust search bounds and lightness based on whether we're above or below target
     if (actualContrast > targetContrast) {
       // Too much contrast, need to move lightness toward background
-      const backgroundLuminance = getLuminance(backgroundColor);
-      if (backgroundLuminance > 0.18) {
+      if (isLightBackground) {
         // Light background, make foreground lighter
         lowerBound = lightness;
         lightness = (lightness + upperBound) / 2;
@@ -126,8 +242,7 @@ export function calculateChromaAwareLightness(
       }
     } else {
       // Too little contrast, need to move lightness away from background
-      const backgroundLuminance = getLuminance(backgroundColor);
-      if (backgroundLuminance > 0.18) {
+      if (isLightBackground) {
         // Light background, make foreground darker
         upperBound = lightness;
         lightness = (lowerBound + lightness) / 2;
@@ -285,16 +400,10 @@ export function resolveBackgroundColor(
 export function generatePalette(controls: PaletteControls, gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020' }, lightnessSettings?: { mode: 'contrast' | 'range' }, existingPalette?: PaletteColor[]): PaletteColor[] {
   // Handle circular dependency for relative palette references
   if (controls.backgroundColor.startsWith('palette-') && !existingPalette) {
-    // First pass: generate palette with fallback background color to create initial palette
-    const firstPassPalette = generatePaletteInternal(
-      { ...controls, backgroundColor: '#ffffff' }, // Use white as fallback
-      gamutSettings, 
-      lightnessSettings, 
-      existingPalette
-    );
-    
-    // Second pass: regenerate with resolved background color using first pass results
-    return generatePaletteInternal(controls, gamutSettings, lightnessSettings, firstPassPalette);
+    console.warn(`Palette reference ${controls.backgroundColor} requires existing palette. Using fallback: #ffffff`);
+    // Use fallback instead of complex two-pass generation that causes instability
+    const fallbackControls = { ...controls, backgroundColor: '#ffffff' };
+    return generatePaletteInternal(fallbackControls, gamutSettings, lightnessSettings, existingPalette);
   }
   
   // Normal generation path
@@ -308,169 +417,272 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
   // Resolve background color early to handle relative palette references
   const resolvedBackgroundColor = resolveBackgroundColor(controls.backgroundColor, existingPalette);
   
-  // Use dynamic steps from controls
-  const steps = controls.steps || [];
+  // Use steps from controls, ensuring we have the core steps
+  const steps = controls.steps || [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  const sortedSteps = [...steps].sort((a, b) => a - b);
   
-  return steps.map((stepInfo, index) => {
-    const step = stepInfo.position;
-    // Normalize step to 0-1 range using index instead of step values
-    const normalizedStep = index / (steps.length - 1);
-    
-    let lightness: number;
-    
-    // Use provided lightness settings or defaults for backward compatibility
-    const effectiveLightnessSettings = lightnessSettings || { mode: 'contrast' };
-    
-    if (effectiveLightnessSettings.mode === 'contrast') {
-      // Always auto mode with individual overrides
-      const stepKey = step.toString();
-      if (controls.lightnessOverrides?.[stepKey] && controls.lightnessValues[stepKey] !== undefined) {
-        // Step has been manually overridden
-        lightness = controls.lightnessValues[stepKey];
-      } else {
-        // Calculate lightness automatically
-        const targetContrast = controls.contrastTargets[stepKey];
-        
-        // Determine the final chroma after gamut clamping for chroma-aware calculation
-        // First, calculate what the chroma will be after clamping
-        let tempChroma: number;
-        if (controls.chromaMode === 'manual') {
-          tempChroma = controls.chromaValues[stepKey] ?? 0.1;
-        } else { // curve mode
-          const peak = controls.chromaPeak;
-          const chromaPosition = Math.abs(normalizedStep - peak);
-          const chromaFactor = calculateChromaFactor(
-            chromaPosition, 
-            controls.chromaCurveType || 'gaussian',
-            controls.chromaEasing
-          );
-          tempChroma = controls.minChroma + (controls.maxChroma - controls.minChroma) * chromaFactor;
-        }
-        
-        // Calculate hue using index-based logic
-        let tempHue: number;
-        const midIndex = Math.floor(steps.length / 2);
-        if (index <= midIndex) {
-          const lightProgress = (midIndex - index) / midIndex;
-          tempHue = controls.baseHue + (lightProgress * controls.lightHueDrift);
-        } else {
-          const darkProgress = (index - midIndex) / (steps.length - 1 - midIndex);
-          tempHue = controls.baseHue + (darkProgress * controls.darkHueDrift);
-        }
-        tempHue = tempHue % 360;
-        if (tempHue < 0) tempHue += 360;
-        
-        // Test what happens to chroma after gamut clamping with initial lightness estimate
-        const initialLightness = calculateLightnessForContrast(targetContrast, resolvedBackgroundColor);
-        const effectiveGamutSettings = gamutSettings || { gamutMode: 'sRGB' };
-        const clampedResult = clampColorToGamut(
-          { l: initialLightness, c: tempChroma, h: tempHue },
-          effectiveGamutSettings.gamutMode
-        );
-        
-        // Now calculate lightness using the FINAL chroma values after clamping
-        lightness = calculateChromaAwareLightness(
-          targetContrast, 
-          resolvedBackgroundColor, 
-          clampedResult.c,  // Use clamped chroma
-          clampedResult.h   // Use clamped hue
-        );
-      }
-    } else {
-      // Use manual lightness calculation
-      lightness = controls.lightnessMin + normalizedStep * (controls.lightnessMax - controls.lightnessMin);
+  // First, generate all core color steps (1-11) and endpoints (0, 12)
+  const coreColors = new Map<number, PaletteColor>();
+  
+  // Generate core steps
+  for (const step of sortedSteps) {
+    if (step === 0) {
+      // Pure white - use palette base hue for consistent interpolation
+      coreColors.set(0, {
+        step: 0,
+        tokenName: '100',
+        lightness: 1,
+        chroma: 0,
+        hue: controls.baseHue, // Use palette hue instead of 0
+        oklch: `oklch(100% 0 ${controls.baseHue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`,
+        css: '#ffffff',
+        contrast: wcagContrast('#ffffff', resolvedBackgroundColor) || 1
+      });
+    } else if (step === 12) {
+      // Pure black - use palette base hue for consistent interpolation
+      coreColors.set(12, {
+        step: 12,
+        tokenName: '0',
+        lightness: 0,
+        chroma: 0,
+        hue: controls.baseHue, // Use palette hue instead of 0
+        oklch: `oklch(0% 0 ${controls.baseHue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`,
+        css: '#000000',
+        contrast: wcagContrast('#000000', resolvedBackgroundColor) || 1
+      });
+    } else if (isColorStep(step)) {
+      // Core color steps (1-11) - use existing logic
+      coreColors.set(step, generateCoreColorStep(step, controls, gamutSettings, lightnessSettings, resolvedBackgroundColor));
     }
-    
-    // Calculate chroma based on mode
-    let chroma: number;
+  }
+  
+  // Now generate all steps (including intermediates)
+  const results: PaletteColor[] = [];
+  
+  for (const step of sortedSteps) {
+    if (coreColors.has(step)) {
+      // Core step - use pre-generated color
+      results.push(coreColors.get(step)!);
+    } else {
+      // Intermediate step - interpolate between adjacent core steps
+      const floor = Math.floor(step);
+      const ceil = Math.ceil(step);
+      const ratio = step - floor;
+      
+      const floorColor = coreColors.get(floor);
+      const ceilColor = coreColors.get(ceil);
+      
+      if (floorColor && ceilColor) {
+        // First get the interpolated color (this is our "calculated" value)
+        const interpolatedColor = interpolateColors(floorColor, ceilColor, ratio, step);
+        
+        // Check if user has manually overridden the lightness for this intermediate step
+        const stepKey = step.toString();
+        if (controls.lightnessOverrides?.[stepKey] === true && controls.lightnessValues[stepKey] !== undefined) {
+          // Use the manually overridden lightness value
+          const overriddenLightness = controls.lightnessValues[stepKey];
+          
+          // Recalculate the color with the overridden lightness using culori
+          const oklchColor = oklch({
+            mode: 'oklch',
+            l: overriddenLightness,
+            c: interpolatedColor.chroma,
+            h: interpolatedColor.hue
+          });
+          
+          const oklchString = `oklch(${(overriddenLightness * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% ${interpolatedColor.chroma.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)} ${interpolatedColor.hue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`;
+          const cssColor = formatHex(oklchColor) || '#000000';
+          const backgroundForContrast = resolveBackgroundColor(controls.backgroundColor, existingPalette);
+          
+          interpolatedColor.lightness = overriddenLightness;
+          interpolatedColor.oklch = oklchString;
+          interpolatedColor.css = cssColor;
+          interpolatedColor.contrast = wcagContrast(cssColor, backgroundForContrast) || 1;
+        }
+        
+        // Update token name with custom name if available
+        interpolatedColor.tokenName = generateTokenName(step, controls.tokenNames);
+        results.push(interpolatedColor);
+      } else {
+        console.warn(`Cannot interpolate step ${step}: missing adjacent core steps ${floor} or ${ceil}`);
+        // Fallback: create a basic color
+        results.push({
+          step,
+          tokenName: generateTokenName(step, controls.tokenNames),
+          lightness: 0.5,
+          chroma: 0.1,
+          hue: controls.baseHue,
+          oklch: 'oklch(50% 0.1 0)',
+          css: '#808080',
+          contrast: 1
+        });
+      }
+    }
+  }
+  
+  return results;
+}
+
+/**
+ * Generate a core color step (1-11) using the original logic
+ */
+function generateCoreColorStep(
+  step: number,
+  controls: PaletteControls,
+  gamutSettings?: { gamutMode: 'sRGB' | 'P3' | 'Rec2020' },
+  lightnessSettings?: { mode: 'contrast' | 'range' },
+  resolvedBackgroundColor?: string
+): PaletteColor {
+  // Normalize step position within 1-11 range for curve calculations
+  const normalizedStep = (step - 1) / 10; // 0 to 1 for steps 1 to 11
+  
+  const effectiveLightnessSettings = lightnessSettings || { mode: 'contrast' };
+  const effectiveGamutSettings = gamutSettings || { gamutMode: 'sRGB' };
+  const backgroundForContrast = resolvedBackgroundColor || '#ffffff';
+  
+  let lightness: number;
+  
+  if (effectiveLightnessSettings.mode === 'contrast') {
+    const stepKey = step.toString();
+    if (controls.lightnessOverrides?.[stepKey] === true && controls.lightnessValues[stepKey] !== undefined) {
+      // Step has been manually overridden
+      lightness = controls.lightnessValues[stepKey];
+    } else {
+      // Calculate lightness automatically based on contrast target
+      const targetContrast = controls.contrastTargets[stepKey] || 4.5;
+      
+      // Calculate chroma first so we can use it for chroma-aware lightness calculation
+      let chroma: number;
+      if (controls.chromaMode === 'manual') {
+        chroma = controls.chromaValues[stepKey] ?? 0.1;
+      } else {
+        // Curve-based chroma distribution
+        const peak = controls.chromaPeak;
+        const chromaPosition = Math.abs(normalizedStep - peak);
+        const chromaFactor = calculateChromaFactor(
+          chromaPosition,
+          controls.chromaCurveType || 'gaussian',
+          controls.chromaEasing
+        );
+        chroma = controls.minChroma + (controls.maxChroma - controls.minChroma) * chromaFactor;
+      }
+      
+      // Calculate hue for chroma-aware calculation
+      let hue: number;
+      const anchorStep = 6;
+      if (step <= anchorStep) {
+        const lightProgress = (anchorStep - step) / (anchorStep - 1);
+        hue = controls.baseHue + (lightProgress * controls.lightHueDrift);
+      } else {
+        const darkProgress = (step - anchorStep) / (11 - anchorStep);
+        hue = controls.baseHue + (darkProgress * controls.darkHueDrift);
+      }
+      hue = hue % 360;
+      if (hue < 0) hue += 360;
+      
+              // Use chroma-aware lightness calculation with gamut awareness
+        lightness = calculateChromaAwareLightness(targetContrast, backgroundForContrast, chroma, hue, effectiveGamutSettings.gamutMode);
+    }
+  } else {
+    // Use manual lightness range
+    lightness = controls.lightnessMin + normalizedStep * (controls.lightnessMax - controls.lightnessMin);
+  }
+  
+  // Calculate chroma (if not already calculated above for chroma-aware lightness)
+  let chroma: number;
+  let hue: number;
+  
+  if (effectiveLightnessSettings.mode === 'contrast' && !(controls.lightnessOverrides?.[step.toString()] === true)) {
+    // Chroma and hue were already calculated above for chroma-aware lightness
+    // Re-calculate them here for consistency (they should be the same)
     const stepKey = step.toString();
     if (controls.chromaMode === 'manual') {
       chroma = controls.chromaValues[stepKey] ?? 0.1;
-    } else { // curve mode
-      // Curve-based distribution
-      const peak = controls.chromaPeak; // Use configurable peak position
+    } else {
+      const peak = controls.chromaPeak;
       const chromaPosition = Math.abs(normalizedStep - peak);
       const chromaFactor = calculateChromaFactor(
-        chromaPosition, 
+        chromaPosition,
         controls.chromaCurveType || 'gaussian',
         controls.chromaEasing
       );
-      // Use min/max chroma range like lightness system
       chroma = controls.minChroma + (controls.maxChroma - controls.minChroma) * chromaFactor;
     }
     
-    // Calculate hue with fixed anchor at position 6 (extended range with Option B)
-    let hue: number;
-    const anchorPosition = 6; // Fixed anchor point
-    
-    if (step <= anchorPosition) {
-      // Light colors: interpolate between baseHue + lightHueDrift (at position 1) and baseHue (at position 6)
-      // Extended range: positions < 1 get more extreme light drift
-      const lightProgress = (anchorPosition - step) / (anchorPosition - 1); // 1 at position 1, 0 at position 6
+    const anchorStep = 6;
+    if (step <= anchorStep) {
+      const lightProgress = (anchorStep - step) / (anchorStep - 1);
       hue = controls.baseHue + (lightProgress * controls.lightHueDrift);
     } else {
-      // Dark colors: interpolate between baseHue (at position 6) and baseHue + darkHueDrift (at position 11)
-      // Extended range: positions > 11 get more extreme dark drift, scaled proportionally
-      const maxDarkPosition = 11; // Original maximum position
-      const darkProgress = (step - anchorPosition) / (maxDarkPosition - anchorPosition); // 0 at position 6, 1 at position 11, >1 for positions >11
+      const darkProgress = (step - anchorStep) / (11 - anchorStep);
       hue = controls.baseHue + (darkProgress * controls.darkHueDrift);
     }
-    
-    // Ensure hue is in valid range
     hue = hue % 360;
     if (hue < 0) hue += 360;
-    
-    // Apply gamut constraints - always enforce gamut clamping
-    let finalLightness = lightness;
-    let finalChroma = chroma;
-    let finalHue = hue;
-    
-    // Use provided gamut settings or defaults for backward compatibility
-    const effectiveGamutSettings = gamutSettings || { gamutMode: 'sRGB' };
-    
-    // Always clamp colors to the selected gamut
-    const clampedResult = clampColorToGamut(
-      { l: lightness, c: chroma, h: hue },
-      effectiveGamutSettings.gamutMode
-    );
-    
-    if (clampedResult.clamped) {
-      finalLightness = clampedResult.l;
-      finalChroma = clampedResult.c;
-      finalHue = clampedResult.h;
+  } else {
+    // Calculate chroma and hue normally
+    const stepKey = step.toString();
+    if (controls.chromaMode === 'manual') {
+      chroma = controls.chromaValues[stepKey] ?? 0.1;
+    } else {
+      const peak = controls.chromaPeak;
+      const chromaPosition = Math.abs(normalizedStep - peak);
+      const chromaFactor = calculateChromaFactor(
+        chromaPosition,
+        controls.chromaCurveType || 'gaussian',
+        controls.chromaEasing
+      );
+      chroma = controls.minChroma + (controls.maxChroma - controls.minChroma) * chromaFactor;
     }
     
-    // Round values to match precision settings for consistency
-    const roundedLightness = Math.round(finalLightness / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
-    const roundedChroma = Math.round(finalChroma / DEFAULT_PRECISION.chroma.step) * DEFAULT_PRECISION.chroma.step;
-    const roundedHue = Math.round(finalHue / DEFAULT_PRECISION.hue.step) * DEFAULT_PRECISION.hue.step;
-    
-    // Create OKLCH color with rounded values
-    const oklchColor = oklch({
-      mode: 'oklch',
-      l: roundedLightness,
-      c: roundedChroma,
-      h: roundedHue
-    });
-    
-    // Convert to CSS color
-    const cssColor = formatHex(oklchColor) || '#000000';
-    
-    // Calculate contrast against background
-    const contrastBackground = effectiveLightnessSettings.mode === 'contrast' ? resolvedBackgroundColor : '#ffffff';
-    const contrast = wcagContrast(oklchColor, contrastBackground) || 1;
-    
-    return {
-      step,
-      tokenName: stepInfo.tokenName,
-      lightness: roundedLightness,
-      chroma: roundedChroma,
-      hue: roundedHue,
-      oklch: `oklch(${(roundedLightness * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% ${roundedChroma.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)} ${roundedHue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`,
-      css: cssColor,
-      contrast: Math.round(contrast * 100) / 100
-    };
+    const anchorStep = 6;
+    if (step <= anchorStep) {
+      const lightProgress = (anchorStep - step) / (anchorStep - 1);
+      hue = controls.baseHue + (lightProgress * controls.lightHueDrift);
+    } else {
+      const darkProgress = (step - anchorStep) / (11 - anchorStep);
+      hue = controls.baseHue + (darkProgress * controls.darkHueDrift);
+    }
+    hue = hue % 360;
+    if (hue < 0) hue += 360;
+  }
+  
+  // Apply gamut clamping
+  const clampedResult = clampColorToGamut(
+    { l: lightness, c: chroma, h: hue },
+    effectiveGamutSettings.gamutMode
+  );
+  
+  const finalLightness = clampedResult.clamped ? clampedResult.l : lightness;
+  const finalChroma = clampedResult.clamped ? clampedResult.c : chroma;
+  const finalHue = clampedResult.clamped ? clampedResult.h : hue;
+  
+  // Round values
+  const roundedLightness = Math.round(finalLightness / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
+  const roundedChroma = Math.round(finalChroma / DEFAULT_PRECISION.chroma.step) * DEFAULT_PRECISION.chroma.step;
+  const roundedHue = Math.round(finalHue / DEFAULT_PRECISION.hue.step) * DEFAULT_PRECISION.hue.step;
+  
+  // Create color
+  const oklchColor = oklch({
+    mode: 'oklch',
+    l: roundedLightness,
+    c: roundedChroma,
+    h: roundedHue
   });
+  
+  const cssColor = formatHex(oklchColor) || '#000000';
+  const contrast = wcagContrast(oklchColor, backgroundForContrast) || 1;
+  
+  return {
+    step,
+    tokenName: generateTokenName(step), // Core steps always use standard names
+    lightness: roundedLightness,
+    chroma: roundedChroma,
+    hue: roundedHue,
+    oklch: `oklch(${(roundedLightness * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% ${roundedChroma.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)} ${roundedHue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`,
+    css: cssColor,
+    contrast: Math.round(contrast * 100) / 100
+  };
 }
 
 /**

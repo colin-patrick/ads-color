@@ -1,23 +1,47 @@
-import { PaletteControls, CustomStep } from '../types';
-
-// Token Studio mapping from step numbers (1-11) to token names
-const STEP_TO_TOKEN_MAPPING = ['95', '90', '80', '70', '60', '50', '40', '30', '20', '15', '10'];
+import { PaletteControls } from '../types';
 
 /**
- * Convert old PaletteControls with numeric Record keys to new CustomStep format
+ * Convert old PaletteControls to new simplified steps format
  */
 export function migratePaletteControls(oldControls: any): PaletteControls {
-  // If already migrated (has steps array), return as-is
-  if (oldControls.steps && Array.isArray(oldControls.steps)) {
-    return oldControls as PaletteControls;
+  // If already migrated to new format (has steps as number array), return as-is
+  if (oldControls.steps && Array.isArray(oldControls.steps) && typeof oldControls.steps[0] === 'number') {
+    // Clean up automatic lightness calculation for existing palettes
+    const cleanedControls = { ...oldControls };
+    
+    // If lightnessMode is 'auto' but we have hardcoded values with false overrides,
+    // clear the hardcoded values to force automatic calculation
+    if (cleanedControls.lightnessMode === 'auto' && cleanedControls.lightnessValues && cleanedControls.lightnessOverrides) {
+      const newLightnessValues: Record<string, number> = {};
+      const newLightnessOverrides: Record<string, boolean> = {};
+      
+      // Only keep lightness values that are explicitly overridden
+      Object.keys(cleanedControls.lightnessOverrides).forEach(stepKey => {
+        if (cleanedControls.lightnessOverrides[stepKey] === true && cleanedControls.lightnessValues[stepKey] !== undefined) {
+          newLightnessValues[stepKey] = cleanedControls.lightnessValues[stepKey];
+          newLightnessOverrides[stepKey] = true;
+        }
+        // If override is false, don't include the lightness value (force automatic calculation)
+      });
+      
+      cleanedControls.lightnessValues = newLightnessValues;
+      cleanedControls.lightnessOverrides = newLightnessOverrides;
+    }
+    
+    return cleanedControls as PaletteControls;
   }
 
-  // Create default 11 steps with Token Studio mapping
-  const defaultSteps: CustomStep[] = [];
-  for (let i = 1; i <= 11; i++) {
-    defaultSteps.push({
-      position: i,
-      tokenName: STEP_TO_TOKEN_MAPPING[i - 1] // Convert 1-based to 0-based index
+  // Create default steps: 0 (white), 1-11 (core palette), 12 (black)
+  const coreSteps = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  
+  // If old format had CustomStep array, extract any intermediate steps
+  const existingIntermediates: number[] = [];
+  if (oldControls.steps && Array.isArray(oldControls.steps)) {
+    oldControls.steps.forEach((step: any) => {
+      const position = typeof step === 'object' ? step.position : step;
+      if (typeof position === 'number' && !Number.isInteger(position)) {
+        existingIntermediates.push(position);
+      }
     });
   }
 
@@ -29,14 +53,12 @@ export function migratePaletteControls(oldControls: any): PaletteControls {
     
     Object.entries(record).forEach(([key, value]) => {
       // Handle both numeric keys and string keys
-      const numericKey = typeof key === 'string' ? parseInt(key, 10) : key;
+      const numericKey = typeof key === 'string' ? parseFloat(key) : key;
       
-      // If it's a valid number between 1-11, use it directly
-      if (!isNaN(numericKey) && numericKey >= 1 && numericKey <= 11) {
+      // If it's a valid number, use string representation
+      if (!isNaN(numericKey)) {
         result[numericKey.toString()] = value;
-      }
-      // Otherwise, keep the original key as string
-      else {
+      } else {
         result[key.toString()] = value;
       }
     });
@@ -46,7 +68,8 @@ export function migratePaletteControls(oldControls: any): PaletteControls {
 
   return {
     ...oldControls,
-    steps: defaultSteps,
+    steps: [...coreSteps, ...existingIntermediates].sort((a, b) => a - b),
+    tokenNames: oldControls.tokenNames || {}, // Keep existing custom token names
     chromaValues: migrateRecord(oldControls.chromaValues || {}),
     contrastTargets: migrateRecord(oldControls.contrastTargets || {}),
     lightnessValues: migrateRecord(oldControls.lightnessValues || {}),
@@ -55,17 +78,10 @@ export function migratePaletteControls(oldControls: any): PaletteControls {
 }
 
 /**
- * Get default 11-step configuration for new palettes
+ * Get default steps configuration for new palettes: 0 (white) through 12 (black)
  */
-export function getDefaultSteps(): CustomStep[] {
-  const steps: CustomStep[] = [];
-  for (let i = 1; i <= 11; i++) {
-    steps.push({
-      position: i,
-      tokenName: STEP_TO_TOKEN_MAPPING[i - 1]
-    });
-  }
-  return steps;
+export function getDefaultSteps(): number[] {
+  return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 }
 
 /**

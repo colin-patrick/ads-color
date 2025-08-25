@@ -12,7 +12,6 @@ import { generatePalette, getMaxChromaForGamut } from '../lib/colorGeneration'
 import { HueVisualizer } from './HueVisualizer'
 import { CurvePreview } from './CurvePreview'
 import { useMemo, useState } from 'react'
-import { CustomStep } from '../types'
 import { Input } from './ui/input'
 import { Slider } from './ui/slider'
 import { cn } from '../lib/utils'
@@ -108,46 +107,34 @@ export function ControlPanel({
   }
 
   // Step management functions
-  const updateStepTokenName = (position: number, newTokenName: string) => {
-    const newSteps = controls.steps?.map(step => 
-      step.position === position 
-        ? { ...step, tokenName: newTokenName }
-        : step
-    ) || []
-    
-    updateControl('steps', newSteps)
+  const updateStepTokenName = (step: number, newTokenName: string) => {
+    // For core steps, we don't allow editing the token name since they're standardized
+    // For intermediate steps, we store the custom name in a separate record
+    if (!isCoreStep(step)) {
+      const newTokenNames = { ...controls.tokenNames || {} };
+      newTokenNames[step.toString()] = newTokenName;
+      onControlsChange({ ...controls, tokenNames: newTokenNames });
+    }
+  }
+
+
+
+  const isCoreStep = (step: number): boolean => {
+    return Number.isInteger(step) && step >= 0 && step <= 12;
   }
 
   const addStep = (afterPosition: number) => {
     const currentSteps = controls.steps || []
-    const sortedSteps = [...currentSteps].sort((a, b) => a.position - b.position)
+    const sortedSteps = [...currentSteps].sort((a, b) => a - b)
     
     // Find the next step after the given position
-    const currentIndex = sortedSteps.findIndex(step => step.position === afterPosition)
+    const currentIndex = sortedSteps.findIndex(step => step === afterPosition)
     const nextStep = sortedSteps[currentIndex + 1]
     
     // Calculate new position (halfway between current and next)
     const newPosition = nextStep 
-      ? afterPosition + (nextStep.position - afterPosition) / 2
+      ? afterPosition + (nextStep - afterPosition) / 2
       : afterPosition + 1
-    
-    // Auto-suggest token name (interpolate between adjacent token names if they're numeric)
-    const currentStep = sortedSteps[currentIndex]
-    let suggestedTokenName = newPosition.toString()
-    
-    if (currentStep && nextStep) {
-      const currentToken = parseInt(currentStep.tokenName)
-      const nextToken = parseInt(nextStep.tokenName)
-      if (!isNaN(currentToken) && !isNaN(nextToken)) {
-        const interpolated = Math.round(currentToken + (nextToken - currentToken) / 2)
-        suggestedTokenName = interpolated.toString()
-      }
-    }
-    
-    const newStep: CustomStep = {
-      position: newPosition,
-      tokenName: suggestedTokenName
-    }
     
     // Add default values for new step in other records
     const stepKey = newPosition.toString()
@@ -162,7 +149,7 @@ export function ControlPanel({
     newLightnessOverrides[stepKey] = false
     newChromaValues[stepKey] = 0.1 // Default chroma
     
-    const newSteps = [...currentSteps, newStep].sort((a, b) => a.position - b.position)
+    const newSteps = [...currentSteps, newPosition].sort((a, b) => a - b)
     
     onControlsChange({
       ...controls,
@@ -175,7 +162,7 @@ export function ControlPanel({
   }
 
   const deleteStep = (position: number) => {
-    const newSteps = controls.steps?.filter(step => step.position !== position) || []
+    const newSteps = controls.steps?.filter(step => step !== position) || []
     const stepKey = position.toString()
     
     // Remove from all related records
@@ -183,15 +170,18 @@ export function ControlPanel({
     const newLightnessValues = { ...controls.lightnessValues }
     const newLightnessOverrides = { ...controls.lightnessOverrides }
     const newChromaValues = { ...controls.chromaValues }
+    const newTokenNames = { ...controls.tokenNames || {} }
     
     delete newContrastTargets[stepKey]
     delete newLightnessValues[stepKey]
     delete newLightnessOverrides[stepKey]
     delete newChromaValues[stepKey]
+    delete newTokenNames[stepKey]
     
     onControlsChange({
       ...controls,
       steps: newSteps,
+      tokenNames: newTokenNames,
       contrastTargets: newContrastTargets,
       lightnessValues: newLightnessValues,
       lightnessOverrides: newLightnessOverrides,
@@ -200,8 +190,35 @@ export function ControlPanel({
   }
 
   const isCustomStep = (position: number) => {
-    // A step is custom if it's not one of the original 1-11 positions
-    return !Number.isInteger(position) || position < 1 || position > 11
+    // A step is custom if it's not one of the core steps (0-12 integers) or is an intermediate step
+    return !Number.isInteger(position) || (Number.isInteger(position) && (position < 0 || position > 12))
+  }
+
+  const generateTokenName = (step: number): string => {
+    // Check for custom token name first
+    if (controls.tokenNames?.[step.toString()]) {
+      return controls.tokenNames[step.toString()];
+    }
+    
+    // Token Studio mapping
+    const STEP_TO_TOKEN_MAPPING: Record<number, string> = {
+      0: '100',
+      1: '95', 2: '90', 3: '80', 4: '70', 5: '60', 6: '50',
+      7: '40', 8: '30', 9: '20', 10: '15', 11: '10',
+      12: '0'
+    }
+    
+    if (STEP_TO_TOKEN_MAPPING[step]) {
+      return STEP_TO_TOKEN_MAPPING[step]
+    }
+    
+    // Intermediate steps: generate based on neighboring core steps
+    const floor = Math.floor(step)
+    const ceil = Math.ceil(step)
+    const floorToken = STEP_TO_TOKEN_MAPPING[floor] || floor.toString()
+    const ceilToken = STEP_TO_TOKEN_MAPPING[ceil] || ceil.toString()
+    
+    return `${floorToken}-${ceilToken}`
   }
 
   return (
@@ -327,15 +344,15 @@ export function ControlPanel({
                 <div className="space-y-6">
                   <Label className="text-sm font-medium">Individual Chroma Values</Label>
                   <div className="space-y-6">
-                    {(controls.steps || []).sort((a, b) => a.position - b.position).map(stepInfo => (
-                      <div key={stepInfo.position} className="flex items-center space-x-2">
+                    {(controls.steps || []).sort((a, b) => a - b).map(step => (
+                      <div key={step} className="flex items-center space-x-2">
                         <PrecisionSlider
-                          value={controls.chromaValues[stepInfo.position.toString()] ?? 0.1}
-                          onChange={(value) => updateChromaValue(stepInfo.position, value)}
+                          value={controls.chromaValues[step.toString()] ?? 0.1}
+                          onChange={(value) => updateChromaValue(step, value)}
                           min={0}
                           max={maxChroma}
                           step={DEFAULT_PRECISION.chroma.step}
-                          label={stepInfo.tokenName}
+                          label={generateTokenName(step)}
                           formatDisplay={(value) => value.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)}
                           className="flex-1"
                         />
@@ -491,14 +508,9 @@ export function ControlPanel({
                         <div className="flex justify-center py-1">
                           <Button
                             onClick={() => {
-                              const sortedSteps = [...(controls.steps || [])].sort((a, b) => a.position - b.position)
-                              const firstPosition = sortedSteps[0]?.position || 1
+                              const sortedSteps = [...(controls.steps || [])].sort((a, b) => a - b)
+                              const firstPosition = sortedSteps[0] || 1
                               const newPosition = Math.max(0.5, firstPosition - 0.5) // Ensure we don't go below 0.5
-                              
-                              const newStep: CustomStep = {
-                                position: newPosition,
-                                tokenName: newPosition.toString()
-                              }
                               
                               // Add default values for new step
                               const stepKey = newPosition.toString()
@@ -512,7 +524,7 @@ export function ControlPanel({
                               newLightnessOverrides[stepKey] = false
                               newChromaValues[stepKey] = 0.1
                               
-                              const newSteps = [...(controls.steps || []), newStep].sort((a, b) => a.position - b.position)
+                              const newSteps = [...(controls.steps || []), newPosition].sort((a, b) => a - b)
                               
                               onControlsChange({
                                 ...controls,
@@ -533,12 +545,9 @@ export function ControlPanel({
                         </div>
                       )}
                       
-                      {(controls.steps || []).sort((a, b) => a.position - b.position).map((stepInfo, index) => {
-                        const step = stepInfo.position;
+                      {(controls.steps || []).sort((a, b) => a - b).map((step, index) => {
                         const color = colors?.find(c => c.step === step);
                         const stepKey = step.toString();
-                        const targetContrast = controls.contrastTargets[stepKey] || 1;
-                        const actualContrast = color?.contrast || 0;
                         
                         // Simple value calculation - always auto mode with optional overrides
                         const hasManualOverride = controls.lightnessOverrides?.[stepKey] || false;
@@ -546,10 +555,10 @@ export function ControlPanel({
                         let currentLightness: number;
                         if (hasManualOverride) {
                           // Use manually overridden value
-                          currentLightness = controls.lightnessValues[stepKey] ?? (color?.lightness || 0.5);
+                          currentLightness = controls.lightnessValues[stepKey] ?? (color?.lightness ?? 0.5);
                         } else {
                           // Use calculated value
-                          currentLightness = color?.lightness || 0.5;
+                          currentLightness = color?.lightness ?? 0.5;
                         }
                         
                         return (
@@ -558,7 +567,7 @@ export function ControlPanel({
                             {isEditingSteps && index > 0 && (
                               <div className="flex justify-center py-1">
                                 <Button
-                                  onClick={() => addStep((controls.steps || []).sort((a, b) => a.position - b.position)[index - 1].position)}
+                                  onClick={() => addStep((controls.steps || []).sort((a, b) => a - b)[index - 1])}
                                   variant="ghost"
                                   size="sm"
                                   className="h-6 text-xs text-muted-foreground hover:text-foreground border-dashed border"
@@ -581,9 +590,9 @@ export function ControlPanel({
                                 
                                 {/* Label container - fixed width to prevent slider width changes */}
                                 <div className="min-w-[80px] flex-1">
-                                  {isEditingSteps ? (
+                                  {isEditingSteps && !isCoreStep(step) ? (
                                     <Input
-                                      value={stepInfo.tokenName}
+                                      value={generateTokenName(step)}
                                       onChange={(e) => updateStepTokenName(step, e.target.value)}
                                       className={cn(
                                         "text-sm font-medium bg-transparent border border-transparent px-2 py-1 h-8 shadow-none",
@@ -594,7 +603,7 @@ export function ControlPanel({
                                     />
                                   ) : (
                                     <div className="h-8 flex items-center">
-                                      <label className="text-sm font-medium">{stepInfo.tokenName}</label>
+                                      <label className="text-sm font-medium">{generateTokenName(step)}</label>
                                     </div>
                                   )}
                                 </div>
@@ -661,13 +670,6 @@ export function ControlPanel({
                                   step={DEFAULT_PRECISION.lightness.step * 100}
                                   className="w-full"
                                 />
-                              </div>
-                              
-                              {/* Contrast Info */}
-                              <div className="flex justify-start">
-                                <span className="text-xs text-muted-foreground">
-                                  Target: {targetContrast} | Actual: {actualContrast.toFixed(1)}
-                                </span>
                               </div>
                             </div>
                             

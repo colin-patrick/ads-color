@@ -16,40 +16,11 @@ const defaultContrastTargetsNumeric = {
   11: 17.2
 };
 
-// Professional lightness values for better contrast
-const defaultLightnessValuesNumeric = {
-  1: 0.97,
-  2: 0.91,
-  3: 0.83,
-  4: 0.73,
-  5: 0.65,
-  6: 0.56,
-  7: 0.49,
-  8: 0.41,
-  9: 0.32,
-  10: 0.26,
-  11: 0.22
-};
-
-// Default lightness overrides - all false since we start in auto mode
-const defaultLightnessOverridesNumeric = {
-  1: false,
-  2: false,
-  3: false,
-  4: false,
-  5: false,
-  6: false,
-  7: false,
-  8: false,
-  9: false,
-  10: false,
-  11: false
-};
-
 // Convert to string keys for new format
 const defaultContrastTargets = convertToStringRecord(defaultContrastTargetsNumeric);
-const defaultLightnessValues = convertToStringRecord(defaultLightnessValuesNumeric);
-const defaultLightnessOverrides = convertToStringRecord(defaultLightnessOverridesNumeric);
+// Empty records for auto mode - lightness calculated from contrast targets
+const defaultLightnessValues: Record<string, number> = {};
+const defaultLightnessOverrides: Record<string, boolean> = {};
 
 export const defaultControls: PaletteControls = {
   baseHue: 247,
@@ -78,6 +49,7 @@ export const defaultControls: PaletteControls = {
   darkHueDrift: 5,
   backgroundColor: '#ffffff',
   steps: getDefaultSteps(),
+  tokenNames: {},
   contrastTargets: defaultContrastTargets,
   lightnessValues: defaultLightnessValues,
   lightnessOverrides: defaultLightnessOverrides,
@@ -112,20 +84,9 @@ export const presets: { [key: string]: PaletteControls } = {
     darkHueDrift: 5,
     backgroundColor: '#ffffff',
     steps: getDefaultSteps(),
+    tokenNames: {},
     contrastTargets: defaultContrastTargets,
-    lightnessValues: convertToStringRecord({
-      1: 0.97,
-      2: 0.91,
-      3: 0.83,
-      4: 0.73,
-      5: 0.65,
-      6: 0.56,
-      7: 0.49,
-      8: 0.41,
-      9: 0.32,
-      10: 0.26,
-      11: 0.22
-    }),
+    lightnessValues: defaultLightnessValues,
     lightnessOverrides: defaultLightnessOverrides,
     lightnessMode: 'auto'
   },
@@ -157,20 +118,9 @@ export const presets: { [key: string]: PaletteControls } = {
     darkHueDrift: 15,
     backgroundColor: '#ffffff',
     steps: getDefaultSteps(),
+    tokenNames: {},
     contrastTargets: defaultContrastTargets,
-    lightnessValues: convertToStringRecord({
-      1: 0.97,
-      2: 0.91,
-      3: 0.83,
-      4: 0.76,
-      5: 0.67,
-      6: 0.59,
-      7: 0.5,
-      8: 0.42,
-      9: 0.32,
-      10: 0.27,
-      11: 0.23
-    }),
+    lightnessValues: defaultLightnessValues,
     lightnessOverrides: defaultLightnessOverrides,
     lightnessMode: 'auto'
   },
@@ -202,20 +152,9 @@ export const presets: { [key: string]: PaletteControls } = {
     darkHueDrift: 5,
     backgroundColor: '#ffffff',
     steps: getDefaultSteps(),
+    tokenNames: {},
     contrastTargets: defaultContrastTargets,
-    lightnessValues: convertToStringRecord({
-      1: 0.97,
-      2: 0.92,
-      3: 0.84,
-      4: 0.75,
-      5: 0.67,
-      6: 0.59,
-      7: 0.5,
-      8: 0.41,
-      9: 0.32,
-      10: 0.27,
-      11: 0.23
-    }),
+    lightnessValues: defaultLightnessValues,
     lightnessOverrides: defaultLightnessOverrides,
     lightnessMode: 'auto'
   },
@@ -247,20 +186,9 @@ export const presets: { [key: string]: PaletteControls } = {
     darkHueDrift: 5,
     backgroundColor: '#ffffff',
     steps: getDefaultSteps(),
+    tokenNames: {},
     contrastTargets: defaultContrastTargets,
-    lightnessValues: convertToStringRecord({
-      1: 0.95,
-      2: 0.9,
-      3: 0.82,
-      4: 0.72,
-      5: 0.63,
-      6: 0.55,
-      7: 0.46,
-      8: 0.39,
-      9: 0.3,
-      10: 0.26,
-      11: 0.22
-    }),
+    lightnessValues: defaultLightnessValues,
     lightnessOverrides: defaultLightnessOverrides,
     lightnessMode: 'auto'
   },
@@ -292,20 +220,9 @@ export const presets: { [key: string]: PaletteControls } = {
     darkHueDrift: -20,
     backgroundColor: '#ffffff',
     steps: getDefaultSteps(),
+    tokenNames: {},
     contrastTargets: defaultContrastTargets,
-    lightnessValues: convertToStringRecord({
-      1: 0.9671120588933685,
-      2: 0.9116559261129418,
-      3: 0.8279919808823784,
-      4: 0.75,
-      5: 0.66,
-      6: 0.58,
-      7: 0.48,
-      8: 0.41,
-      9: 0.32,
-      10: 0.27,
-      11: 0.23
-    }),
+    lightnessValues: defaultLightnessValues,
     lightnessOverrides: defaultLightnessOverrides,
     lightnessMode: 'auto'
   }
