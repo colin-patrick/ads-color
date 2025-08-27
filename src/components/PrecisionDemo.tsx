@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { PrecisionSlider } from './ui/precision-slider'
 import { DEFAULT_PRECISION } from '../types'
-import { oklch, formatHex } from 'culori'
+import { oklch, formatHex, formatCss } from 'culori'
 
 export function PrecisionDemo() {
   const [lightness, setLightness] = useState(0.65)
@@ -11,7 +11,8 @@ export function PrecisionDemo() {
   // Generate color from current values
   const color = oklch({ mode: 'oklch', l: lightness, c: chroma, h: hue })
   const hexColor = formatHex(color) || '#000000'
-  const oklchString = `oklch(${(lightness * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% ${chroma.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)} ${hue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`
+  // Use formatCss for consistent formatting, with fallback for precision
+  const oklchString = formatCss(color) || `oklch(${(lightness * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% ${chroma.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)} ${hue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`
 
   return (
     <div className="p-6 space-y-6 max-w-md mx-auto">

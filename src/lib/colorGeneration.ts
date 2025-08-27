@@ -1,4 +1,4 @@
-import { oklch, rgb, hsl, wcagContrast, wcagLuminance, formatHex, formatRgb, formatHsl, p3, rec2020 } from 'culori';
+import { oklch, rgb, hsl, wcagContrast, wcagLuminance, formatHex, formatRgb, formatHsl, p3, rec2020, inGamut, clampChroma, interpolate, formatCss, parse } from 'culori';
 import { PaletteControls, PaletteColor, Palette, ColorFormatValue, ContrastResult, ColorGamut, GamutValidation, GamutSettings, LightnessSettings, DEFAULT_PRECISION } from '../types';
 import { defaultControls, presets } from './presets';
 import { migratePaletteControls } from './migration';
@@ -58,47 +58,42 @@ function isColorStep(step: number): boolean {
 }
 
 /**
- * Interpolate between two colors for intermediate steps
+ * Interpolate between two colors for intermediate steps using Culori's built-in interpolation
  */
 function interpolateColors(color1: PaletteColor, color2: PaletteColor, ratio: number, targetStep: number): PaletteColor {
-  // Linear interpolation for OKLCH values
-  const lightness = color1.lightness + (color2.lightness - color1.lightness) * ratio;
-  const chroma = color1.chroma + (color2.chroma - color1.chroma) * ratio;
+  // Create OKLCH color objects for interpolation
+  const oklchColor1 = oklch({
+    mode: 'oklch',
+    l: color1.lightness,
+    c: color1.chroma,
+    h: color1.hue
+  });
   
-  // Handle hue interpolation (accounting for circular nature)
-  let hue1 = color1.hue;
-  let hue2 = color2.hue;
+  const oklchColor2 = oklch({
+    mode: 'oklch',
+    l: color2.lightness,
+    c: color2.chroma,
+    h: color2.hue
+  });
   
-  // Find shortest path around the color wheel
-  const hueDiff = hue2 - hue1;
-  if (Math.abs(hueDiff) > 180) {
-    if (hueDiff > 0) {
-      hue1 += 360;
-    } else {
-      hue2 += 360;
-    }
-  }
+  // Use Culori's interpolate function for better hue interpolation
+  const interpolator = interpolate([oklchColor1, oklchColor2], 'oklch');
+  const interpolatedColor = interpolator(ratio);
   
-  let hue = hue1 + (hue2 - hue1) * ratio;
+  // Apply precision rounding to the interpolated values
+  const roundedLightness = Math.round((interpolatedColor?.l || 0) / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
+  const roundedChroma = Math.round((interpolatedColor?.c || 0) / DEFAULT_PRECISION.chroma.step) * DEFAULT_PRECISION.chroma.step;
+  const roundedHue = Math.round((interpolatedColor?.h || 0) / DEFAULT_PRECISION.hue.step) * DEFAULT_PRECISION.hue.step;
   
-  // Normalize hue to 0-360 range
-  hue = hue % 360;
-  if (hue < 0) hue += 360;
-  
-  // Round values to precision
-  const roundedLightness = Math.round(lightness / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
-  const roundedChroma = Math.round(chroma / DEFAULT_PRECISION.chroma.step) * DEFAULT_PRECISION.chroma.step;
-  const roundedHue = Math.round(hue / DEFAULT_PRECISION.hue.step) * DEFAULT_PRECISION.hue.step;
-  
-  // Create OKLCH color
-  const oklchColor = oklch({
+  // Create final OKLCH color with rounded values
+  const finalOklchColor = oklch({
     mode: 'oklch',
     l: roundedLightness,
     c: roundedChroma,
     h: roundedHue
   });
   
-  const cssColor = formatHex(oklchColor) || '#000000';
+  const cssColor = formatHex(finalOklchColor) || '#000000';
   
   // Interpolate contrast (though this might not be perfectly accurate)
   const contrast = color1.contrast + (color2.contrast - color1.contrast) * ratio;
@@ -109,7 +104,7 @@ function interpolateColors(color1: PaletteColor, color2: PaletteColor, ratio: nu
     lightness: roundedLightness,
     chroma: roundedChroma,
     hue: roundedHue,
-    oklch: `oklch(${(roundedLightness * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% ${roundedChroma.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)} ${roundedHue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`,
+    oklch: formatOklchWithPrecision({ l: roundedLightness, c: roundedChroma, h: roundedHue }),
     css: cssColor,
     contrast: Math.round(contrast * 100) / 100
   };
@@ -129,12 +124,59 @@ export function getMaxChromaForGamut(gamut: 'sRGB' | 'P3' | 'Rec2020'): number {
 }
 
 /**
- * Validate if a string is a valid hex color
+ * Validate if a string is a valid color (any CSS color format)
+ */
+export function isValidColor(colorString: string): boolean {
+  // Use Culori's parse function to validate - if it returns undefined, the color is invalid
+  const parsedColor = parse(colorString);
+  return parsedColor !== undefined;
+}
+
+/**
+ * Validate if a string is a valid hex color (legacy function for compatibility)
  */
 export function isValidHexColor(hex: string): boolean {
-  // Check if it's a valid hex color using culori
-  const color = oklch(hex);
-  return color !== undefined;
+  // Use the more comprehensive validation
+  return isValidColor(hex) && (hex.startsWith('#') || hex.toLowerCase().startsWith('0x'));
+}
+
+/**
+ * Parse any CSS color string to OKLCH color object
+ */
+export function parseToOklch(colorString: string): { l: number; c: number; h: number } | null {
+  // Use Culori's robust parsing for any CSS color format
+  const parsedColor = parse(colorString);
+  if (!parsedColor) {
+    return null;
+  }
+  
+  // Convert to OKLCH
+  const oklchColor = oklch(parsedColor);
+  if (!oklchColor) {
+    return null;
+  }
+  
+  return {
+    l: oklchColor.l || 0,
+    c: oklchColor.c || 0,
+    h: oklchColor.h || 0
+  };
+}
+
+/**
+ * Format an OKLCH color to CSS string with custom precision
+ */
+function formatOklchWithPrecision(color: { l: number; c: number; h: number }): string {
+  const oklchColor = oklch({ mode: 'oklch', l: color.l, c: color.c, h: color.h });
+  
+  // Try using formatCss first, but fall back to manual formatting if precision is critical
+  const cssString = formatCss(oklchColor);
+  if (cssString && cssString.startsWith('oklch(')) {
+    return cssString;
+  }
+  
+  // Fallback to manual formatting with our precision requirements
+  return `oklch(${(color.l * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% ${color.c.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)} ${color.h.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`;
 }
 
 /**
@@ -337,15 +379,9 @@ export function resolveBackgroundColor(
 ): string {
   // If it's not a relative palette reference, return as-is
   if (!backgroundColor.startsWith('palette-')) {
-    // Validate that it's a proper color format
-    try {
-      const testColor = oklch(backgroundColor);
-      if (!testColor) {
-        console.warn(`Invalid color format: ${backgroundColor}. Using fallback: ${fallbackColor}`);
-        return fallbackColor;
-      }
-    } catch (error) {
-      console.warn(`Error parsing color ${backgroundColor}:`, error, `Using fallback: ${fallbackColor}`);
+    // Validate that it's a proper color format using Culori's built-in validation
+    if (!isValidColor(backgroundColor)) {
+      console.warn(`Invalid color format: ${backgroundColor}. Using fallback: ${fallbackColor}`);
       return fallbackColor;
     }
     return backgroundColor;
@@ -379,15 +415,9 @@ export function resolveBackgroundColor(
     return fallbackColor;
   }
   
-  // Validate the resolved color
-  try {
-    const testColor = oklch(targetColor.css);
-    if (!testColor) {
-      console.warn(`Resolved color ${targetColor.css} for ${backgroundColor} is invalid. Using fallback: ${fallbackColor}`);
-      return fallbackColor;
-    }
-  } catch (error) {
-    console.warn(`Error parsing resolved color ${targetColor.css} for ${backgroundColor}:`, error, `Using fallback: ${fallbackColor}`);
+  // Validate the resolved color using Culori's built-in validation
+  if (!isValidColor(targetColor.css)) {
+    console.warn(`Resolved color ${targetColor.css} for ${backgroundColor} is invalid. Using fallback: ${fallbackColor}`);
     return fallbackColor;
   }
   
@@ -434,7 +464,7 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
         lightness: 1,
         chroma: 0,
         hue: controls.baseHue, // Use palette hue instead of 0
-        oklch: `oklch(100% 0 ${controls.baseHue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`,
+        oklch: formatOklchWithPrecision({ l: 1, c: 0, h: controls.baseHue }),
         css: '#ffffff',
         contrast: wcagContrast('#ffffff', resolvedBackgroundColor) || 1
       });
@@ -446,7 +476,7 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
         lightness: 0,
         chroma: 0,
         hue: controls.baseHue, // Use palette hue instead of 0
-        oklch: `oklch(0% 0 ${controls.baseHue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`,
+        oklch: formatOklchWithPrecision({ l: 0, c: 0, h: controls.baseHue }),
         css: '#000000',
         contrast: wcagContrast('#000000', resolvedBackgroundColor) || 1
       });
@@ -490,7 +520,7 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
             h: interpolatedColor.hue
           });
           
-          const oklchString = `oklch(${(overriddenLightness * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% ${interpolatedColor.chroma.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)} ${interpolatedColor.hue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`;
+          const oklchString = formatOklchWithPrecision({ l: overriddenLightness, c: interpolatedColor.chroma, h: interpolatedColor.hue });
           const cssColor = formatHex(oklchColor) || '#000000';
           const backgroundForContrast = resolveBackgroundColor(controls.backgroundColor, existingPalette);
           
@@ -679,7 +709,7 @@ function generateCoreColorStep(
     lightness: roundedLightness,
     chroma: roundedChroma,
     hue: roundedHue,
-    oklch: `oklch(${(roundedLightness * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% ${roundedChroma.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)} ${roundedHue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`,
+    oklch: formatOklchWithPrecision({ l: roundedLightness, c: roundedChroma, h: roundedHue }),
     css: cssColor,
     contrast: Math.round(contrast * 100) / 100
   };
@@ -734,97 +764,43 @@ export function detectColorGamut(color: PaletteColor): ColorGamut | null {
 }
 
 /**
- * Clamp a color to fit within a specific gamut
+ * Clamp a color to fit within a specific gamut using Culori's built-in functions
  */
 export function clampColorToGamut(color: { l: number; c: number; h: number }, targetGamut: ColorGamut): { l: number; c: number; h: number; clamped: boolean } {
   const oklchColor = oklch({ mode: 'oklch', l: color.l, c: color.c, h: color.h });
   
-  let clampedColor = oklchColor;
-  let wasClamped = false;
+  // Map our gamut names to Culori's gamut identifiers
+  const gamutMap: { [key in ColorGamut]: 'rgb' | 'p3' | 'rec2020' } = {
+    'sRGB': 'rgb',
+    'P3': 'p3',
+    'Rec2020': 'rec2020',
+    'Wide': 'rgb' // Fallback to sRGB for wide gamut
+  };
   
-  // Try to clamp to the target gamut
-  if (targetGamut === 'sRGB') {
-    // For sRGB, we need to reduce chroma until it fits
-    const rgbColor = rgb(oklchColor);
-    if (!rgbColor || rgbColor.r < 0 || rgbColor.r > 1 || rgbColor.g < 0 || rgbColor.g > 1 || rgbColor.b < 0 || rgbColor.b > 1) {
-      // Binary search to find maximum chroma that fits in sRGB
-      let minChroma = 0;
-      let maxChroma = color.c;
-      let bestChroma = 0;
-      
-      for (let i = 0; i < 20; i++) { // 20 iterations should be enough for precision
-        const testChroma = (minChroma + maxChroma) / 2;
-        const testColor = oklch({ mode: 'oklch', l: color.l, c: testChroma, h: color.h });
-        const testRgb = rgb(testColor);
-        
-        if (testRgb && testRgb.r >= 0 && testRgb.r <= 1 && testRgb.g >= 0 && testRgb.g <= 1 && testRgb.b >= 0 && testRgb.b <= 1) {
-          bestChroma = testChroma;
-          minChroma = testChroma;
-        } else {
-          maxChroma = testChroma;
-        }
-      }
-      
-      clampedColor = oklch({ mode: 'oklch', l: color.l, c: bestChroma, h: color.h });
-      wasClamped = true;
-    }
-  } else if (targetGamut === 'P3') {
-    // For P3, clamp to P3 gamut
-    const p3Color = p3(oklchColor);
-    if (!p3Color || p3Color.r < 0 || p3Color.r > 1 || p3Color.g < 0 || p3Color.g > 1 || p3Color.b < 0 || p3Color.b > 1) {
-      // Binary search to find maximum chroma that fits in P3
-      let minChroma = 0;
-      let maxChroma = color.c;
-      let bestChroma = 0;
-      
-      for (let i = 0; i < 20; i++) {
-        const testChroma = (minChroma + maxChroma) / 2;
-        const testColor = oklch({ mode: 'oklch', l: color.l, c: testChroma, h: color.h });
-        const testP3 = p3(testColor);
-        
-        if (testP3 && testP3.r >= 0 && testP3.r <= 1 && testP3.g >= 0 && testP3.g <= 1 && testP3.b >= 0 && testP3.b <= 1) {
-          bestChroma = testChroma;
-          minChroma = testChroma;
-        } else {
-          maxChroma = testChroma;
-        }
-      }
-      
-      clampedColor = oklch({ mode: 'oklch', l: color.l, c: bestChroma, h: color.h });
-      wasClamped = true;
-    }
-  } else if (targetGamut === 'Rec2020') {
-    // For Rec2020, clamp to Rec2020 gamut
-    const rec2020Color = rec2020(oklchColor);
-    if (!rec2020Color || rec2020Color.r < 0 || rec2020Color.r > 1 || rec2020Color.g < 0 || rec2020Color.g > 1 || rec2020Color.b < 0 || rec2020Color.b > 1) {
-      // Binary search to find maximum chroma that fits in Rec2020
-      let minChroma = 0;
-      let maxChroma = color.c;
-      let bestChroma = 0;
-      
-      for (let i = 0; i < 20; i++) {
-        const testChroma = (minChroma + maxChroma) / 2;
-        const testColor = oklch({ mode: 'oklch', l: color.l, c: testChroma, h: color.h });
-        const testRec2020 = rec2020(testColor);
-        
-        if (testRec2020 && testRec2020.r >= 0 && testRec2020.r <= 1 && testRec2020.g >= 0 && testRec2020.g <= 1 && testRec2020.b >= 0 && testRec2020.b <= 1) {
-          bestChroma = testChroma;
-          minChroma = testChroma;
-        } else {
-          maxChroma = testChroma;
-        }
-      }
-      
-      clampedColor = oklch({ mode: 'oklch', l: color.l, c: bestChroma, h: color.h });
-      wasClamped = true;
-    }
+  const targetGamutId = gamutMap[targetGamut];
+  const isInGamutFn = inGamut(targetGamutId);
+  
+  // Check if color is already in gamut
+  if (oklchColor && isInGamutFn(oklchColor)) {
+    return {
+      l: color.l,
+      c: color.c,
+      h: color.h,
+      clamped: false
+    };
   }
   
+  // Use Culori's clampChroma to reduce chroma while preserving hue and lightness
+  const clampedColor = clampChroma(oklchColor, 'oklch', targetGamutId);
+  
+  // Ensure we have a valid OKLCH color result
+  const clampedOklch = oklch(clampedColor);
+  
   return {
-    l: clampedColor?.l || color.l,
-    c: clampedColor?.c || color.c,
-    h: clampedColor?.h || color.h,
-    clamped: wasClamped
+    l: clampedOklch?.l || color.l,
+    c: clampedOklch?.c || color.c,
+    h: clampedOklch?.h || color.h,
+    clamped: true
   };
 }
 
@@ -1302,7 +1278,7 @@ export function convertToLuminance(color: PaletteColor): PaletteColor {
     chroma: 0,
     hue: roundedHue,
     css: luminanceCss,
-    oklch: `oklch(${(color.lightness * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% 0 ${roundedHue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`
+    oklch: formatOklchWithPrecision({ l: color.lightness, c: 0, h: roundedHue })
   };
 }
 
