@@ -1,5 +1,5 @@
 import { oklch, rgb, hsl, wcagContrast, wcagLuminance, formatHex, formatRgb, formatHsl, p3, rec2020, inGamut, clampChroma, interpolate, formatCss, parse } from 'culori';
-import { PaletteControls, PaletteColor, Palette, ColorFormatValue, ContrastResult, ColorGamut, GamutValidation, GamutSettings, LightnessSettings, DEFAULT_PRECISION } from '../types';
+import { PaletteControls, PaletteColor, Palette, ColorFormatValue, ContrastResult, ColorGamut, GamutValidation, GamutSettings, LightnessSettings } from '../types';
 import { defaultControls, presets } from './presets';
 import { migratePaletteControls } from './migration';
 import defaultPalettesData from '../data/default-palettes.json';
@@ -80,10 +80,10 @@ function interpolateColors(color1: PaletteColor, color2: PaletteColor, ratio: nu
   const interpolator = interpolate([oklchColor1, oklchColor2], 'oklch');
   const interpolatedColor = interpolator(ratio);
   
-  // Apply precision rounding to the interpolated values
-  const roundedLightness = Math.round((interpolatedColor?.l || 0) / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
-  const roundedChroma = Math.round((interpolatedColor?.c || 0) / DEFAULT_PRECISION.chroma.step) * DEFAULT_PRECISION.chroma.step;
-  const roundedHue = Math.round((interpolatedColor?.h || 0) / DEFAULT_PRECISION.hue.step) * DEFAULT_PRECISION.hue.step;
+  // Use interpolated values directly from Culori
+  const roundedLightness = interpolatedColor?.l || 0;
+  const roundedChroma = interpolatedColor?.c || 0;
+  const roundedHue = interpolatedColor?.h || 0;
   
   // Create final OKLCH color with rounded values
   const finalOklchColor = oklch({
@@ -104,7 +104,7 @@ function interpolateColors(color1: PaletteColor, color2: PaletteColor, ratio: nu
     lightness: roundedLightness,
     chroma: roundedChroma,
     hue: roundedHue,
-    oklch: formatOklchWithPrecision({ l: roundedLightness, c: roundedChroma, h: roundedHue }),
+    oklch: formatOklchWithCulori({ l: roundedLightness, c: roundedChroma, h: roundedHue }),
     css: cssColor,
     contrast: Math.round(contrast * 100) / 100
   };
@@ -164,19 +164,11 @@ export function parseToOklch(colorString: string): { l: number; c: number; h: nu
 }
 
 /**
- * Format an OKLCH color to CSS string with custom precision
+ * Format an OKLCH color to CSS string using Culori's built-in formatting
  */
-function formatOklchWithPrecision(color: { l: number; c: number; h: number }): string {
+function formatOklchWithCulori(color: { l: number; c: number; h: number }): string {
   const oklchColor = oklch({ mode: 'oklch', l: color.l, c: color.c, h: color.h });
-  
-  // Try using formatCss first, but fall back to manual formatting if precision is critical
-  const cssString = formatCss(oklchColor);
-  if (cssString && cssString.startsWith('oklch(')) {
-    return cssString;
-  }
-  
-  // Fallback to manual formatting with our precision requirements
-  return `oklch(${(color.l * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% ${color.c.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)} ${color.h.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`;
+  return formatCss(oklchColor) || '#000000';
 }
 
 /**
@@ -213,8 +205,8 @@ export function calculateLightnessForContrast(
   // Convert luminance to OKLCH lightness (simplified approximation)
   const oklchLightness = Math.cbrt(targetLuminance);
   
-  // Round to precision for consistency
-  return Math.round(oklchLightness / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
+  // Return lightness value directly from Culori
+  return oklchLightness;
 }
 
 /**
@@ -266,8 +258,7 @@ export function calculateChromaAwareLightness(
     
     // If we're close enough, return current lightness
     if (contrastDelta <= tolerance) {
-      const clampedLightness = Math.max(0, Math.min(1, lightness));
-      return Math.round(clampedLightness / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
+      return Math.max(0, Math.min(1, lightness));
     }
     
     // Adjust search bounds and lightness based on whether we're above or below target
@@ -299,9 +290,7 @@ export function calculateChromaAwareLightness(
   }
   
   // If we couldn't converge, return the best attempt
-  // Round to precision to avoid long decimal values from binary search
-  const clampedLightness = Math.max(0, Math.min(1, lightness));
-  return Math.round(clampedLightness / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
+  return Math.max(0, Math.min(1, lightness));
 }
 
 /**
@@ -464,7 +453,7 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
         lightness: 1,
         chroma: 0,
         hue: controls.baseHue, // Use palette hue instead of 0
-        oklch: formatOklchWithPrecision({ l: 1, c: 0, h: controls.baseHue }),
+        oklch: formatOklchWithCulori({ l: 1, c: 0, h: controls.baseHue }),
         css: '#ffffff',
         contrast: wcagContrast('#ffffff', resolvedBackgroundColor) || 1
       });
@@ -476,7 +465,7 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
         lightness: 0,
         chroma: 0,
         hue: controls.baseHue, // Use palette hue instead of 0
-        oklch: formatOklchWithPrecision({ l: 0, c: 0, h: controls.baseHue }),
+        oklch: formatOklchWithCulori({ l: 0, c: 0, h: controls.baseHue }),
         css: '#000000',
         contrast: wcagContrast('#000000', resolvedBackgroundColor) || 1
       });
@@ -520,7 +509,7 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
             h: interpolatedColor.hue
           });
           
-          const oklchString = formatOklchWithPrecision({ l: overriddenLightness, c: interpolatedColor.chroma, h: interpolatedColor.hue });
+          const oklchString = formatOklchWithCulori({ l: overriddenLightness, c: interpolatedColor.chroma, h: interpolatedColor.hue });
           const cssColor = formatHex(oklchColor) || '#000000';
           const backgroundForContrast = resolveBackgroundColor(controls.backgroundColor, existingPalette);
           
@@ -687,10 +676,10 @@ function generateCoreColorStep(
   const finalChroma = clampedResult.clamped ? clampedResult.c : chroma;
   const finalHue = clampedResult.clamped ? clampedResult.h : hue;
   
-  // Round values
-  const roundedLightness = Math.round(finalLightness / DEFAULT_PRECISION.lightness.step) * DEFAULT_PRECISION.lightness.step;
-  const roundedChroma = Math.round(finalChroma / DEFAULT_PRECISION.chroma.step) * DEFAULT_PRECISION.chroma.step;
-  const roundedHue = Math.round(finalHue / DEFAULT_PRECISION.hue.step) * DEFAULT_PRECISION.hue.step;
+  // Use final values directly from Culori
+  const roundedLightness = finalLightness;
+  const roundedChroma = finalChroma;
+  const roundedHue = finalHue;
   
   // Create color
   const oklchColor = oklch({
@@ -709,7 +698,7 @@ function generateCoreColorStep(
     lightness: roundedLightness,
     chroma: roundedChroma,
     hue: roundedHue,
-    oklch: formatOklchWithPrecision({ l: roundedLightness, c: roundedChroma, h: roundedHue }),
+    oklch: formatOklchWithCulori({ l: roundedLightness, c: roundedChroma, h: roundedHue }),
     css: cssColor,
     contrast: Math.round(contrast * 100) / 100
   };
@@ -1259,8 +1248,8 @@ export function convertExternalPalettes(externalData: any): Palette[] {
  * Convert a color to luminance-only by removing chroma
  */
 export function convertToLuminance(color: PaletteColor): PaletteColor {
-  // Round hue to maintain precision consistency
-  const roundedHue = Math.round(color.hue / DEFAULT_PRECISION.hue.step) * DEFAULT_PRECISION.hue.step;
+  // Use hue directly from color
+  const roundedHue = color.hue;
   
   // Create OKLCH color with chroma = 0 to get pure luminance
   const luminanceColor = oklch({
@@ -1278,7 +1267,7 @@ export function convertToLuminance(color: PaletteColor): PaletteColor {
     chroma: 0,
     hue: roundedHue,
     css: luminanceCss,
-    oklch: formatOklchWithPrecision({ l: color.lightness, c: 0, h: roundedHue })
+    oklch: formatOklchWithCulori({ l: color.lightness, c: 0, h: roundedHue })
   };
 }
 

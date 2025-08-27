@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { PrecisionSlider } from './ui/precision-slider'
-import { DEFAULT_PRECISION } from '../types'
+
 import { oklch, formatHex, formatCss } from 'culori'
 
 export function PrecisionDemo() {
@@ -11,8 +11,8 @@ export function PrecisionDemo() {
   // Generate color from current values
   const color = oklch({ mode: 'oklch', l: lightness, c: chroma, h: hue })
   const hexColor = formatHex(color) || '#000000'
-  // Use formatCss for consistent formatting, with fallback for precision
-  const oklchString = formatCss(color) || `oklch(${(lightness * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}% ${chroma.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)} ${hue.toFixed(DEFAULT_PRECISION.hue.displayDecimals)})`
+  // Use formatCss for consistent formatting with fallback
+  const oklchString = formatCss(color) || '#000000'
 
   return (
     <div className="p-6 space-y-6 max-w-md mx-auto">
@@ -39,10 +39,10 @@ export function PrecisionDemo() {
           onChange={setLightness}
           min={0}
           max={1}
-          step={DEFAULT_PRECISION.lightness.step}
+          step={0.01}
           label="Lightness"
           unit="%"
-          formatDisplay={(value) => `${(value * 100).toFixed(DEFAULT_PRECISION.lightness.displayDecimals)}%`}
+          formatDisplay={(value) => `${(value * 100).toFixed(1)}%`}
         />
 
         <PrecisionSlider
@@ -50,9 +50,9 @@ export function PrecisionDemo() {
           onChange={setChroma}
           min={0}
           max={0.4}
-          step={DEFAULT_PRECISION.chroma.step}
+          step={0.001}
           label="Chroma"
-          formatDisplay={(value) => value.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)}
+          formatDisplay={(value) => value.toFixed(3)}
         />
 
         <PrecisionSlider
@@ -60,18 +60,18 @@ export function PrecisionDemo() {
           onChange={setHue}
           min={0}
           max={360}
-          step={DEFAULT_PRECISION.hue.step}
+          step={0.1}
           label="Hue"
           unit="°"
-          formatDisplay={(value) => `${value.toFixed(DEFAULT_PRECISION.hue.displayDecimals)}°`}
+          formatDisplay={(value) => `${value.toFixed(1)}°`}
         />
       </div>
 
       <div className="text-xs text-gray-600">
         <p><strong>Precision:</strong></p>
-        <p>• Lightness: {DEFAULT_PRECISION.lightness.step} step, {DEFAULT_PRECISION.lightness.displayDecimals} decimals</p>
-        <p>• Chroma: {DEFAULT_PRECISION.chroma.step} step, {DEFAULT_PRECISION.chroma.displayDecimals} decimals</p>
-        <p>• Hue: {DEFAULT_PRECISION.hue.step}° step, {DEFAULT_PRECISION.hue.displayDecimals} decimals</p>
+        <p>• Lightness: 0.01 step, 1 decimal</p>
+        <p>• Chroma: 0.001 step, 3 decimals</p>
+        <p>• Hue: 0.1° step, 1 decimal</p>
       </div>
     </div>
   )

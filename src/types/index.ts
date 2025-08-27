@@ -81,27 +81,6 @@ export interface LightnessSettings {
   mode: 'contrast' | 'range';
 }
 
-export interface PrecisionSettings {
-  lightness: {
-    step: number;
-    displayDecimals: number;
-  };
-  chroma: {
-    step: number;
-    displayDecimals: number;
-  };
-  hue: {
-    step: number;
-    displayDecimals: number;
-  };
-}
-
-export const DEFAULT_PRECISION: PrecisionSettings = {
-  lightness: { step: 0.0001, displayDecimals: 2 },
-  chroma: { step: 0.001, displayDecimals: 3 },
-  hue: { step: 0.1, displayDecimals: 2 }
-};
-
 export interface AppState {
   palettes: Palette[];
   activePaletteId: string | null;

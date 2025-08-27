@@ -50,11 +50,16 @@ export function PrecisionSlider({
   
   const inputValue = getInputValue()
   
+  const roundToStep = (value: number) => {
+    return Math.round(value / step) * step
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseFloat(e.target.value)
     if (!isNaN(newValue)) {
       const clampedValue = Math.max(min, Math.min(max, newValue))
-      onChange(clampedValue)
+      const roundedValue = roundToStep(clampedValue)
+      onChange(roundedValue)
     }
   }
 
@@ -70,11 +75,13 @@ export function PrecisionSlider({
     if (e.key === 'ArrowUp') {
       e.preventDefault()
       const newValue = Math.min(max, value + step)
-      onChange(newValue)
+      const roundedValue = roundToStep(newValue)
+      onChange(roundedValue)
     } else if (e.key === 'ArrowDown') {
       e.preventDefault()
       const newValue = Math.max(min, value - step)
-      onChange(newValue)
+      const roundedValue = roundToStep(newValue)
+      onChange(roundedValue)
     }
   }
 
@@ -117,7 +124,7 @@ export function PrecisionSlider({
       
       <Slider
         value={[value]}
-        onValueChange={(values) => onChange(values[0])}
+        onValueChange={(values) => onChange(roundToStep(values[0]))}
         min={min}
         max={max}
         step={step}

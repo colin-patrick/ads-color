@@ -1,5 +1,5 @@
 import { RotateCcw, RefreshCw, Plus, Trash2 } from 'lucide-react'
-import { PaletteControls, Palette, GamutSettings, DEFAULT_PRECISION } from '../types'
+import { PaletteControls, Palette, GamutSettings } from '../types'
 import { defaultControls } from '../lib/presets'
 import { PrecisionSlider } from './ui/precision-slider'
 import { Button } from './ui/button'
@@ -284,10 +284,10 @@ export function ControlPanel({
                   onChange={(value) => updateControl('baseHue', value)}
                   min={0}
                   max={360}
-                  step={DEFAULT_PRECISION.hue.step}
+                  step={0.1}
                   label="Base Hue (Middle)"
                   unit="°"
-                  formatDisplay={(value) => `${value.toFixed(DEFAULT_PRECISION.hue.displayDecimals)}°`}
+                  formatDisplay={(value) => `${value.toFixed(1)}°`}
                   className="w-full"
                 />
                 <p className="text-xs text-muted-foreground">Anchor hue at middle of palette (step 6)</p>
@@ -300,10 +300,10 @@ export function ControlPanel({
                   onChange={(value) => updateControl('lightHueDrift', value)}
                   min={-60}
                   max={60}
-                  step={DEFAULT_PRECISION.hue.step}
+                  step={0.1}
                   label="Light Hue Drift"
                   unit="°"
-                  formatDisplay={(value) => `${value.toFixed(DEFAULT_PRECISION.hue.displayDecimals)}°`}
+                  formatDisplay={(value) => `${value.toFixed(1)}°`}
                   className="w-full"
                 />
                 <p className="text-xs text-muted-foreground">Hue shift for light colors (steps 1-5)</p>
@@ -316,10 +316,10 @@ export function ControlPanel({
                   onChange={(value) => updateControl('darkHueDrift', value)}
                   min={-60}
                   max={60}
-                  step={DEFAULT_PRECISION.hue.step}
+                  step={0.1}
                   label="Dark Hue Drift"
                   unit="°"
-                  formatDisplay={(value) => `${value.toFixed(DEFAULT_PRECISION.hue.displayDecimals)}°`}
+                  formatDisplay={(value) => `${value.toFixed(1)}°`}
                   className="w-full"
                 />
                 <p className="text-xs text-muted-foreground">Hue shift for dark colors (steps 7-11)</p>
@@ -351,9 +351,9 @@ export function ControlPanel({
                           onChange={(value) => updateChromaValue(step, value)}
                           min={0}
                           max={maxChroma}
-                          step={DEFAULT_PRECISION.chroma.step}
+                          step={0.001}
                           label={generateTokenName(step)}
-                          formatDisplay={(value) => value.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)}
+                          formatDisplay={(value) => value.toFixed(3)}
                           className="flex-1"
                         />
                       </div>
@@ -371,9 +371,9 @@ export function ControlPanel({
                     onChange={(value) => updateControl('minChroma', value)}
                     min={0}
                     max={controls.maxChroma * 0.8}
-                    step={DEFAULT_PRECISION.chroma.step}
+                    step={0.001}
                     label="Min Chroma"
-                    formatDisplay={(value) => value.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)}
+                    formatDisplay={(value) => value.toFixed(3)}
                     className="w-full"
                   />
                   
@@ -382,9 +382,9 @@ export function ControlPanel({
                     onChange={(value) => updateControl('maxChroma', value)}
                     min={controls.minChroma || 0}
                     max={maxChroma}
-                    step={DEFAULT_PRECISION.chroma.step}
+                    step={0.001}
                     label="Max Chroma"
-                    formatDisplay={(value) => value.toFixed(DEFAULT_PRECISION.chroma.displayDecimals)}
+                    formatDisplay={(value) => value.toFixed(3)}
                     className="w-full"
                   />
 
@@ -628,7 +628,7 @@ export function ControlPanel({
                                     }}
                                     min={0}
                                     max={100}
-                                    step={DEFAULT_PRECISION.lightness.step * 100}
+                                    step={0.001}
                                     className="w-20 h-8 text-sm font-mono pr-1 pl-3"
                                   />
                                   <span className="text-sm text-muted-foreground">%</span>
@@ -667,7 +667,7 @@ export function ControlPanel({
                                   onValueChange={(values) => updateLightnessValue(step, values[0] / 100)}
                                   min={0}
                                   max={100}
-                                  step={DEFAULT_PRECISION.lightness.step * 100}
+                                  step={0.001}
                                   className="w-full"
                                 />
                               </div>
@@ -710,7 +710,7 @@ export function ControlPanel({
                       onChange={(value) => updateControl('lightnessMin', value / 100)}
                       min={50}
                       max={100}
-                      step={DEFAULT_PRECISION.lightness.step * 100}
+                      step={0.01}
                       label="Max Lightness (Step 1)"
                       unit="%"
                       formatDisplay={(value) => `${value.toFixed(2)}%`}
@@ -721,7 +721,7 @@ export function ControlPanel({
                       onChange={(value) => updateControl('lightnessMax', value / 100)}
                       min={0}
                       max={50}
-                      step={DEFAULT_PRECISION.lightness.step * 100}
+                      step={0.01}
                       label="Min Lightness (Step 11)"
                       unit="%"
                       formatDisplay={(value) => `${value.toFixed(2)}%`}
