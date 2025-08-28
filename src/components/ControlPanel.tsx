@@ -77,6 +77,32 @@ export function ControlPanel({
     updateControl('chromaValues', newValues);
   }
 
+  // Auto-populate chroma values when switching from curve/perceptual to manual
+  const handleChromaModeChange = (newMode: 'manual' | 'curve' | 'perceptual') => {
+    const currentMode = controls.chromaMode;
+    
+    // If switching TO manual mode FROM curve/perceptual, auto-populate with current values
+    if (newMode === 'manual' && (currentMode === 'curve' || currentMode === 'perceptual')) {
+      // Generate current palette to get actual chroma values
+      const currentPalette = generatePalette(controls, gamutSettings, { mode: lightnessMode });
+      
+      // Extract chroma values for each step
+      const newChromaValues: Record<string, number> = {};
+      currentPalette.forEach(color => {
+        newChromaValues[color.step.toString()] = color.chroma;
+      });
+      
+      onControlsChange({
+        ...controls,
+        chromaMode: newMode,
+        chromaValues: newChromaValues
+      });
+    } else {
+      // Normal mode change
+      updateControl('chromaMode', newMode);
+    }
+  };
+
   const updateLightnessValue = (step: number, value: number) => {
     const newValues = { ...controls.lightnessValues };
     const newOverrides = { ...controls.lightnessOverrides };
@@ -329,7 +355,7 @@ export function ControlPanel({
             <TabsContent value="chroma" className="space-y-4 mt-6">
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Chroma Mode</Label>
-                <Select value={controls.chromaMode} onValueChange={(value) => updateControl('chromaMode', value)}>
+                <Select value={controls.chromaMode} onValueChange={handleChromaModeChange}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
