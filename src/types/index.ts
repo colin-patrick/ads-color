@@ -40,6 +40,8 @@ export interface PaletteColor {
   originalIntended?: { l: number; c: number; h: number };
   achievableChroma?: number;
   maxPossibleChroma?: number;
+  // Store original calculated chroma before hex round-trip for manual mode switching
+  originalCalculatedChroma?: number;
 }
 
 export interface Palette {

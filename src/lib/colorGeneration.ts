@@ -128,7 +128,9 @@ function interpolateColors(color1: PaletteColor, color2: PaletteColor, ratio: nu
       l: clampedResult.l,
       c: clampedResult.c,
       h: clampedResult.h
-    } : undefined
+    } : undefined,
+    // Store original calculated chroma (interpolated chroma before gamut clamping)
+    originalCalculatedChroma: roundedChroma
   };
 }
 
@@ -914,7 +916,9 @@ function generateCoreColorStep(
       l: roundedLightness,
       c: roundedChroma,
       h: roundedHue
-    } : undefined
+    } : undefined,
+    // Store original calculated chroma for manual mode switching
+    originalCalculatedChroma: chroma
   };
 }
 

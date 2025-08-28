@@ -86,10 +86,11 @@ export function ControlPanel({
       // Generate current palette to get actual chroma values
       const currentPalette = generatePalette(controls, gamutSettings, { mode: lightnessMode });
       
-      // Extract chroma values for each step
+      // Extract chroma values for each step - use original calculated values to avoid round-trip drift
       const newChromaValues: Record<string, number> = {};
       currentPalette.forEach(color => {
-        newChromaValues[color.step.toString()] = color.chroma;
+        // Use originalCalculatedChroma if available (preserves precision), fallback to actual chroma
+        newChromaValues[color.step.toString()] = color.originalCalculatedChroma ?? color.chroma;
       });
       
       onControlsChange({
