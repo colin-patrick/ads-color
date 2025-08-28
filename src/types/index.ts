@@ -35,6 +35,11 @@ export interface PaletteColor {
   oklch: string;
   css: string;
   contrast: number;
+  // New transparency properties
+  gamutMapped: boolean;
+  originalIntended?: { l: number; c: number; h: number };
+  achievableChroma?: number;
+  maxPossibleChroma?: number;
 }
 
 export interface Palette {

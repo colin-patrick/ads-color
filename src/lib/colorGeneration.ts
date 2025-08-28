@@ -60,7 +60,7 @@ function isColorStep(step: number): boolean {
 /**
  * Interpolate between two colors for intermediate steps using Culori's built-in interpolation
  */
-function interpolateColors(color1: PaletteColor, color2: PaletteColor, ratio: number, targetStep: number): PaletteColor {
+function interpolateColors(color1: PaletteColor, color2: PaletteColor, ratio: number, targetStep: number, gamutMode: 'sRGB' | 'P3' | 'Rec2020' = 'sRGB'): PaletteColor {
   // Create OKLCH color objects for interpolation
   const oklchColor1 = oklch({
     mode: 'oklch',
@@ -85,12 +85,21 @@ function interpolateColors(color1: PaletteColor, color2: PaletteColor, ratio: nu
   const roundedChroma = interpolatedColor?.c || 0;
   const roundedHue = interpolatedColor?.h || 0;
   
-  // Create final OKLCH color with rounded values
+  // Apply gamut clamping to prevent hue shifts during RGB conversion
+  const clampedResult = clampColorToGamut(
+    { l: roundedLightness, c: roundedChroma, h: roundedHue },
+    gamutMode
+  );
+  
+  // Track if gamut mapping occurred
+  const wasGamutMapped = clampedResult.clamped;
+  
+  // Create final OKLCH color with clamped values
   const finalOklchColor = oklch({
     mode: 'oklch',
-    l: roundedLightness,
-    c: roundedChroma,
-    h: roundedHue
+    l: clampedResult.l,
+    c: clampedResult.c,
+    h: clampedResult.h
   });
   
   const cssColor = formatHex(finalOklchColor) || '#000000';
@@ -98,15 +107,28 @@ function interpolateColors(color1: PaletteColor, color2: PaletteColor, ratio: nu
   // Interpolate contrast (though this might not be perfectly accurate)
   const contrast = color1.contrast + (color2.contrast - color1.contrast) * ratio;
   
+  // CRITICAL: Get the ACTUAL OKLCH values from the generated hex (round-trip verification)
+  const parsedHexColor = parse(cssColor);
+  const verifiedOklch = oklch(parsedHexColor);
+  const actualL = verifiedOklch?.l || clampedResult.l;
+  const actualC = verifiedOklch?.c || clampedResult.c;
+  const actualH = verifiedOklch?.h || clampedResult.h;
+
   return {
     step: targetStep,
-    tokenName: generateTokenName(targetStep), // Will be updated by the calling function
-    lightness: roundedLightness,
-    chroma: roundedChroma,
-    hue: roundedHue,
-    oklch: formatOklchWithCulori({ l: roundedLightness, c: roundedChroma, h: roundedHue }),
+    tokenName: generateTokenName(targetStep),
+    lightness: actualL,     // ACTUAL values from hex round-trip
+    chroma: actualC,        // ACTUAL values from hex round-trip
+    hue: actualH,           // ACTUAL values from hex round-trip
+    oklch: formatOklchWithCulori({ l: actualL, c: actualC, h: actualH }),
     css: cssColor,
-    contrast: Math.round(contrast * 100) / 100
+    contrast: Math.round(contrast * 100) / 100,
+    gamutMapped: wasGamutMapped,
+    originalIntended: wasGamutMapped ? {
+      l: clampedResult.l,
+      c: clampedResult.c,
+      h: clampedResult.h
+    } : undefined
   };
 }
 
@@ -517,6 +539,9 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
   // Resolve background color early to handle relative palette references
   const resolvedBackgroundColor = resolveBackgroundColor(controls.backgroundColor, existingPalette);
   
+  // Set up effective settings with defaults
+  const effectiveGamutSettings = gamutSettings || { gamutMode: 'sRGB' };
+  
   // Use steps from controls, ensuring we have the core steps
   const steps = controls.steps || [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   const sortedSteps = [...steps].sort((a, b) => a - b);
@@ -536,7 +561,8 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
         hue: controls.baseHue, // Use palette hue instead of 0
         oklch: formatOklchWithCulori({ l: 1, c: 0, h: controls.baseHue }),
         css: '#ffffff',
-        contrast: wcagContrast('#ffffff', resolvedBackgroundColor) || 1
+        contrast: wcagContrast('#ffffff', resolvedBackgroundColor) || 1,
+        gamutMapped: false
       });
     } else if (step === 12) {
       // Pure black - use palette base hue for consistent interpolation
@@ -548,7 +574,8 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
         hue: controls.baseHue, // Use palette hue instead of 0
         oklch: formatOklchWithCulori({ l: 0, c: 0, h: controls.baseHue }),
         css: '#000000',
-        contrast: wcagContrast('#000000', resolvedBackgroundColor) || 1
+        contrast: wcagContrast('#000000', resolvedBackgroundColor) || 1,
+        gamutMapped: false
       });
     } else if (isColorStep(step)) {
       // Core color steps (1-11) - use existing logic
@@ -574,7 +601,7 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
       
       if (floorColor && ceilColor) {
         // First get the interpolated color (this is our "calculated" value)
-        const interpolatedColor = interpolateColors(floorColor, ceilColor, ratio, step);
+        const interpolatedColor = interpolateColors(floorColor, ceilColor, ratio, step, effectiveGamutSettings.gamutMode);
         
         // Check if user has manually overridden the lightness for this intermediate step
         const stepKey = step.toString();
@@ -614,7 +641,8 @@ function generatePaletteInternal(controls: PaletteControls, gamutSettings?: { ga
           hue: controls.baseHue,
           oklch: 'oklch(50% 0.1 0)',
           css: '#808080',
-          contrast: 1
+          contrast: 1,
+          gamutMapped: false
         });
       }
     }
@@ -856,17 +884,37 @@ function generateCoreColorStep(
   });
   
   const cssColor = formatHex(oklchColor) || '#000000';
+  
+  // CRITICAL: Get the ACTUAL OKLCH values from the generated hex (round-trip verification)
+  const parsedHexColor = parse(cssColor);
+  const verifiedOklch = oklch(parsedHexColor);
+  const actualL = verifiedOklch?.l || roundedLightness;
+  const actualC = verifiedOklch?.c || roundedChroma;
+  const actualH = verifiedOklch?.h || roundedHue;
+  
   const contrast = wcagContrast(oklchColor, backgroundForContrast) || 1;
+  
+  // Check if there was a difference between clamped and actual values
+  const hueDelta = Math.abs(actualH - roundedHue);
+  const chromaDelta = Math.abs(actualC - roundedChroma);
+  const lightnessDelta = Math.abs(actualL - roundedLightness);
+  const wasGamutMapped = clampedResult.clamped || hueDelta > 0.1 || chromaDelta > 0.001 || lightnessDelta > 0.001;
   
   return {
     step,
     tokenName: generateTokenName(step), // Core steps always use standard names
-    lightness: roundedLightness,
-    chroma: roundedChroma,
-    hue: roundedHue,
-    oklch: formatOklchWithCulori({ l: roundedLightness, c: roundedChroma, h: roundedHue }),
+    lightness: actualL,     // ACTUAL values from hex round-trip
+    chroma: actualC,        // ACTUAL values from hex round-trip
+    hue: actualH,           // ACTUAL values from hex round-trip
+    oklch: formatOklchWithCulori({ l: actualL, c: actualC, h: actualH }),
     css: cssColor,
-    contrast: Math.round(contrast * 100) / 100
+    contrast: Math.round(contrast * 100) / 100,
+    gamutMapped: wasGamutMapped,
+    originalIntended: wasGamutMapped ? {
+      l: roundedLightness,
+      c: roundedChroma,
+      h: roundedHue
+    } : undefined
   };
 }
 
