@@ -81,7 +81,7 @@ export function GlobalContrastTargets({
               min="1"
               max="21"
               step="0.1"
-              className="flex-1 text-sm"
+              className="flex-1 text-sm [&::-webkit-outer-spin-button]:appearance-auto [&::-webkit-inner-spin-button]:appearance-auto"
             />
           </div>
         ))}

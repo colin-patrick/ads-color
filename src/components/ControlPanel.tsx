@@ -450,36 +450,36 @@ export function ControlPanel({
                   <CurvePreview controls={controls} />
                   
                   <PrecisionSlider
-                    value={controls.minChroma}
-                    onChange={(value) => updateControl('minChroma', value)}
+                    value={controls.minChroma * 100}
+                    onChange={(value) => updateControl('minChroma', value / 100)}
                     min={0}
-                    max={controls.maxChroma * 0.8}
-                    step={0.001}
-                    label="Min Chroma (% of available)"
-                    formatDisplay={(value) => `${(value * 100).toFixed(1)}%`}
+                    max={controls.maxChroma * 80}
+                    step={1}
+                    label="Min Chroma"
+                    unit="%"
                     className="w-full"
                   />
                   
                   <PrecisionSlider
-                    value={controls.maxChroma}
-                    onChange={(value) => updateControl('maxChroma', value)}
-                    min={controls.minChroma || 0}
-                    max={1.0}
-                    step={0.001}
-                    label="Max Chroma (% of available)"
-                    formatDisplay={(value) => `${(value * 100).toFixed(1)}%`}
+                    value={controls.maxChroma * 100}
+                    onChange={(value) => updateControl('maxChroma', value / 100)}
+                    min={(controls.minChroma || 0) * 100}
+                    max={100}
+                    step={1}
+                    label="Max Chroma"
+                    unit="%"
                     className="w-full"
                   />
 
                   {controls.chromaCurveType !== 'flat' && (
                     <PrecisionSlider
-                      value={controls.chromaPeak}
-                      onChange={(value) => updateControl('chromaPeak', value)}
+                      value={controls.chromaPeak * 100}
+                      onChange={(value) => updateControl('chromaPeak', value / 100)}
                       min={0}
-                      max={1}
-                      step={0.01}
+                      max={100}
+                      step={1}
                       label="Curve Peak Position"
-                      formatDisplay={(value) => `${(value * 100).toFixed(0)}%`}
+                      unit="%"
                       className="w-full"
                     />
                   )}
