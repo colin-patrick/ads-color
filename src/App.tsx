@@ -50,9 +50,9 @@ function App() {
   
   // Display settings state
   const [colorFormat, setColorFormat] = useState<ColorFormat>('hex')
-  const [gridMode, setGridMode] = useState(false)
   const [luminanceMode, setLuminanceMode] = useState(false)
   const [showColorLabels, setShowColorLabels] = useState(true)
+  const [zoomLevel, setZoomLevel] = useState(1) // 1 = 100%, 0.5 = 50%, 1.5 = 150%, etc.
   
   // UI state
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -171,8 +171,6 @@ function App() {
             <PaletteToolbar
               contrastAnalysis={contrastAnalysis}
               setContrastAnalysis={setContrastAnalysis}
-              gridMode={gridMode}
-              setGridMode={setGridMode}
               luminanceMode={luminanceMode}
               setLuminanceMode={setLuminanceMode}
               colorFormat={colorFormat}
@@ -181,17 +179,19 @@ function App() {
               setShowColorLabels={setShowColorLabels}
               colorOptions={paletteState.colorOptions}
               setSettingsOpen={setSettingsOpen}
+              zoomLevel={zoomLevel}
+              setZoomLevel={setZoomLevel}
             />
             
             <PaletteDisplay
               palettes={palettes}
-              gridMode={gridMode}
               luminanceMode={luminanceMode}
               colorFormat={colorFormat}
               contrastAnalysis={contrastAnalysis}
               showColorLabels={showColorLabels}
               gamutSettings={gamutSettings}
               lightnessSettings={lightnessSettings}
+              zoomLevel={zoomLevel}
             />
           </div>
 

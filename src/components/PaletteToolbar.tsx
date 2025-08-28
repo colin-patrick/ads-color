@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Settings } from 'lucide-react'
+import { Eye, EyeOff, Settings, ZoomIn, ZoomOut } from 'lucide-react'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
@@ -10,8 +10,6 @@ import { ColorFormat } from '../types'
 interface PaletteToolbarProps {
   contrastAnalysis: { enabled: boolean; selectedColor: string; showCompliance: boolean }
   setContrastAnalysis: React.Dispatch<React.SetStateAction<PaletteToolbarProps['contrastAnalysis']>>
-  gridMode: boolean
-  setGridMode: (value: boolean) => void
   luminanceMode: boolean
   setLuminanceMode: (value: boolean) => void
   colorFormat: ColorFormat
@@ -20,13 +18,13 @@ interface PaletteToolbarProps {
   setShowColorLabels: (value: boolean) => void
   colorOptions: ColorOption[]
   setSettingsOpen: (value: boolean) => void
+  zoomLevel: number
+  setZoomLevel: (value: number) => void
 }
 
 export function PaletteToolbar({
   contrastAnalysis,
   setContrastAnalysis,
-  gridMode,
-  setGridMode,
   luminanceMode,
   setLuminanceMode,
   colorFormat,
@@ -34,7 +32,9 @@ export function PaletteToolbar({
   showColorLabels,
   setShowColorLabels,
   colorOptions,
-  setSettingsOpen
+  setSettingsOpen,
+  zoomLevel,
+  setZoomLevel
 }: PaletteToolbarProps) {
   const formatOptions: Array<{ value: ColorFormat; label: string }> = [
     { value: 'hex', label: 'HEX' },
@@ -42,6 +42,24 @@ export function PaletteToolbar({
     { value: 'hsl', label: 'HSL' },
     { value: 'oklch', label: 'OKLCH' }
   ]
+
+  // Zoom controls
+  const zoomLevels = [0.5, 0.75, 1, 1.25, 1.5, 2]
+  const currentZoomIndex = zoomLevels.indexOf(zoomLevel)
+  
+  const handleZoomIn = () => {
+    const nextIndex = Math.min(currentZoomIndex + 1, zoomLevels.length - 1)
+    setZoomLevel(zoomLevels[nextIndex])
+  }
+  
+  const handleZoomOut = () => {
+    const prevIndex = Math.max(currentZoomIndex - 1, 0)
+    setZoomLevel(zoomLevels[prevIndex])
+  }
+  
+  const resetZoom = () => {
+    setZoomLevel(1)
+  }
 
   return (
     <div className="p-4 border-b border-border bg-background flex-shrink-0">
@@ -80,22 +98,44 @@ export function PaletteToolbar({
         </div>
 
         <div className="flex items-center space-x-4">
-          {/* Grid Mode Toggle */}
-          <div className="flex items-center space-x-2">
-            <Toggle
-              pressed={gridMode}
-              onPressedChange={setGridMode}
-              aria-label="Toggle grid mode"
-              title="Toggle grid mode - display all swatches in a responsive grid layout"
+          {/* Zoom Controls */}
+          <div className="flex items-center space-x-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleZoomOut}
+              disabled={currentZoomIndex === 0}
+              className="w-8 h-8 p-0"
+              title="Zoom out"
+              aria-label="Zoom out"
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="7" height="7"/>
-                <rect x="14" y="3" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/>
-                <rect x="14" y="14" width="7" height="7"/>
-              </svg>
-            </Toggle>
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={resetZoom}
+              className="min-w-[3rem] h-8 px-2 text-xs font-mono"
+              title="Reset zoom to 100%"
+              aria-label="Reset zoom"
+            >
+              {Math.round(zoomLevel * 100)}%
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleZoomIn}
+              disabled={currentZoomIndex === zoomLevels.length - 1}
+              className="w-8 h-8 p-0"
+              title="Zoom in"
+              aria-label="Zoom in"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
           </div>
+
+          {/* Divider */}
+          <Separator orientation="vertical" className="h-6" />
 
           {/* Luminance Mode Toggle */}
           <div className="flex items-center space-x-2">
