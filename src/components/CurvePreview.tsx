@@ -1,4 +1,5 @@
 import { PaletteControls } from '../types';
+import { calculateGamutAwareChromaFactor } from '../lib/colorGeneration';
 
 // Helper function to apply easing (copied from colorGeneration.ts)
 function applyEasing(factor: number, easing: string = 'none'): number {
@@ -55,7 +56,7 @@ interface CurvePreviewProps {
 }
 
 export function CurvePreview({ controls }: CurvePreviewProps) {
-  if (controls.chromaMode !== 'curve') {
+  if (controls.chromaMode !== 'curve' && controls.chromaMode !== 'perceptual') {
     return null;
   }
 
@@ -65,16 +66,47 @@ export function CurvePreview({ controls }: CurvePreviewProps) {
   ).sort((a, b) => a - b);
   
   // Calculate chroma values for each color step
-  const chromaValues = colorSteps.map((_: number, index: number) => {
+  const chromaValues = colorSteps.map((step: number, index: number) => {
     const normalizedStep = index / (colorSteps.length - 1); // Normalize to 0-1
     const peak = controls.chromaPeak;
     const chromaPosition = Math.abs(normalizedStep - peak);
-    const chromaFactor = calculateChromaFactor(
-      chromaPosition,
-      controls.chromaCurveType || 'gaussian',
-      controls.chromaEasing
-    );
-    return controls.minChroma + (controls.maxChroma - controls.minChroma) * chromaFactor;
+    
+    if (controls.chromaMode === 'perceptual') {
+      // For perceptual mode, we need to calculate hue and lightness
+      const anchorStep = 6;
+      let hue: number;
+      if (step <= anchorStep) {
+        const lightProgress = (anchorStep - step) / (anchorStep - 1);
+        hue = controls.baseHue + (lightProgress * controls.lightHueDrift);
+      } else {
+        const darkProgress = (step - anchorStep) / (11 - anchorStep);
+        hue = controls.baseHue + (darkProgress * controls.darkHueDrift);
+      }
+      hue = hue % 360;
+      if (hue < 0) hue += 360;
+      
+      // Use a rough lightness estimate for preview
+      const roughLightness = controls.lightnessMin + normalizedStep * (controls.lightnessMax - controls.lightnessMin);
+      
+      return calculateGamutAwareChromaFactor(
+        roughLightness,
+        hue,
+        chromaPosition,
+        controls.chromaCurveType || 'gaussian',
+        controls.minChroma,
+        controls.maxChroma,
+        'sRGB', // Use sRGB for preview
+        controls.chromaEasing
+      );
+    } else {
+      // Regular curve mode
+      const chromaFactor = calculateChromaFactor(
+        chromaPosition,
+        controls.chromaCurveType || 'gaussian',
+        controls.chromaEasing
+      );
+      return controls.minChroma + (controls.maxChroma - controls.minChroma) * chromaFactor;
+    }
   });
 
   // SVG dimensions
@@ -95,7 +127,9 @@ export function CurvePreview({ controls }: CurvePreviewProps) {
 
   return (
     <div className="space-y-2">
-      <div className="text-sm font-medium text-muted-foreground">Curve Preview</div>
+      <div className="text-sm font-medium text-muted-foreground">
+        Curve Preview {controls.chromaMode === 'perceptual' ? '(Gamut-Aware)' : ''}
+      </div>
       <div className="border rounded-lg bg-card">
         <svg width={width} height={height} className="w-full h-auto">
           {/* Grid lines */}

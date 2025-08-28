@@ -124,6 +124,87 @@ export function getMaxChromaForGamut(gamut: 'sRGB' | 'P3' | 'Rec2020'): number {
 }
 
 /**
+ * Find the maximum achievable chroma for a specific lightness and hue within a gamut
+ * Uses binary search to find the boundary of the gamut
+ */
+export function findMaxChromaForLightness(
+  lightness: number,
+  hue: number,
+  gamut: 'sRGB' | 'P3' | 'Rec2020' = 'sRGB',
+  precision: number = 0.001
+): number {
+  // Map our gamut names to Culori's gamut identifiers
+  const gamutMap = {
+    'sRGB': 'rgb',
+    'P3': 'p3',
+    'Rec2020': 'rec2020'
+  } as const;
+  
+  const targetGamutId = gamutMap[gamut];
+  const isInGamutFn = inGamut(targetGamutId);
+  
+  // Binary search for maximum chroma
+  let low = 0;
+  let high = getMaxChromaForGamut(gamut); // Start with theoretical max for this gamut
+  let maxChroma = 0;
+  
+  // Ensure we don't get stuck in infinite loop
+  let iterations = 0;
+  const maxIterations = 100;
+  
+  while (high - low > precision && iterations < maxIterations) {
+    const mid = (low + high) / 2;
+    
+    // Test if this chroma value is within the gamut
+    const testColor = oklch({
+      mode: 'oklch',
+      l: Math.max(0, Math.min(1, lightness)),
+      c: mid,
+      h: hue % 360
+    });
+    
+    if (testColor && isInGamutFn(testColor)) {
+      // This chroma is achievable, try higher
+      maxChroma = mid;
+      low = mid;
+    } else {
+      // This chroma is too high, try lower
+      high = mid;
+    }
+    
+    iterations++;
+  }
+  
+  return maxChroma;
+}
+
+/**
+ * Calculate chroma factor for perceptual mode using gamut-aware curve mapping
+ */
+export function calculateGamutAwareChromaFactor(
+  lightness: number,
+  hue: number,
+  distance: number,
+  curveType: string,
+  minChroma: number,
+  maxChroma: number,
+  gamut: 'sRGB' | 'P3' | 'Rec2020' = 'sRGB',
+  easing: string = 'none'
+): number {
+  // Find the maximum available chroma for this lightness/hue combination
+  const maxAvailableChroma = findMaxChromaForLightness(lightness, hue, gamut);
+  
+  // Scale the user's desired range to fit within available space
+  const effectiveMaxChroma = Math.min(maxChroma, maxAvailableChroma);
+  const effectiveMinChroma = Math.min(minChroma, effectiveMaxChroma);
+  
+  // Apply the curve within the effective range
+  const curveFactor = calculateChromaFactor(distance, curveType, easing);
+  
+  return effectiveMinChroma + (effectiveMaxChroma - effectiveMinChroma) * curveFactor;
+}
+
+/**
  * Validate if a string is a valid color (any CSS color format)
  */
 export function isValidColor(colorString: string): boolean {
@@ -574,8 +655,39 @@ function generateCoreColorStep(
       let chroma: number;
       if (controls.chromaMode === 'manual') {
         chroma = controls.chromaValues[stepKey] ?? 0.1;
+      } else if (controls.chromaMode === 'perceptual') {
+        // Calculate hue first for perceptual chroma calculation
+        const anchorStep = 6;
+        let tempHue: number;
+        if (step <= anchorStep) {
+          const lightProgress = (anchorStep - step) / (anchorStep - 1);
+          tempHue = controls.baseHue + (lightProgress * controls.lightHueDrift);
+        } else {
+          const darkProgress = (step - anchorStep) / (11 - anchorStep);
+          tempHue = controls.baseHue + (darkProgress * controls.darkHueDrift);
+        }
+        tempHue = tempHue % 360;
+        if (tempHue < 0) tempHue += 360;
+        
+        // Use a rough lightness estimate for perceptual calculation
+        // We'll refine this in the lightness calculation step
+        const roughLightness = controls.lightnessMin + normalizedStep * (controls.lightnessMax - controls.lightnessMin);
+        
+        // Perceptual chroma distribution - gamut-aware curve
+        const peak = controls.chromaPeak;
+        const chromaPosition = Math.abs(normalizedStep - peak);
+        chroma = calculateGamutAwareChromaFactor(
+          roughLightness,
+          tempHue,
+          chromaPosition,
+          controls.chromaCurveType || 'gaussian',
+          controls.minChroma,
+          controls.maxChroma,
+          effectiveGamutSettings.gamutMode,
+          controls.chromaEasing
+        );
       } else {
-        // Curve-based chroma distribution
+        // Curve-based chroma distribution (legacy mode)
         const peak = controls.chromaPeak;
         const chromaPosition = Math.abs(normalizedStep - peak);
         const chromaFactor = calculateChromaFactor(
@@ -617,6 +729,33 @@ function generateCoreColorStep(
     const stepKey = step.toString();
     if (controls.chromaMode === 'manual') {
       chroma = controls.chromaValues[stepKey] ?? 0.1;
+    } else if (controls.chromaMode === 'perceptual') {
+      // Calculate hue first for perceptual chroma calculation
+      const anchorStep = 6;
+      let tempHue: number;
+      if (step <= anchorStep) {
+        const lightProgress = (anchorStep - step) / (anchorStep - 1);
+        tempHue = controls.baseHue + (lightProgress * controls.lightHueDrift);
+      } else {
+        const darkProgress = (step - anchorStep) / (11 - anchorStep);
+        tempHue = controls.baseHue + (darkProgress * controls.darkHueDrift);
+      }
+      tempHue = tempHue % 360;
+      if (tempHue < 0) tempHue += 360;
+      
+      // Perceptual chroma distribution - gamut-aware curve
+      const peak = controls.chromaPeak;
+      const chromaPosition = Math.abs(normalizedStep - peak);
+      chroma = calculateGamutAwareChromaFactor(
+        lightness,
+        tempHue,
+        chromaPosition,
+        controls.chromaCurveType || 'gaussian',
+        controls.minChroma,
+        controls.maxChroma,
+        effectiveGamutSettings.gamutMode,
+        controls.chromaEasing
+      );
     } else {
       const peak = controls.chromaPeak;
       const chromaPosition = Math.abs(normalizedStep - peak);
@@ -643,6 +782,33 @@ function generateCoreColorStep(
     const stepKey = step.toString();
     if (controls.chromaMode === 'manual') {
       chroma = controls.chromaValues[stepKey] ?? 0.1;
+    } else if (controls.chromaMode === 'perceptual') {
+      // Calculate hue first for perceptual chroma calculation
+      const anchorStep = 6;
+      let tempHue: number;
+      if (step <= anchorStep) {
+        const lightProgress = (anchorStep - step) / (anchorStep - 1);
+        tempHue = controls.baseHue + (lightProgress * controls.lightHueDrift);
+      } else {
+        const darkProgress = (step - anchorStep) / (11 - anchorStep);
+        tempHue = controls.baseHue + (darkProgress * controls.darkHueDrift);
+      }
+      tempHue = tempHue % 360;
+      if (tempHue < 0) tempHue += 360;
+      
+      // Perceptual chroma distribution - gamut-aware curve
+      const peak = controls.chromaPeak;
+      const chromaPosition = Math.abs(normalizedStep - peak);
+      chroma = calculateGamutAwareChromaFactor(
+        lightness,
+        tempHue,
+        chromaPosition,
+        controls.chromaCurveType || 'gaussian',
+        controls.minChroma,
+        controls.maxChroma,
+        effectiveGamutSettings.gamutMode,
+        controls.chromaEasing
+      );
     } else {
       const peak = controls.chromaPeak;
       const chromaPosition = Math.abs(normalizedStep - peak);

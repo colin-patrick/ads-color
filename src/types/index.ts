@@ -2,7 +2,7 @@ export interface PaletteControls {
   baseHue: number;
   lightnessMin: number;
   lightnessMax: number;
-  chromaMode: 'manual' | 'curve';
+  chromaMode: 'manual' | 'curve' | 'perceptual';
   chromaValues: Record<string, number>;
   minChroma: number;
   maxChroma: number;

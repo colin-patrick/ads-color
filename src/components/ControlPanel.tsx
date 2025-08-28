@@ -336,6 +336,7 @@ export function ControlPanel({
                   <SelectContent>
                     <SelectItem value="manual">Manual Control</SelectItem>
                     <SelectItem value="curve">Curve Distribution</SelectItem>
+                    <SelectItem value="perceptual">Perceptual (Gamut-Aware)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -396,6 +397,89 @@ export function ControlPanel({
                       max={1}
                       step={0.01}
                       label="Chroma Peak Position"
+                      className="w-full"
+                    />
+                  )}
+
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Curve Type</Label>
+                    <Select 
+                      value={controls.chromaCurveType || 'gaussian'} 
+                      onValueChange={(value) => updateControl('chromaCurveType', value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="flat">Flat (Equal Chroma)</SelectItem>
+                        <SelectItem value="gaussian">Gaussian (Smooth Bell)</SelectItem>
+                        <SelectItem value="linear">Linear (Triangular)</SelectItem>
+                        <SelectItem value="sine">Sine Wave (Gentle)</SelectItem>
+                        <SelectItem value="cubic">Cubic (Dramatic)</SelectItem>
+                        <SelectItem value="quartic">Quartic (Very Dramatic)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Curve Easing</Label>
+                    <Select 
+                      value={controls.chromaEasing || 'none'} 
+                      onValueChange={(value) => updateControl('chromaEasing', value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="ease-in">Ease In (Slow Start)</SelectItem>
+                        <SelectItem value="ease-out">Ease Out (Slow End)</SelectItem>
+                        <SelectItem value="ease-in-out">Ease In-Out (Both)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
+              {controls.chromaMode === 'perceptual' && (
+                <div className="space-y-6">
+                  <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                    <strong>Perceptual Mode:</strong> Maps your curve shape to the actual available gamut space for each lightness level. This ensures smooth transitions without hard clipping, but your min/max chroma values become percentages of what's actually achievable.
+                  </div>
+                  
+                  <CurvePreview controls={controls} />
+                  
+                  <PrecisionSlider
+                    value={controls.minChroma}
+                    onChange={(value) => updateControl('minChroma', value)}
+                    min={0}
+                    max={controls.maxChroma * 0.8}
+                    step={0.001}
+                    label="Min Chroma (% of available)"
+                    formatDisplay={(value) => `${(value * 100).toFixed(1)}%`}
+                    className="w-full"
+                  />
+                  
+                  <PrecisionSlider
+                    value={controls.maxChroma}
+                    onChange={(value) => updateControl('maxChroma', value)}
+                    min={controls.minChroma || 0}
+                    max={1.0}
+                    step={0.001}
+                    label="Max Chroma (% of available)"
+                    formatDisplay={(value) => `${(value * 100).toFixed(1)}%`}
+                    className="w-full"
+                  />
+
+                  {controls.chromaCurveType !== 'flat' && (
+                    <PrecisionSlider
+                      value={controls.chromaPeak}
+                      onChange={(value) => updateControl('chromaPeak', value)}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      label="Curve Peak Position"
+                      formatDisplay={(value) => `${(value * 100).toFixed(0)}%`}
                       className="w-full"
                     />
                   )}
@@ -626,10 +710,25 @@ export function ControlPanel({
                                         e.target.value = (Math.round((currentLightness * 100) * 100) / 100).toString()
                                       }
                                     }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'ArrowUp') {
+                                        e.preventDefault()
+                                        const currentValue = currentLightness * 100
+                                        const stepSize = 0.1 // Use a reasonable step size for percentage values
+                                        const newValue = Math.min(100, currentValue + stepSize)
+                                        updateLightnessValue(step, newValue / 100)
+                                      } else if (e.key === 'ArrowDown') {
+                                        e.preventDefault()
+                                        const currentValue = currentLightness * 100
+                                        const stepSize = 0.1 // Use a reasonable step size for percentage values
+                                        const newValue = Math.max(0, currentValue - stepSize)
+                                        updateLightnessValue(step, newValue / 100)
+                                      }
+                                    }}
                                     min={0}
                                     max={100}
-                                    step={0.001}
-                                    className="w-20 h-8 text-sm font-mono pr-1 pl-3"
+                                    step={0.1}
+                                    className="w-20 h-8 text-sm font-mono pr-1 pl-3 [&::-webkit-outer-spin-button]:appearance-auto [&::-webkit-inner-spin-button]:appearance-auto"
                                   />
                                   <span className="text-sm text-muted-foreground">%</span>
                                 </div>

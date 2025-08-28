@@ -12,15 +12,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuAction,
-} from '@/components/ui/sidebar'
+} from './ui/sidebar'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+} from './ui/dropdown-menu'
+import { Input } from './ui/input'
+import { Button } from './ui/button'
 import { generatePalette } from '../lib/colorGeneration'
 import { Palette, GamutSettings, LightnessSettings } from '../types'
 import { TokenStudioExportDialog } from './TokenStudioExportDialog'
