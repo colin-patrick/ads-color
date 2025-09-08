@@ -1,5 +1,5 @@
 import { RotateCcw, RefreshCw, Plus, Trash2 } from 'lucide-react'
-import { PaletteControls, Palette, GamutSettings } from '../types'
+import { PaletteControls, Palette, GamutSettings, PaletteColor } from '../types'
 import { defaultControls } from '../lib/presets'
 import { PrecisionSlider } from './ui/precision-slider'
 import { Button } from './ui/button'
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { generatePalette, getMaxChromaForGamut } from '../lib/colorGeneration'
 import { HueVisualizer } from './HueVisualizer'
 import { CurvePreview } from './CurvePreview'
+import { GamutSpaceVisualizer } from './GamutSpaceVisualizer'
 import { useMemo, useState } from 'react'
 import { Input } from './ui/input'
 import { Slider } from './ui/slider'
@@ -21,7 +22,7 @@ interface ControlPanelProps {
   onControlsChange: (controls: PaletteControls) => void
   paletteName?: string
   paletteColor?: string
-  colors?: Array<{ step: number; contrast: number; lightness: number; css: string }>
+  colors?: PaletteColor[]
   lightnessMode: 'contrast' | 'range'
   // New props for palette management
   palettes: Palette[]
@@ -293,6 +294,76 @@ export function ControlPanel({
           <HueVisualizer 
             controls={controls}
             colors={colors || []}
+          />
+
+          {/* Gamut Space Visualizer */}
+          <GamutSpaceVisualizer
+            controls={controls}
+            colors={colors || []}
+            gamutSettings={gamutSettings}
+            lightnessMode={lightnessMode}
+            onColorSelect={(lightness, chroma) => {
+              // Smart color selection: Update the most relevant control based on current mode
+              if (controls.chromaMode === 'manual') {
+                // In manual mode, update the middle step (step 6) as a reference point
+                const newChromaValues = { ...controls.chromaValues };
+                newChromaValues['6'] = chroma;
+                
+                // Also update lightness if in range mode
+                if (lightnessMode === 'range') {
+                  // Adjust lightness range based on selected point
+                  const newLightnessMin = Math.max(0.1, lightness - 0.4);
+                  const newLightnessMax = Math.min(0.9, lightness + 0.4);
+                  
+                  onControlsChange({
+                    ...controls,
+                    chromaValues: newChromaValues,
+                    lightnessMin: newLightnessMin,
+                    lightnessMax: newLightnessMax
+                  });
+                } else {
+                  // In contrast mode, update the manual override for step 6
+                  const newLightnessValues = { ...controls.lightnessValues };
+                  const newLightnessOverrides = { ...controls.lightnessOverrides };
+                  newLightnessValues['6'] = lightness;
+                  newLightnessOverrides['6'] = true;
+                  
+                  onControlsChange({
+                    ...controls,
+                    chromaValues: newChromaValues,
+                    lightnessValues: newLightnessValues,
+                    lightnessOverrides: newLightnessOverrides
+                  });
+                }
+              } else {
+                // In curve/perceptual mode, adjust the global chroma range
+                const chromaRange = controls.maxChroma - controls.minChroma;
+                const newMaxChroma = Math.min(chroma + chromaRange * 0.3, chroma * 1.5);
+                const newMinChroma = Math.max(0, chroma - chromaRange * 0.3);
+                
+                if (lightnessMode === 'range') {
+                  // Update lightness range
+                  const newLightnessMin = Math.max(0.1, lightness - 0.4);
+                  const newLightnessMax = Math.min(0.9, lightness + 0.4);
+                  
+                  onControlsChange({
+                    ...controls,
+                    minChroma: newMinChroma,
+                    maxChroma: newMaxChroma,
+                    lightnessMin: newLightnessMin,
+                    lightnessMax: newLightnessMax
+                  });
+                } else {
+                  // Just update chroma range
+                  onControlsChange({
+                    ...controls,
+                    minChroma: newMinChroma,
+                    maxChroma: newMaxChroma
+                  });
+                }
+              }
+            }}
+            className="mb-6"
           />
 
           {/* Shadcn Tabs */}

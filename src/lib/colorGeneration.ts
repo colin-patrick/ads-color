@@ -204,6 +204,7 @@ export function findMaxChromaForLightness(
 
 /**
  * Calculate chroma factor for perceptual mode using gamut-aware curve mapping
+ * In perceptual mode, minChroma and maxChroma are treated as percentages (0-1) of the available chroma
  */
 export function calculateGamutAwareChromaFactor(
   lightness: number,
@@ -218,9 +219,17 @@ export function calculateGamutAwareChromaFactor(
   // Find the maximum available chroma for this lightness/hue combination
   const maxAvailableChroma = findMaxChromaForLightness(lightness, hue, gamut);
   
-  // Scale the user's desired range to fit within available space
-  const effectiveMaxChroma = Math.min(maxChroma, maxAvailableChroma);
-  const effectiveMinChroma = Math.min(minChroma, effectiveMaxChroma);
+  // Treat minChroma and maxChroma as percentages of the available chroma
+  // Clamp to valid percentage range (0-1)
+  const minChromaPercent = Math.max(0, Math.min(1, minChroma));
+  const maxChromaPercent = Math.max(0, Math.min(1, maxChroma));
+  
+  // Ensure maxChromaPercent is at least as large as minChromaPercent
+  const effectiveMaxChromaPercent = Math.max(minChromaPercent, maxChromaPercent);
+  
+  // Convert percentages to actual chroma values
+  const effectiveMinChroma = maxAvailableChroma * minChromaPercent;
+  const effectiveMaxChroma = maxAvailableChroma * effectiveMaxChromaPercent;
   
   // Apply the curve within the effective range
   const curveFactor = calculateChromaFactor(distance, curveType, easing);
@@ -1494,6 +1503,88 @@ export function convertToLuminance(color: PaletteColor): PaletteColor {
  */
 export function convertPaletteToLuminance(colors: PaletteColor[]): PaletteColor[] {
   return colors.map(convertToLuminance);
+}
+
+/**
+ * Calculate gamut boundaries for a specific hue and lightness
+ * Returns the maximum achievable chroma at given L and H values
+ */
+export function getMaxChromaAtLightnessHue(
+  lightness: number, 
+  hue: number, 
+  gamutMode: 'sRGB' | 'P3' | 'Rec2020' = 'sRGB',
+  precision: number = 0.001
+): number {
+  const gamutMap = {
+    'sRGB': 'rgb',
+    'P3': 'p3', 
+    'Rec2020': 'rec2020'
+  } as const;
+  
+  const targetGamut = gamutMap[gamutMode];
+  const isInGamutFn = inGamut(targetGamut);
+  
+  let maxChroma = 0;
+  let testChroma = 0.5; // Start with reasonable chroma
+  let step = 0.25;
+  
+  // Binary search for maximum chroma
+  while (step > precision) {
+    const testColor = oklch({ mode: 'oklch', l: lightness, c: testChroma, h: hue });
+    
+    if (testColor && isInGamutFn(testColor)) {
+      maxChroma = testChroma;
+      testChroma += step;
+    } else {
+      testChroma -= step;
+    }
+    step /= 2;
+  }
+  
+  return maxChroma;
+}
+
+/**
+ * Generate gamut boundary data for visualization
+ * Returns array of {lightness, maxChroma} points defining the gamut boundary
+ */
+export function generateGamutBoundary(
+  hue: number,
+  gamutMode: 'sRGB' | 'P3' | 'Rec2020' = 'sRGB',
+  lightnessSteps: number = 100
+): Array<{ lightness: number; maxChroma: number }> {
+  const boundary: Array<{ lightness: number; maxChroma: number }> = [];
+  
+  for (let i = 0; i <= lightnessSteps; i++) {
+    const lightness = i / lightnessSteps;
+    const maxChroma = getMaxChromaAtLightnessHue(lightness, hue, gamutMode);
+    
+    boundary.push({ lightness, maxChroma });
+  }
+  
+  return boundary;
+}
+
+/**
+ * Check if a specific L,C,H combination is within gamut
+ */
+export function isColorInGamut(
+  lightness: number,
+  chroma: number, 
+  hue: number,
+  gamutMode: 'sRGB' | 'P3' | 'Rec2020' = 'sRGB'
+): boolean {
+  const gamutMap = {
+    'sRGB': 'rgb',
+    'P3': 'p3',
+    'Rec2020': 'rec2020'  
+  } as const;
+  
+  const targetGamut = gamutMap[gamutMode];
+  const isInGamutFn = inGamut(targetGamut);
+  const testColor = oklch({ mode: 'oklch', l: lightness, c: chroma, h: hue });
+  
+  return testColor ? isInGamutFn(testColor) : false;
 }
 
 /**
