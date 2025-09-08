@@ -192,6 +192,13 @@ function App() {
               gamutSettings={gamutSettings}
               lightnessSettings={lightnessSettings}
               zoomLevel={zoomLevel}
+              onControlsChange={(paletteId, newControls) => {
+                setPalettes(prev => prev.map(p => 
+                  p.id === paletteId 
+                    ? { ...p, controls: newControls, updatedAt: new Date() }
+                    : p
+                ))
+              }}
             />
           </div>
 

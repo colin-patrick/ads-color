@@ -28,6 +28,14 @@ export function migratePaletteControls(oldControls: any): PaletteControls {
       cleanedControls.lightnessOverrides = newLightnessOverrides;
     }
     
+    // Ensure lockedSteps and lockedColorValues fields exist
+    if (!cleanedControls.lockedSteps) {
+      cleanedControls.lockedSteps = {};
+    }
+    if (!cleanedControls.lockedColorValues) {
+      cleanedControls.lockedColorValues = {};
+    }
+    
     return cleanedControls as PaletteControls;
   }
 
@@ -73,7 +81,9 @@ export function migratePaletteControls(oldControls: any): PaletteControls {
     chromaValues: migrateRecord(oldControls.chromaValues || {}),
     contrastTargets: migrateRecord(oldControls.contrastTargets || {}),
     lightnessValues: migrateRecord(oldControls.lightnessValues || {}),
-    lightnessOverrides: migrateRecord(oldControls.lightnessOverrides || {})
+    lightnessOverrides: migrateRecord(oldControls.lightnessOverrides || {}),
+    lockedSteps: migrateRecord(oldControls.lockedSteps || {}),
+    lockedColorValues: oldControls.lockedColorValues || {}
   };
 }
 

@@ -22,6 +22,10 @@ export interface PaletteControls {
   lightnessValues: Record<string, number>;
   // Track which lightness values have been manually overridden in manual mode
   lightnessOverrides: Record<string, boolean>;
+  // Track which steps are locked (completely frozen from changes)
+  lockedSteps: Record<string, boolean>;
+  // Store the actual color values for locked steps
+  lockedColorValues: Record<string, PaletteColor>;
   // Lightness calculation mode - always auto with individual overrides
   lightnessMode: 'auto';
 }

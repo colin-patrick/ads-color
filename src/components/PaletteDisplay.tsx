@@ -1,7 +1,14 @@
 import { generatePalette, getColorFormats, analyzeContrast, getContrastBadge, copyToClipboard, getTextColorForBackground, convertPaletteToLuminance } from '../lib/colorGeneration'
-import { Palette, ColorFormat, GamutSettings, LightnessSettings } from '../types'
+import { Palette, ColorFormat, GamutSettings, LightnessSettings, PaletteControls } from '../types'
 import { toast } from 'sonner'
 import { useRef, useEffect } from 'react'
+import { Lock, Unlock } from 'lucide-react'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from './ui/context-menu'
 
 interface PaletteDisplayProps {
   palettes: Palette[]
@@ -16,6 +23,7 @@ interface PaletteDisplayProps {
   gamutSettings: GamutSettings
   lightnessSettings: LightnessSettings
   zoomLevel: number
+  onControlsChange?: (paletteId: string, newControls: PaletteControls) => void
 }
 
 export function PaletteDisplay({
@@ -26,7 +34,8 @@ export function PaletteDisplay({
   showColorLabels,
   gamutSettings,
   lightnessSettings,
-  zoomLevel
+  zoomLevel,
+  onControlsChange
 }: PaletteDisplayProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -57,6 +66,43 @@ export function PaletteDisplay({
     }
   }
 
+  // Handle locking/unlocking a color step
+  const handleToggleLock = (paletteId: string, step: number, currentColor: any) => {
+    if (!onControlsChange) return
+    
+    const palette = palettes.find(p => p.id === paletteId)
+    if (!palette) return
+    
+    const stepKey = step.toString()
+    const newLockedSteps = { ...palette.controls.lockedSteps }
+    const newLockedColorValues = { ...palette.controls.lockedColorValues }
+    
+    if (newLockedSteps[stepKey]) {
+      // Unlock the step
+      delete newLockedSteps[stepKey]
+      delete newLockedColorValues[stepKey]
+    } else {
+      // Lock the step - store the current color value
+      newLockedSteps[stepKey] = true
+      newLockedColorValues[stepKey] = { ...currentColor }
+    }
+    
+    const newControls = {
+      ...palette.controls,
+      lockedSteps: newLockedSteps,
+      lockedColorValues: newLockedColorValues
+    }
+    
+    onControlsChange(paletteId, newControls)
+    
+    const isLocked = newLockedSteps[stepKey]
+    toast(
+      <span>
+        {isLocked ? 'Locked' : 'Unlocked'} step {step}
+      </span>
+    )
+  }
+
   return (
     <div className="flex-1 overflow-auto">
       <div 
@@ -71,7 +117,7 @@ export function PaletteDisplay({
             transformOrigin: 'top left'
           }}
         >
-            {palettes.map((palette, index) => {
+            {palettes.map((palette) => {
               const paletteColors = generatePalette(palette.controls, gamutSettings, lightnessSettings)
               const displayColors = luminanceMode ? convertPaletteToLuminance(paletteColors) : paletteColors
               
@@ -80,7 +126,15 @@ export function PaletteDisplay({
                   <h3 className="text-lg font-semibold text-foreground">{palette.name}</h3>
                   <div className="flex flex-col">
                     {displayColors.map((color) => {
-                      const formats = getColorFormats(color)
+                      const stepKey = color.step.toString()
+                      const isLocked = palette.controls.lockedSteps?.[stepKey] === true
+                      
+                      // Use locked color if available, otherwise use generated color
+                      const displayColor = isLocked && palette.controls.lockedColorValues?.[stepKey] 
+                        ? palette.controls.lockedColorValues[stepKey]
+                        : color
+                      
+                      const formats = getColorFormats(displayColor)
                       const displayValue = formats[colorFormat]
                       
                       // Calculate contrast if enabled (use original color for contrast calculation)
@@ -102,55 +156,82 @@ export function PaletteDisplay({
                       
                       return (
                         <div key={color.step} className="flex-shrink-0">
-                          <div 
-                            className="w-64 h-20 cursor-pointer relative flex flex-col justify-between p-2"
-                            style={{ backgroundColor: color.css }}
-                            onClick={() => handleCopyColor(originalColor)}
-                            title={`Click to copy: ${displayValue}`}
-                          >
-                            {/* Top-right badges container */}
-                            <div className="absolute top-2 right-2 flex items-center space-x-1">
-                              {/* Gamut compliance badge removed - colors are always clamped to selected gamut */}
-                              
-                              {/* Contrast analysis badge */}
-                              {contrastResult && contrastBadge && (
-                                <div 
-                                  className="px-1 py-0.5 rounded text-xs font-medium"
-                                  style={contrastBadge.style}
-                                  title={contrastBadge.description}
-                                >
-                                  {contrastBadge.label}
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Step number at top */}
-                            <div className="flex justify-start">
+                          <ContextMenu>
+                            <ContextMenuTrigger asChild>
                               <div 
-                                className="text-sm font-bold"
-                                style={{ 
-                                  color: getTextColorForBackground(color)
-                                }}
+                                className="w-64 h-20 cursor-pointer relative flex flex-col justify-between p-2"
+                                style={{ backgroundColor: displayColor.css }}
+                                onClick={() => handleCopyColor(displayColor)}
+                                title={`Click to copy: ${displayValue}`}
                               >
-                                {color.tokenName}
-                              </div>
-                            </div>
-                            
-                            {/* Color value and contrast at bottom */}
-                            {showColorLabels && (
-                              <div className="flex flex-col space-y-1">
-                                <div 
-                                  className="text-xs font-mono leading-tight"
-                                  style={{ 
-                                    color: getTextColorForBackground(color)
-                                  }}
-                                  title={displayValue}
-                                >
-                                  {displayValue}
+                                {/* Top-right badges container */}
+                                <div className="absolute top-2 right-2 flex items-center space-x-1">
+                                  {/* Lock indicator */}
+                                  {isLocked && (
+                                    <div 
+                                      className="p-1 rounded bg-black/20 backdrop-blur-sm"
+                                      title="This color is locked"
+                                    >
+                                      <Lock className="w-3 h-3" style={{ color: getTextColorForBackground(displayColor) }} />
+                                    </div>
+                                  )}
+                                  
+                                  {/* Contrast analysis badge */}
+                                  {contrastResult && contrastBadge && (
+                                    <div 
+                                      className="px-1 py-0.5 rounded text-xs font-medium"
+                                      style={contrastBadge.style}
+                                      title={contrastBadge.description}
+                                    >
+                                      {contrastBadge.label}
+                                    </div>
+                                  )}
                                 </div>
+                                
+                                {/* Step number at top */}
+                                <div className="flex justify-start">
+                                  <div 
+                                    className="text-sm font-bold"
+                                    style={{ 
+                                      color: getTextColorForBackground(displayColor)
+                                    }}
+                                  >
+                                    {displayColor.tokenName}
+                                  </div>
+                                </div>
+                                
+                                {/* Color value and contrast at bottom */}
+                                {showColorLabels && (
+                                  <div className="flex flex-col space-y-1">
+                                    <div 
+                                      className="text-xs font-mono leading-tight"
+                                      style={{ 
+                                        color: getTextColorForBackground(displayColor)
+                                      }}
+                                      title={displayValue}
+                                    >
+                                      {displayValue}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
+                            </ContextMenuTrigger>
+                            <ContextMenuContent>
+                              <ContextMenuItem onClick={() => handleToggleLock(palette.id, color.step, displayColor)}>
+                                {isLocked ? (
+                                  <>
+                                    <Unlock className="w-4 h-4 mr-2" />
+                                    Unlock Color
+                                  </>
+                                ) : (
+                                  <>
+                                    <Lock className="w-4 h-4 mr-2" />
+                                    Lock Color
+                                  </>
+                                )}
+                              </ContextMenuItem>
+                            </ContextMenuContent>
+                          </ContextMenu>
                         </div>
                       )
                     })}
