@@ -9,8 +9,6 @@ import { Label } from './ui/label'
 import { ColorCombobox, ColorOption } from './ui/color-combobox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { generatePalette, getMaxChromaForGamut } from '../lib/colorGeneration'
-import { HueVisualizer } from './HueVisualizer'
-import { CurvePreview } from './CurvePreview'
 import { GamutSpaceVisualizer } from './GamutSpaceVisualizer'
 import { useMemo, useState } from 'react'
 import { Input } from './ui/input'
@@ -287,21 +285,13 @@ export function ControlPanel({
         </div>
       </CardHeader>
       
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto">
-        <CardContent className="px-4 pt-4 pb-4 space-y-6">
-          {/* Hue Visualizer - Always visible */}
-          <HueVisualizer 
-            controls={controls}
-            colors={colors || []}
-          />
-
-          {/* Gamut Space Visualizer */}
+      {/* Fixed Gamut Space Visualizer */}
+      <div className="flex-shrink-0 border-b border-border">
+        <CardContent className="px-4 pt-4 pb-4">
           <GamutSpaceVisualizer
             controls={controls}
             colors={colors || []}
             gamutSettings={gamutSettings}
-            lightnessMode={lightnessMode}
             onColorSelect={(lightness, chroma) => {
               // Smart color selection: Update the most relevant control based on current mode
               if (controls.chromaMode === 'manual') {
@@ -363,8 +353,13 @@ export function ControlPanel({
                 }
               }
             }}
-            className="mb-6"
           />
+        </CardContent>
+      </div>
+
+      {/* Scrollable Content - Tabs Only */}
+      <div className="flex-1 overflow-y-auto">
+        <CardContent className="px-4 pt-4 pb-4 space-y-6">
 
           {/* Shadcn Tabs */}
           <Tabs defaultValue="hue" className="w-full">
@@ -463,7 +458,6 @@ export function ControlPanel({
 
               {controls.chromaMode === 'curve' && (
                 <div className="space-y-6">
-                  <CurvePreview controls={controls} />
                   
                   <PrecisionSlider
                     value={controls.minChroma}
@@ -544,8 +538,6 @@ export function ControlPanel({
                   <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
                     <strong>Perceptual Mode:</strong> Maps your curve shape to the actual available gamut space for each lightness level. This ensures smooth transitions without hard clipping, but your min/max chroma values become percentages of what's actually achievable.
                   </div>
-                  
-                  <CurvePreview controls={controls} />
                   
                   <PrecisionSlider
                     value={controls.minChroma * 100}

@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import { oklch, formatHex, rgb, inGamut } from 'culori';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { isColorInGamut } from '../lib/colorGeneration';
 import { PaletteControls, PaletteColor, GamutSettings } from '../types';
 import { cn } from '../lib/utils';
@@ -21,6 +22,7 @@ export function GamutSpaceVisualizer({
 }: GamutSpaceVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredPoint, setHoveredPoint] = useState<{ lightness: number; chroma: number } | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   
   // No chart dimensions needed - using full canvas
   
@@ -95,15 +97,9 @@ export function GamutSpaceVisualizer({
       iterations++;
     }
     
-    // CRITICAL: Apply user constraints like palette generation does
-    // This ensures visualizer matches palette generation behavior
-    const userMaxChroma = controls.maxChroma || 0.4;
-    
-    // Scale the user's desired range to fit within available space
-    const effectiveMaxChroma = Math.min(userMaxChroma, theoreticalMax);
-    
-    // Return the effective maximum (constrained by user settings)
-    return effectiveMaxChroma;
+    // For the visualizer, we want to show the full theoretical gamut
+    // Don't apply user constraints - show the complete available color space
+    return theoreticalMax;
   }, [controls.minChroma, controls.maxChroma]);
 
   // Calculate dynamic gamut with hue drift awareness using accurate Culori functions
@@ -126,8 +122,10 @@ export function GamutSpaceVisualizer({
       });
     }
     
-    // Calculate overall max chroma for scaling
-    const maxChromaOverall = Math.max(0.4, ...gamutPoints.map(p => p.maxChroma));
+    // Calculate overall max chroma for scaling - use the actual maximum found
+    // This ensures we show the full theoretical gamut spectrum
+    // Add 10% headroom to prevent high chroma values from touching the edge
+    const maxChromaOverall = Math.max(...gamutPoints.map(p => p.maxChroma)) * 1.1;
     
     console.timeEnd('dynamicGamut');
     
@@ -164,7 +162,7 @@ export function GamutSpaceVisualizer({
     
     // Optimize pixel rendering resolution for performance
     // For large canvases, render at lower resolution and scale up
-    const maxPixels = 400000; // Increased for smoother edges: ~632x632 pixels max
+    const maxPixels = 250000; // Further reduced to prevent cutoff: ~500x500 pixels max
     const totalPixels = actualChartWidth * actualChartHeight;
     const scaleFactor = totalPixels > maxPixels ? Math.sqrt(totalPixels / maxPixels) : 1;
     
@@ -424,38 +422,53 @@ export function GamutSpaceVisualizer({
   
   return (
     <div className={cn('space-y-3', className)}>
-      <div className="text-sm font-medium text-foreground">
-        Gamut Space - Hue {controls.baseHue.toFixed(1)}° ({gamutSettings.gamutMode})
+      <div 
+        className="flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded px-2 py-1 -mx-2 -my-1 transition-colors"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+      >
+        <div className="text-sm font-medium text-foreground">
+          Gamut Space - Hue {controls.baseHue.toFixed(1)}° ({gamutSettings.gamutMode})
+        </div>
+        {isCollapsed ? (
+          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+        ) : (
+          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+        )}
       </div>
       
-      <div className="border rounded-lg bg-card p-2">
-        <div className="w-full" style={{ aspectRatio: '3/2' }}>
-          <canvas
-            ref={canvasRef}
-            className="cursor-crosshair w-full h-full"
-            style={{ imageRendering: 'crisp-edges' }}
-            onClick={handleClick}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-          />
-        </div>
-      </div>
-      
-      {hoveredPoint && hoverColor && (
-        <div className="flex items-center space-x-2 text-xs">
-          <div 
-            className="w-4 h-4 border border-border rounded flex-shrink-0"
-            style={{ backgroundColor: hoverColor }}
-          />
-          <span className="font-mono">
-            L: {hoveredPoint.lightness.toFixed(3)}, C: {hoveredPoint.chroma.toFixed(3)}
-          </span>
-        </div>
+      {!isCollapsed && (
+        <>
+          <div className="w-full relative" style={{ aspectRatio: '3/1' }}>
+            <canvas
+              ref={canvasRef}
+              className="cursor-crosshair w-full h-full"
+              style={{ imageRendering: 'crisp-edges' }}
+              onClick={handleClick}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+            />
+          </div>
+          
+          {/* Fixed height info display to prevent layout shift */}
+          <div className="h-6 flex items-center justify-center">
+            {hoveredPoint && hoverColor ? (
+              <div className="flex items-center space-x-2 text-xs">
+                <div 
+                  className="w-4 h-4 border border-border rounded flex-shrink-0"
+                  style={{ backgroundColor: hoverColor }}
+                />
+                <span className="font-mono">
+                  L: {hoveredPoint.lightness.toFixed(3)}, C: {hoveredPoint.chroma.toFixed(3)}
+                </span>
+              </div>
+            ) : (
+              <span className="text-xs text-muted-foreground">Hover over the visualizer to see color values</span>
+            )}
+          </div>
+        </>
       )}
       
-      <div className="text-xs text-muted-foreground">
-        <strong>Click within the color area</strong> to adjust your palette settings.
-      </div>
     </div>
   );
 }
+
