@@ -3,7 +3,6 @@ import { PaletteControls, Palette, GamutSettings, PaletteColor } from '../types'
 import { defaultControls } from '../lib/presets'
 import { PrecisionSlider } from './ui/precision-slider'
 import { Button } from './ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { CardContent, CardHeader } from './ui/card'
 import { Label } from './ui/label'
 import { ColorCombobox, ColorOption } from './ui/color-combobox'
@@ -15,6 +14,9 @@ import { useMemo, useState } from 'react'
 import { Input } from './ui/input'
 import { Slider } from './ui/slider'
 import { cn } from '../lib/utils'
+import { PaletteSelector } from './controls/PaletteSelector'
+import { BaseColorControls } from './controls/BaseColorControls'
+import { ChromaControls } from './controls/ChromaControls'
 
 interface ControlPanelProps {
   controls: PaletteControls
@@ -71,38 +73,6 @@ export function ControlPanel({
 
   // Removed - no longer need manual mode switching
 
-  const updateChromaValue = (step: number, value: number) => {
-    const newValues = { ...controls.chromaValues };
-    newValues[step.toString()] = value;
-    updateControl('chromaValues', newValues);
-  }
-
-  // Auto-populate chroma values when switching from curve/perceptual to manual
-  const handleChromaModeChange = (newMode: 'manual' | 'curve' | 'perceptual') => {
-    const currentMode = controls.chromaMode;
-    
-    // If switching TO manual mode FROM curve/perceptual, auto-populate with current values
-    if (newMode === 'manual' && (currentMode === 'curve' || currentMode === 'perceptual')) {
-      // Generate current palette to get actual chroma values
-      const currentPalette = generatePalette(controls, gamutSettings, { mode: lightnessMode });
-      
-      // Extract chroma values for each step - use original calculated values to avoid round-trip drift
-      const newChromaValues: Record<string, number> = {};
-      currentPalette.forEach(color => {
-        // Use originalCalculatedChroma if available (preserves precision), fallback to actual chroma
-        newChromaValues[color.step.toString()] = color.originalCalculatedChroma ?? color.chroma;
-      });
-      
-      onControlsChange({
-        ...controls,
-        chromaMode: newMode,
-        chromaValues: newChromaValues
-      });
-    } else {
-      // Normal mode change
-      updateControl('chromaMode', newMode);
-    }
-  };
 
   const updateLightnessValue = (step: number, value: number) => {
     const newValues = { ...controls.lightnessValues };
@@ -251,38 +221,16 @@ export function ControlPanel({
   return (
     <>
       {/* Fixed Header with Palette Selector */}
-              <CardHeader className="p-4 border-b border-border flex-shrink-0">
+      <CardHeader className="p-4 border-b border-border flex-shrink-0">
         <div className="space-y-2">
-          <div className="space-y-1">
-            <Select value={activePaletteId} onValueChange={onActivePaletteChange}>
-              <SelectTrigger className="w-full" title="Active Palette - Switch between your palettes">
-                <SelectValue>
-                  <div className="flex items-center space-x-2">
-                    <div 
-                      className="w-4 h-4 rounded-full border border-input flex-shrink-0" 
-                      style={{ backgroundColor: paletteColors[activePaletteId] || paletteColor || '#6b7280' }}
-                    ></div>
-                    <span className="text-sm truncate">
-                      {paletteName || 'Unnamed Palette'}
-                    </span>
-                  </div>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {palettes.map((palette) => (
-                  <SelectItem key={palette.id} value={palette.id}>
-                    <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-4 h-4 rounded-full border border-input flex-shrink-0" 
-                        style={{ backgroundColor: paletteColors[palette.id] }}
-                      ></div>
-                      <span className="truncate">{palette.name}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <PaletteSelector
+            palettes={palettes}
+            activePaletteId={activePaletteId}
+            onActivePaletteChange={onActivePaletteChange}
+            paletteName={paletteName}
+            paletteColor={paletteColor}
+            paletteColors={paletteColors}
+          />
         </div>
       </CardHeader>
       
@@ -370,250 +318,22 @@ export function ControlPanel({
               <TabsTrigger value="lightness">Lightness</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="hue" className="space-y-4 mt-6">
-              {/* Base Hue */}
-              <div className="space-y-3">
-                <PrecisionSlider
-                  value={controls.baseHue}
-                  onChange={(value) => updateControl('baseHue', value)}
-                  min={0}
-                  max={360}
-                  step={0.1}
-                  label="Base Hue (Middle)"
-                  unit="°"
-                  formatDisplay={(value) => `${value.toFixed(1)}°`}
-                  className="w-full"
-                />
-                <p className="text-xs text-muted-foreground">Anchor hue at middle of palette (step 6)</p>
-              </div>
-
-              {/* Light Hue Drift */}
-              <div className="space-y-3">
-                <PrecisionSlider
-                  value={controls.lightHueDrift}
-                  onChange={(value) => updateControl('lightHueDrift', value)}
-                  min={-60}
-                  max={60}
-                  step={0.1}
-                  label="Light Hue Drift"
-                  unit="°"
-                  formatDisplay={(value) => `${value.toFixed(1)}°`}
-                  className="w-full"
-                />
-                <p className="text-xs text-muted-foreground">Hue shift for light colors (steps 1-5)</p>
-              </div>
-
-              {/* Dark Hue Drift */}
-              <div className="space-y-3">
-                <PrecisionSlider
-                  value={controls.darkHueDrift}
-                  onChange={(value) => updateControl('darkHueDrift', value)}
-                  min={-60}
-                  max={60}
-                  step={0.1}
-                  label="Dark Hue Drift"
-                  unit="°"
-                  formatDisplay={(value) => `${value.toFixed(1)}°`}
-                  className="w-full"
-                />
-                <p className="text-xs text-muted-foreground">Hue shift for dark colors (steps 7-11)</p>
-              </div>
+            <TabsContent value="hue">
+              <BaseColorControls
+                controls={controls}
+                onControlChange={updateControl}
+              />
             </TabsContent>
 
-            <TabsContent value="chroma" className="space-y-4 mt-6">
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Chroma Mode</Label>
-                <Select value={controls.chromaMode} onValueChange={handleChromaModeChange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="manual">Manual Control</SelectItem>
-                    <SelectItem value="curve">Curve Distribution</SelectItem>
-                    <SelectItem value="perceptual">Perceptual (Gamut-Aware)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {controls.chromaMode === 'manual' && (
-                <div className="space-y-6">
-                  <Label className="text-sm font-medium">Individual Chroma Values</Label>
-                  <div className="space-y-6">
-                    {(controls.steps || []).sort((a, b) => a - b).map(step => (
-                      <div key={step} className="flex items-center space-x-2">
-                        <PrecisionSlider
-                          value={controls.chromaValues[step.toString()] ?? 0.1}
-                          onChange={(value) => updateChromaValue(step, value)}
-                          min={0}
-                          max={maxChroma}
-                          step={0.001}
-                          label={generateTokenName(step)}
-                          formatDisplay={(value) => value.toFixed(3)}
-                          className="flex-1"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {controls.chromaMode === 'curve' && (
-                <div className="space-y-6">
-                  
-                  <PrecisionSlider
-                    value={controls.minChroma}
-                    onChange={(value) => updateControl('minChroma', value)}
-                    min={0}
-                    max={controls.maxChroma * 0.8}
-                    step={0.001}
-                    label="Min Chroma"
-                    formatDisplay={(value) => value.toFixed(3)}
-                    className="w-full"
-                  />
-                  
-                  <PrecisionSlider
-                    value={controls.maxChroma}
-                    onChange={(value) => updateControl('maxChroma', value)}
-                    min={controls.minChroma || 0}
-                    max={maxChroma}
-                    step={0.001}
-                    label="Max Chroma"
-                    formatDisplay={(value) => value.toFixed(3)}
-                    className="w-full"
-                  />
-
-                  {controls.chromaCurveType !== 'flat' && (
-                    <PrecisionSlider
-                      value={controls.chromaPeak}
-                      onChange={(value) => updateControl('chromaPeak', value)}
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      label="Chroma Peak Position"
-                      className="w-full"
-                    />
-                  )}
-
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">Curve Type</Label>
-                    <Select 
-                      value={controls.chromaCurveType || 'gaussian'} 
-                      onValueChange={(value) => updateControl('chromaCurveType', value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="flat">Flat (Equal Chroma)</SelectItem>
-                        <SelectItem value="gaussian">Gaussian (Smooth Bell)</SelectItem>
-                        <SelectItem value="linear">Linear (Triangular)</SelectItem>
-                        <SelectItem value="sine">Sine Wave (Gentle)</SelectItem>
-                        <SelectItem value="cubic">Cubic (Dramatic)</SelectItem>
-                        <SelectItem value="quartic">Quartic (Very Dramatic)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">Curve Easing</Label>
-                    <Select 
-                      value={controls.chromaEasing || 'none'} 
-                      onValueChange={(value) => updateControl('chromaEasing', value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="ease-in">Ease In (Slow Start)</SelectItem>
-                        <SelectItem value="ease-out">Ease Out (Slow End)</SelectItem>
-                        <SelectItem value="ease-in-out">Ease In-Out (Both)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-
-              {controls.chromaMode === 'perceptual' && (
-                <div className="space-y-6">
-                  <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                    <strong>Perceptual Mode:</strong> Maps your curve shape to the actual available gamut space for each lightness level. This ensures smooth transitions without hard clipping, but your min/max chroma values become percentages of what's actually achievable.
-                  </div>
-                  
-                  <PrecisionSlider
-                    value={controls.minChroma * 100}
-                    onChange={(value) => updateControl('minChroma', value / 100)}
-                    min={0}
-                    max={controls.maxChroma * 80}
-                    step={1}
-                    label="Min Chroma"
-                    unit="%"
-                    className="w-full"
-                  />
-                  
-                  <PrecisionSlider
-                    value={controls.maxChroma * 100}
-                    onChange={(value) => updateControl('maxChroma', value / 100)}
-                    min={(controls.minChroma || 0) * 100}
-                    max={100}
-                    step={1}
-                    label="Max Chroma"
-                    unit="%"
-                    className="w-full"
-                  />
-
-                  {controls.chromaCurveType !== 'flat' && (
-                    <PrecisionSlider
-                      value={controls.chromaPeak * 100}
-                      onChange={(value) => updateControl('chromaPeak', value / 100)}
-                      min={0}
-                      max={100}
-                      step={1}
-                      label="Curve Peak Position"
-                      unit="%"
-                      className="w-full"
-                    />
-                  )}
-
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">Curve Type</Label>
-                    <Select 
-                      value={controls.chromaCurveType || 'gaussian'} 
-                      onValueChange={(value) => updateControl('chromaCurveType', value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="flat">Flat (Equal Chroma)</SelectItem>
-                        <SelectItem value="gaussian">Gaussian (Smooth Bell)</SelectItem>
-                        <SelectItem value="linear">Linear (Triangular)</SelectItem>
-                        <SelectItem value="sine">Sine Wave (Gentle)</SelectItem>
-                        <SelectItem value="cubic">Cubic (Dramatic)</SelectItem>
-                        <SelectItem value="quartic">Quartic (Very Dramatic)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">Curve Easing</Label>
-                    <Select 
-                      value={controls.chromaEasing || 'none'} 
-                      onValueChange={(value) => updateControl('chromaEasing', value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="ease-in">Ease In (Slow Start)</SelectItem>
-                        <SelectItem value="ease-out">Ease Out (Slow End)</SelectItem>
-                        <SelectItem value="ease-in-out">Ease In-Out (Both)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
+            <TabsContent value="chroma">
+              <ChromaControls
+                controls={controls}
+                onControlsChange={onControlsChange}
+                onControlChange={updateControl}
+                maxChroma={maxChroma}
+                gamutSettings={gamutSettings}
+                lightnessMode={lightnessMode}
+              />
             </TabsContent>
 
             <TabsContent value="lightness" className="space-y-4 mt-6">
