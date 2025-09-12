@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { createNewPalette } from '../lib/colorGeneration'
+import { createNewPalette } from '../lib/utils/system'
 import { defaultControls } from '../lib/presets'
 import { Palette } from '../types'
 

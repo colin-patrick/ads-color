@@ -1,5 +1,5 @@
 import { PaletteControls } from '../types';
-import { calculateGamutAwareChromaFactor } from '../lib/colorGeneration';
+import { calculateGamutAwareChromaFactor } from '../lib/palette/generation';
 
 // Helper function to apply easing (copied from colorGeneration.ts)
 function applyEasing(factor: number, easing: string = 'none'): number {

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { generatePalette, importPalettes, downloadPalettes, convertExternalPalettes } from '../lib/colorGeneration'
+import { generatePalette } from '../lib/palette/generation'
+import { importPalettes, downloadPalettes } from '../lib/storage/persistence'
+import { convertExternalPalettes } from '../lib/integration/external'
 import { Palette, GamutSettings, LightnessSettings } from '../types'
 
 interface UsePaletteImportProps {

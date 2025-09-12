@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import { oklch, formatHex, rgb, inGamut } from 'culori';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { isColorInGamut } from '../lib/colorGeneration';
+import { isColorInGamut } from '../lib/color/gamut';
 import { PaletteControls, PaletteColor, GamutSettings } from '../types';
 import { cn } from '../lib/utils';
 

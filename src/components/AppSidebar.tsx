@@ -21,7 +21,7 @@ import {
 } from './ui/dropdown-menu'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
-import { generatePalette } from '../lib/colorGeneration'
+import { generatePalette } from '../lib/palette/generation'
 import { Palette, GamutSettings, LightnessSettings } from '../types'
 import { TokenStudioExportDialog } from './TokenStudioExportDialog'
 

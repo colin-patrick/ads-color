@@ -1,5 +1,7 @@
 import { useMemo, useEffect } from 'react'
-import { generatePalette, generateColorOptions, savePalettesToStorage } from '../lib/colorGeneration'
+import { generatePalette } from '../lib/palette/generation'
+import { generateColorOptions } from '../lib/palette/utils'
+import { savePalettesToStorage } from '../lib/storage/persistence'
 import { Palette, PaletteControls, GamutSettings, LightnessSettings } from '../types'
 
 interface UsePaletteStateProps {

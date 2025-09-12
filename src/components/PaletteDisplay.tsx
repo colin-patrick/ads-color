@@ -1,6 +1,7 @@
 import { generatePalette } from '../lib/palette/generation'
 import { analyzeContrast, getContrastBadge, getTextColorForBackground } from '../lib/color/contrast'
-import { getColorFormats, copyToClipboard, convertPaletteToLuminance } from '../lib/colorGeneration'
+import { getColorFormats, convertPaletteToLuminance } from '../lib/palette/utils'
+import { copyToClipboard } from '../lib/utils/system'
 import { Palette, ColorFormat, GamutSettings, LightnessSettings, PaletteControls } from '../types'
 import { toast } from 'sonner'
 import { useRef, useEffect } from 'react'

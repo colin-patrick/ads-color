@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { Button } from './ui/button'
 import { Palette, GamutSettings, LightnessSettings } from '../types'
-import { generatePalette } from '../lib/colorGeneration'
+import { generatePalette } from '../lib/palette/generation'
 import { Copy, Check } from 'lucide-react'
 
 interface TokenStudioExportDialogProps {

@@ -1,7 +1,6 @@
 import { oklch, wcagContrast, wcagLuminance } from 'culori';
 import { ContrastResult, PaletteColor } from '../../types';
 import { clampColorToGamut } from './gamut';
-import { parseToOklch } from './core';
 
 /**
  * Contrast and accessibility functions implementing WCAG standards
